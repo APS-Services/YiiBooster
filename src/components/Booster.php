@@ -23,7 +23,7 @@
  * @author Amr Bedair <amr.bedair@gmail.com>
  * @version 3.0.1
  * 
- * Bootstrap 3.x.x
+ * Bootstrap 5.x.x
  * @author Amr Bedair <amr.bedair@gmail.com>
  * @version 4.0.0
  * 
@@ -163,9 +163,9 @@ class Booster extends CApplicationComponent {
 	 * @since 1.1.0 NOTE: this parameter changed its logic completely!
 	 * Previously it was the selector from which to start delegating the popovers.
 	 * Now the popovers are always being bound to specific elements.
-	 * According to the documentation: http://twitter.github.io/bootstrap/javascript.html#popovers
+	 * According to the documentation: https://getbootstrap.com/docs/5.3/components/popovers/
 	 */
-	public $popoverSelector = '[data-toggle=popover]';
+	public $popoverSelector = '[data-bs-toggle=popover]';
 
 	/**
 	 * @var string default tooltip CSS selector.
@@ -174,11 +174,11 @@ class Booster extends CApplicationComponent {
 	 * Previously it was the selector from which to start delegating the tooltips.
 	 * Now the tooltips always start spreading from `body`, and this parameter controls
 	 * what elements will actually receive the tooltip behavior.
-	 * According to the documentation: http://twitter.github.io/bootstrap/javascript.html#tooltips
+	 * According to the documentation: https://getbootstrap.com/docs/5.3/components/tooltips/
 	 * previously it was the direct selector to which to apply the `tooltip` plugin,
 	 * now it is the value for `selector` plugin option.
 	 */
-	public $tooltipSelector = '[data-toggle=tooltip]';
+	public $tooltipSelector = '[data-bs-toggle=tooltip]';
 
 	/**
 	 * @var array list of script packages (name=>package spec).
@@ -529,11 +529,15 @@ class Booster extends CApplicationComponent {
 	}
 	
 	public function registerPopoverJs() {
-		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-toggle=popover]').popover();");
+		// Bootstrap 5: Initialize popovers using vanilla JavaScript
+		$this->cs->registerScript($this->getUniqueScriptId(), 
+			"document.querySelectorAll('[data-bs-toggle=\"popover\"]').forEach(function(el) { new bootstrap.Popover(el); });");
 	}
 	
 	public function registerTooltipJs() {
-		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-toggle=tooltip]').tooltip();");
+		// Bootstrap 5: Initialize tooltips using vanilla JavaScript
+		$this->cs->registerScript($this->getUniqueScriptId(), 
+			"document.querySelectorAll('[data-bs-toggle=\"tooltip\"]').forEach(function(el) { new bootstrap.Tooltip(el); });");
 	}
 
 	/**

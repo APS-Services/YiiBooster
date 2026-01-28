@@ -15,9 +15,9 @@ return array(
 		'css' => array(($this->minify || $this->enableCdn) ? 'css/font-awesome.min.css' : 'css/font-awesome.css'),
 	),
 	'bootstrap.js' => array(
-		'baseUrl' => $this->enableCdn ? 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/' : $this->getAssetsUrl() . '/bootstrap/',
-		'js' => array($this->minify ? 'js/bootstrap.min.js' : 'js/bootstrap.js'),
-		'depends' => array('jquery'),
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/' : $this->getAssetsUrl() . '/bootstrap/',
+		'js' => array($this->minify ? 'js/bootstrap.bundle.min.js' : 'js/bootstrap.bundle.js'),
+		'depends' => array(), // Bootstrap 5 no longer requires jQuery
 	),
 	'bootstrap-yii' => array(
 		'baseUrl' => $this->getAssetsUrl(),
