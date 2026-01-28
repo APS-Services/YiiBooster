@@ -160,7 +160,7 @@ class TbPanel extends TbWidget {
 		if (empty($this->headerButtons))
 			return;
 
-		echo '<div class="pull-right">';
+		echo '<div class="float-end">';
 
 		if (!empty($this->headerButtons) && is_array($this->headerButtons)) {
 			
@@ -175,7 +175,7 @@ class TbPanel extends TbWidget {
 				if (!isset($options['htmlOptions']))
 					$options['htmlOptions'] = array();
 
-				self::addCssClass($options['htmlOptions'], 'pull-right');
+				self::addCssClass($options['htmlOptions'], 'float-end');
 				
 				$this->controller->widget($class, $options);
 			}

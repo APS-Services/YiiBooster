@@ -132,7 +132,7 @@ class TbInputHorizontal extends TbInput
 			$this->labelOptions = array('for' => $label_for);
 		}
 
-		$this->htmlOptions['class'] = 'pull-left';
+		$this->htmlOptions['class'] = 'float-start';
 
 		echo $this->getLabel();
 		echo '<div class="controls">';
@@ -277,7 +277,7 @@ class TbInputHorizontal extends TbInput
 			$this->labelOptions = array('for' => $label_for);
 		}
 
-		$this->htmlOptions['class'] = 'pull-left';
+		$this->htmlOptions['class'] = 'float-start';
 
 		echo $this->getLabel();
 		echo '<div class="controls">';

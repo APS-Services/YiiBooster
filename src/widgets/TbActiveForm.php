@@ -121,7 +121,7 @@ class TbActiveForm extends CActiveForm {
 	 * Hint CSS class.
 	 * @var string
 	 */
-	public $hintCssClass = 'help-block';
+	public $hintCssClass = 'form-text';
 
 	/**
 	 * Hint wrapper tag.
@@ -144,7 +144,7 @@ class TbActiveForm extends CActiveForm {
 		self::addCssClass($this->htmlOptions, 'form' . self::$typeClasses[$this->type]);
 		
 		if (!isset($this->errorMessageCssClass)) {
-			$this->errorMessageCssClass = 'help-block error';
+			$this->errorMessageCssClass = 'form-text error';
 		}
 		if(!isset($this->clientOptions['errorCssClass'])){
 			$this->clientOptions['errorCssClass'] = 'has-error';

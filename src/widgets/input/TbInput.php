@@ -502,9 +502,9 @@ abstract class TbInput extends CInputWidget
 			$htmlOptions = $this->hintOptions;
 
 			if (isset($htmlOptions['class'])) {
-				$htmlOptions['class'] .= ' help-block';
+				$htmlOptions['class'] .= ' form-text';
 			} else {
-				$htmlOptions['class'] = 'help-block';
+				$htmlOptions['class'] = 'form-text';
 			}
 
 			return CHtml::tag('p', $htmlOptions, $this->hintText);
