@@ -194,7 +194,7 @@ class TbTabs extends CWidget {
 			}
 
 			if (!isset($item['url'])) {
-				$item['linkOptions']['data-toggle'] = 'tab';
+				$item['linkOptions']['data-bs-toggle'] = 'tab';
 			}
 
 			if (isset($tab['items'])) {

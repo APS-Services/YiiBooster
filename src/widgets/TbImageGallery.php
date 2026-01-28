@@ -38,8 +38,8 @@ class TbImageGallery extends CWidget
 	public $htmlOptions = array();
 
 	public static $defaultHtmlOptions = array(
-		'data-toggle' => 'modal-gallery',
-		'data-target' => '#modal-gallery',
+		'data-bs-toggle' => 'modal-gallery',
+		'data-bs-target' => '#modal-gallery',
 		'data-filter' => '*',
 	);
 

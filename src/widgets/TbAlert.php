@@ -209,7 +209,7 @@ class TbAlert extends TbWidget {
 
 		// If `closeText` which is in effect now is `false` then do not show button.
 		if ($alert['closeText'] !== false) {
-			echo '<a href="#" class="close" data-dismiss="alert">' . $alert['closeText'] . '</a>';
+			echo '<a href="#" class="close" data-bs-dismiss="alert">' . $alert['closeText'] . '</a>';
 		}
 
 		echo $alertText;

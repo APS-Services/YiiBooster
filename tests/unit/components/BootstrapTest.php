@@ -28,7 +28,7 @@ class BoosterTest extends PHPUnit_Framework_TestCase {
 
 	public function BootstrapCssFilenames() {
 		
-		$cdn_url = '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0';
+		$cdn_url = '//cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist';
 		$local_url = 'assets'; // make sure it's equal to `assetsUrl` defined in relevant test!
 		return array(
 			// $cdn, $responsive, $fontawesome, $mincss, $expected_filename

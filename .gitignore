@@ -38,3 +38,4 @@ switch
 /vendor*
 
 /phpdoc.xml
+src/assets/bootstrap.bak/

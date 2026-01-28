@@ -78,7 +78,7 @@ class TbPager extends CLinkPager {
 
 		if (in_array($this->alignment, $validAlignments)) {
 			if($this->alignment == self::ALIGNMENT_RIGHT)
-				$classes[] = 'pull-right';
+				$classes[] = 'float-end';
 			
 			if($this->alignment == self::ALIGNMENT_CENTER) {
 				// $style = 'margin-left: auto; margin-right: auto;'; // not needed!

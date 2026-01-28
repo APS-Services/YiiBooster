@@ -16,6 +16,12 @@ YiiBooster is a widget toolkit for [Yii web framework](http://www.yiiframework.c
 Its main purpose is to ease building UI in Yii-based web applications utilizing the beauty of [Twitter Bootstrap][twitter-bootstrap]
 and several other great UI plugins developed over time by the community.
 
+**Note: YiiBooster now uses Bootstrap 5.3.3** (upgraded from Bootstrap 3.3.2). This major version upgrade includes:
+- Removed jQuery dependency (Bootstrap 5 uses vanilla JavaScript)
+- Updated all data attributes to `data-bs-*` format
+- Updated CSS utility classes for Bootstrap 5 compatibility
+- Full Bootstrap 5 component support
+
 Twitter Bootstrap wrapping is based over the excellent job of [Christoffer Niska](https://twitter.com/Crisu83) called [Yii-Bootstrap](http://www.cniska.net/yii-bootstrap/).
 We at [Clevertech](http://clevertech.biz) included his library into our own Yii project startup library, [YiiBoilerplate](http://github.com/clevertech/yiiboilerplate),
 and started improving it in order to satisfy some of our customers' project requirements.

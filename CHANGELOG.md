@@ -9,6 +9,14 @@ Thank you all
 Antonio Ramirez.
 
 ## YiiBooster latest development alpha
+- **(MAJOR)** upgrade to Bootstrap 5.3.3 - Complete migration from Bootstrap 3.3.2 to Bootstrap 5.3.3
+  - Updated all Bootstrap assets (CSS, JS, fonts) to version 5.3.3
+  - Updated CDN URLs from maxcdn.bootstrapcdn.com to cdn.jsdelivr.net
+  - Removed jQuery dependency from Bootstrap (Bootstrap 5 uses vanilla JavaScript)
+  - Updated all data attributes to Bootstrap 5 format (`data-*` → `data-bs-*`)
+  - Updated CSS utility classes (`pull-left/right` → `float-start/end`, `help-block` → `form-text`)
+  - Updated JavaScript initialization for tooltips and popovers to use vanilla JS API
+  - Updated all widgets, helpers, and views for Bootstrap 5 compatibility
 - **(fix)** fix TbEditableField params prop check is an array and js callback implementation #1016 (Oxyaction)
 - **(enh)** upgrade to select2 3.5.1 and select2-bootstrap-css 1.4.1
 - **(enh)** upgrade to font-awesome 4.3.0
