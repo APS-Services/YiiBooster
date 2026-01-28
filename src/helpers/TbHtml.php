@@ -2539,7 +2539,7 @@ EOD;
             $htmlOptions['data-loading-text'] = $loading;
         }
         if (TbArray::popValue('toggle', $htmlOptions, false)) {
-            $htmlOptions['data-toggle'] = 'button';
+            $htmlOptions['data-bs-toggle'] = 'button';
         }
         $icon = TbArray::popValue('icon', $htmlOptions);
         $iconOptions = TbArray::popValue('iconOptions', $htmlOptions, array());
@@ -2778,7 +2778,7 @@ EOD;
     {
         self::addCssClass('dropdown-toggle', $htmlOptions);
         $label .= ' <b class="caret"></b>';
-        $htmlOptions['data-toggle'] = 'dropdown';
+        $htmlOptions['data-bs-toggle'] = 'dropdown';
         return self::btn($type, $label, $htmlOptions);
     }
 
@@ -2796,7 +2796,7 @@ EOD;
         if ($depth === 0) {
             $label .= ' <b class="caret"></b>';
         }
-        $htmlOptions['data-toggle'] = 'dropdown';
+        $htmlOptions['data-bs-toggle'] = 'dropdown';
         return self::link($label, $url, $htmlOptions);
     }
 
@@ -2819,7 +2819,7 @@ EOD;
             }
             $toggle = TbArray::popValue('toggle', $htmlOptions);
             if (!empty($toggle)) {
-                $htmlOptions['data-toggle'] = 'buttons-' . $toggle;
+                $htmlOptions['data-bs-toggle'] = 'buttons-' . $toggle;
             }
             $parentOptions = array(
                 'color' => TbArray::popValue('color', $htmlOptions),
@@ -3221,12 +3221,12 @@ EOD;
             $menuItem['htmlOptions'] = TbArray::popValue('htmlOptions', $tabOptions, array());
             $items = TbArray::popValue('items', $tabOptions, array());
             if (!empty($items)) {
-                $menuItem['linkOptions']['data-toggle'] = 'dropdown';
+                $menuItem['linkOptions']['data-bs-toggle'] = 'dropdown';
                 $menuItem['items'] = self::normalizeTabs($items, $panes, $i);
             } else {
                 $paneOptions = TbArray::popValue('paneOptions', $tabOptions, array());
                 $id = $paneOptions['id'] = TbArray::popValue('id', $tabOptions, 'tab_' . ++$i);
-                $menuItem['linkOptions']['data-toggle'] = 'tab';
+                $menuItem['linkOptions']['data-bs-toggle'] = 'tab';
                 $menuItem['url'] = '#' . $id;
                 self::addCssClass('tab-pane', $paneOptions);
                 if (TbArray::popValue('fade', $tabOptions, true)) {
@@ -3344,8 +3344,8 @@ EOD;
     public static function navbarCollapseLink($target, $htmlOptions = array())
     {
         self::addCssClass('btn btn-navbar', $htmlOptions);
-        $htmlOptions['data-toggle'] = 'collapse';
-        $htmlOptions['data-target'] = $target;
+        $htmlOptions['data-bs-toggle'] = 'collapse';
+        $htmlOptions['data-bs-target'] = $target;
         $content = '<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>';
         return self::tag('a', $htmlOptions, $content);
     }
@@ -3962,7 +3962,7 @@ EOD;
         self::addCssClass('close', $htmlOptions);
         $dismiss = TbArray::popValue('dismiss', $htmlOptions);
         if (!empty($dismiss)) {
-            $htmlOptions['data-dismiss'] = $dismiss;
+            $htmlOptions['data-bs-dismiss'] = $dismiss;
         }
         $htmlOptions['type'] = 'button';
         return self::tag($tag, $htmlOptions, $label);
@@ -3977,7 +3977,7 @@ EOD;
      */
     public static function collapseLink($label, $target, $htmlOptions = array())
     {
-        $htmlOptions['data-toggle'] = 'collapse';
+        $htmlOptions['data-bs-toggle'] = 'collapse';
         return self::link($label, $target, $htmlOptions);
     }
 
@@ -4062,7 +4062,7 @@ EOD;
     {
         $htmlOptions['rel'] = 'popover';
         $htmlOptions['data-content'] = $content;
-        $htmlOptions['data-toggle'] = 'popover';
+        $htmlOptions['data-bs-toggle'] = 'popover';
         return self::tooltipPopover($label, '#', $title, $htmlOptions);
     }
 
@@ -4214,7 +4214,7 @@ EOD;
     public static function carouselPrevLink($label, $url = '#', $htmlOptions = array())
     {
         self::addCssClass('carousel-control left', $htmlOptions);
-        $htmlOptions['data-slide'] = 'prev';
+        $htmlOptions['data-bs-slide'] = 'prev';
         return self::link($label, $url, $htmlOptions);
     }
 
@@ -4228,7 +4228,7 @@ EOD;
     public static function carouselNextLink($label, $url = '#', $htmlOptions = array())
     {
         self::addCssClass('carousel-control right', $htmlOptions);
-        $htmlOptions['data-slide'] = 'next';
+        $htmlOptions['data-bs-slide'] = 'next';
         return self::link($label, $url, $htmlOptions);
     }
 
@@ -4244,7 +4244,7 @@ EOD;
         self::addCssClass('carousel-indicators', $htmlOptions);
         $output = self::openTag('ol', $htmlOptions);
         for ($i = 0; $i < $numSlides; $i++) {
-            $itemOptions = array('data-target' => $target, 'data-slide-to' => $i);
+            $itemOptions = array('data-bs-target' => $target, 'data-bs-slide-to' => $i);
             if ($i === 0) {
                 $itemOptions['class'] = 'active';
             }
