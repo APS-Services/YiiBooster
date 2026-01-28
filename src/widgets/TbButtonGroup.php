@@ -118,7 +118,7 @@ class TbButtonGroup extends CWidget {
 		$validToggles = array(self::TOGGLE_CHECKBOX, self::TOGGLE_RADIO);
 
 		if (isset($this->toggle) && in_array($this->toggle, $validToggles)) {
-			$this->htmlOptions['data-toggle'] = 'buttons';
+			$this->htmlOptions['data-bs-toggle'] = 'buttons';
 		}
 	}
 

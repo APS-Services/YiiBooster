@@ -47,7 +47,7 @@ class TbScrollSpy extends CWidget
 		$script = "jQuery('{$this->selector}').attr('data-spy', 'scroll');";
 
 		if (isset($this->target)) {
-			$script .= "jQuery('{$this->selector}').attr('data-target', '{$this->target}');";
+			$script .= "jQuery('{$this->selector}').attr('data-bs-target', '{$this->target}');";
 		}
 
 		if (isset($this->offset)) {

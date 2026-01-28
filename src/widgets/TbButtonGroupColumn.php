@@ -92,8 +92,8 @@ class TbButtonGroupColumn extends TbButtonColumn {
 			$options['buttonType'] = 'link';
 		}
 
-		if (!isset($options['data-toggle'])) {
-			$options['data-toggle'] = 'tooltip';
+		if (!isset($options['data-bs-toggle'])) {
+			$options['data-bs-toggle'] = 'tooltip';
 		}
 
 		if (!isset($options['class'])) {

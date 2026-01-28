@@ -227,7 +227,7 @@ class TbButton extends TbWidget {
 
 			$classes[] = 'dropdown-toggle';
 			$this->label .= ' <span class="caret"></span>';
-			$this->htmlOptions['data-toggle'] = 'dropdown';
+			$this->htmlOptions['data-bs-toggle'] = 'dropdown';
 		}
 
 		if (!empty($classes)) {
@@ -253,7 +253,7 @@ class TbButton extends TbWidget {
 		}
 
 		if (isset($this->toggle)) {
-			$this->htmlOptions['data-toggle'] = 'button';
+			$this->htmlOptions['data-bs-toggle'] = 'button';
 		}
 
 		if (isset($this->loadingText)) {
@@ -269,7 +269,7 @@ class TbButton extends TbWidget {
                 $this->tooltipOptions = array();
             }
 
-            $this->htmlOptions['data-toggle'] = 'tooltip';
+            $this->htmlOptions['data-bs-toggle'] = 'tooltip';
             foreach ($this->tooltipOptions as $key => $value) {
                 $this->htmlOptions['data-' . $key] = $value;
             }

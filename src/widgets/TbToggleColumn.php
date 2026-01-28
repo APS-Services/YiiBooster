@@ -284,8 +284,8 @@ function() {
 		$htmlOptions = $this->button['htmlOptions'];
 
 		$htmlOptions['title'] = $label;
-		if (!isset($htmlOptions['data-toggle']))
-			$htmlOptions['data-toggle'] = 'tooltip';
+		if (!isset($htmlOptions['data-bs-toggle']))
+			$htmlOptions['data-bs-toggle'] = 'tooltip';
 
 		$iconHtmlTemplate = $this->isNotGlyphiconsIcon($icon)
 			? '<span class="glyphicon glyphicon-%s"></span>'

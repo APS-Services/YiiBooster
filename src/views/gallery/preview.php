@@ -10,7 +10,7 @@
 <!-- modal-gallery is the modal dialog used for the image gallery -->
 <div id="modal-gallery" class="modal modal-gallery hide fade" data-filter=":odd" tabindex="-1">
     <div class="modal-header">
-        <a class="close" data-dismiss="modal">&times;</a>
+        <a class="close" data-bs-dismiss="modal">&times;</a>
         <h3 class="modal-title"></h3>
     </div>
     <div class="modal-body"><div class="modal-image"></div></div>
