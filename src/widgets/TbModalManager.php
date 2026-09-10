@@ -1,113 +1,30 @@
 <?php
 /**
- *## TbModalMaster class file.
- *
- * @author Thiago Otaviani Vidal <thiagovidal@gmail.com>
- * @copyright Copyright &copy; Thiago Otaviani Vidal 2012
- * @license http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * YiiBooster project.
+ * @license [New BSD License](http://www.opensource.org/licenses/bsd-license.php)
  */
 
 /**
- *## Bootstrap modal master widget.
+ *## TbModalManager - REMOVED in YiiBooster 5.0.
  *
- * @see https://github.com/jschr/bootstrap-modal/
+ * The bundled modal manager is a 2012 plugin written for Bootstrap 2 that drove stacking by
+ * passing a `manager` option into $.modal() and building backdrops by hand. Bootstrap 5 stacks
+ * modals natively, so the widget has nothing left to do.
  *
- * @since 0.9.3
+ * This stub exists only so that applications upgrading from 4.x get a message naming the
+ * replacement, at the line that used the widget, instead of Yii's opaque
+ * "include(TbModalManager.php): failed to open stream: No such file or directory" fatal.
+ * It will be deleted in 5.1.
+ *
+ * @deprecated 5.0.0
  * @package booster.widgets.modals
  */
-class TbModalManager extends CWidget
-{
-	/**
-	 * @var boolean indicates whether to automatically open the modal when initialized. Defaults to 'false'.
-	 */
-	public $autoOpen = false;
+class TbModalManager extends CWidget {
 
-	/**
-	 * @var boolean indicates whether the modal should use transitions. Defaults to 'true'.
-	 */
-	public $fade = true;
+	public function init() {
 
-	/**
-	 * @var array the options for the Bootstrap Javascript plugin.
-	 */
-	public $options = array();
-
-	/**
-	 * @var string[] the Javascript event handlers.
-	 */
-	public $events = array();
-
-	/**
-	 * @var array the HTML attributes for the widget container.
-	 */
-	public $htmlOptions = array();
-
-	/**
-	 * Initializes the widget.
-	 */
-	public function init()
-	{
-		if (!isset($this->htmlOptions['id'])) {
-			$this->htmlOptions['id'] = $this->getId();
-		}
-
-		if ($this->autoOpen === false && !isset($this->options['show'])) {
-			$this->options['show'] = false;
-		}
-
-		$classes = array('modal');
-
-		if ($this->fade === true) {
-			$classes[] = 'fade';
-		}
-
-		if (!empty($classes)) {
-			$classes = implode(' ', $classes);
-			if (isset($this->htmlOptions['class'])) {
-				$this->htmlOptions['class'] .= ' ' . $classes;
-			} else {
-				$this->htmlOptions['class'] = $classes;
-			}
-		}
-		echo CHtml::openTag('div', $this->htmlOptions);
-	}
-
-	/**
-	 * Runs the widget.
-	 */
-	public function run()
-	{
-		echo CHtml::closeTag('div');
-		$this->registerClientScript($this->htmlOptions['id']);
-	}
-
-	/**
-	 * Registers required
-	 *
-	 * @param integer $id
-	 */
-	public function registerClientScript($id)
-	{
-        $booster = Booster::getBooster();
-        $booster->registerAssetJs('bootstrap-modalmanager.js', CClientScript::POS_HEAD);
-        $booster->registerAssetCss('bootstrap-modalmanager.css');
-
-		$options = !empty($this->format) ? CJavaScript::encode(array('format' => $this->format)) : '';
-
-		ob_start();
-		echo "jQuery('#{$id}').modalmanager({$options})";
-		foreach ($this->events as $event => $handler) {
-			echo ".on('{$event}', " . CJavaScript::encode($handler) . ")";
-		}
-
-		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean() . ';');
-
-		foreach ($this->events as $name => $handler) {
-			$handler = CJavaScript::encode($handler);
-			Yii::app()->getClientScript()->registerScript(
-				__CLASS__ . '#' . $id . '_' . $name,
-				"jQuery('#{$id}').on('{$name}', {$handler});"
-			);
-		}
+		throw new CException('TbModalManager was removed in YiiBooster 5.0: Bootstrap 5 stacks modals natively, so the '
+			. 'bundled Bootstrap 2 modal manager is redundant. Open modals normally with TbModal. '
+			. 'See UPGRADE-5.0.md.');
 	}
 }

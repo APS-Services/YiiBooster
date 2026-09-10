@@ -50,9 +50,13 @@ return array(
 		'css' => array('css/jquery-ui-bootstrap.css'),
 	),
 	'bootbox' => array(
+		// bootbox 6 targets Bootstrap 4/5 and drives the modal through Bootstrap's jQuery bridge,
+		// so it needs both jQuery and Bootstrap present - and Bootstrap's bridge only appears on
+		// DOMContentLoaded, which is after bootbox's own script runs. That is fine because bootbox
+		// only calls it in response to user code, never at load.
 		'baseUrl' => $this->getAssetsUrl() . '/bootbox/',
 		'js' => array($this->minify ? 'bootbox.min.js' : 'bootbox.js'),
-		'depends' => array('bootstrap.js'),
+		'depends' => array('jquery', 'bootstrap.js'),
 	),
 	'notify' => array(
 		'baseUrl' => $this->getAssetsUrl() . '/notify/',
@@ -133,12 +137,6 @@ return array(
 		'css' => array('redactor.css'),
 		'depends' => array('jquery')
 	),
-	'passfield' => array(
-		'depends' => array('jquery'),
-		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-passfield', // Not in CDN yet
-		'css' => array($this->minify ? 'css/passfield.min.css' : 'css/passfield.min.css'),
-		'js' => array($this->minify ? 'js/passfield.min.js' : 'js/passfield.min.js')
-	),
 	'timepicker' => array(
 		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-timepicker',
 		'js' => array('js/bootstrap-timepicker.js'),
@@ -164,12 +162,6 @@ return array(
 		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-markdown',
 		'css' => array('css/bootstrap-markdown.min.css'),
 		'js' => array('js/bootstrap-markdown.js', 'js/to-markdown.js', 'js/markdown.js'),
-	),
-	'switch' => array(
-		'depends' => array('bootstrap.js'),
-		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-switch',
-		'css' => array($this->minify ? 'css/bootstrap3/bootstrap-switch.min.css' : 'css/bootstrap3/bootstrap-switch.css'),
-		'js' => array($this->minify ? 'js/bootstrap-switch.min.js' : 'js/bootstrap-switch.js'),
 	),
 	'typeahead' => array(
 		'depends' => array('jquery'),

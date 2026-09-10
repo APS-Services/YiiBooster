@@ -22,10 +22,14 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
 - **(fix)** both CDN branches now point at `cdn.jsdelivr.net` and agree on a version. They previously
   served Bootstrap 3.2.0 CSS against 3.3.2 JS from `maxcdn.bootstrapcdn.com`, which no longer resolves.
 - **(enh)** removed the Bootstrap 3 glyphicon fonts. Glyphicons do not exist in Bootstrap 4+.
-- **(enh)** removed `assets/js/bootstrap-noconflict.js` and its package. Bootstrap 5 registers no
-  jQuery plugins, so the `$.fn.button` / `$.fn.tooltip` collision it repaired no longer exists.
-  **Note:** jQuery UI now owns `$.fn.tooltip` and `$.fn.button`, so application code calling
-  `$el.tooltip()` silently gets jQuery UI's widget. Use `new bootstrap.Tooltip(el)`.
+- **(enh)** removed `assets/js/bootstrap-noconflict.js` and its package. Bootstrap 5 still
+  installs its jQuery plugins when jQuery is present, but does so on `DOMContentLoaded` rather
+  than at script-execution time - after jQuery UI has registered its own - so it now wins the
+  `$.fn.button`/`$.fn.tooltip` collision on its own, and the manual capture/restore dance is
+  redundant. `$el.tooltip()` is still Bootstrap's, and jQuery UI's widgets remain reachable as
+  `uiButton`/`uiTooltip`. The one thing that changed is timing: code running *before*
+  `DOMContentLoaded` that reads `$.fn.tooltip` sees jQuery UI's, which is what broke the bundled
+  picker plugin.
 
 - **(enh)** icons are now rendered by a single `TbIcon` helper instead of eight hand-rolled blocks
   in two inconsistent flavours. Bootstrap Icons 1.11.3 is bundled and used by default; set
@@ -59,9 +63,10 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
 - **(enh)** `table-condensed` is now `table-sm`. The type name `condensed` remains valid and is
   mapped to `sm`, so existing configuration - including `TbDetailView`'s own default - keeps working.
 
-- **(enh)** widgets now construct Bootstrap components through the ES6 class API instead of the
-  removed jQuery plugins: `TbModal`, `TbCarousel`, `TbCollapse`, `TbTabs`, `TbAlert`, `TbScrollSpy`
-  and `TbPopoverColumn`.
+- **(enh)** widgets now construct Bootstrap components through the ES6 class API rather than the
+  jQuery plugin bridge: `TbModal`, `TbCarousel`, `TbCollapse`, `TbTabs`, `TbAlert`, `TbScrollSpy`
+  and `TbPopoverColumn`. The bridge still exists when jQuery is loaded, but it only appears at
+  `DOMContentLoaded` and offers no way to dispose an instance, which the AJAX grid path needs.
 - **(fix)** `TbModal::$autoOpen` works again. Bootstrap 3's `$el.modal(options)` opened the modal
   unless `show: false` was passed, which is how `autoOpen` was implemented. Bootstrap 5 removed the
   `show` option entirely - constructing never opens - so `autoOpen` now drives an explicit `show()`.
@@ -71,10 +76,10 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   start-up, so an attribute written afterwards has no effect.
 - **(fix)** `TbPopoverColumn` no longer stacks up a duplicate delegated click handler on every AJAX
   update.
-- **(enh)** `assets/picker/bootstrap.picker.js` is reimplemented over `bootstrap.Popover`. It used
-  to build itself from `$.fn.tooltip.Constructor.prototype`; with Bootstrap 5 that is either
-  undefined or - once the no-conflict shim was removed - jQuery UI's tooltip, so it was inheriting
-  from the wrong object silently. Its `$.fn.picker` API is unchanged.
+- **(enh)** `assets/picker/bootstrap.picker.js` is reimplemented over `bootstrap.Popover`. It built
+  its prototype from `$.fn.tooltip.Constructor` at script-execution time, which is before Bootstrap
+  5 installs its jQuery plugins - so it was inheriting from jQuery UI's tooltip, silently. Its
+  `$.fn.picker` API is unchanged.
 - **(enh)** widget `$events` handlers stay on jQuery. Bootstrap 5's `EventHandler` still triggers a
   jQuery event alongside the native one when jQuery is present, so `'shown.bs.modal'` handlers keep
   working.
@@ -149,7 +154,23 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   uses a Bootstrap Icon.
 - **(enh)** `btn-group-justified` became a flex utility.
 
+- **(enh)** bootbox upgraded 4.2.0 -> 6.0.4, which targets Bootstrap 4/5. This one mattered by
+  default: `enableBootboxJS` is on, so every page was loading a build that drove Bootstrap 3 modal
+  internals.
+- **(enh)** `TbSwitch` renders Bootstrap 5's native switch (`form-check form-switch`) and the
+  bootstrap-switch plugin is gone. `$options` is accepted but ignored - a Bootstrap 5 switch is
+  styled entirely in CSS - and `$events` are now plain DOM events rather than the plugin's
+  `.bootstrapSwitch`-namespaced ones. New `$label` and `$wrapperHtmlOptions`.
+
 ### Removed
+- **(enh)** removed `TbChosen` (Chosen archived upstream; use `TbSelect2`), `TbPassfield`
+  (Pass*Field archived, and only its minified build was ever vendored), `TbFileUpload` (broken for
+  years - it registered four asset files that are not in the repository), `TbImageGallery` (the
+  bundled blueimp gallery reads `$.fn.modal.Constructor.prototype` at load time and throws under
+  Bootstrap 5, taking the rest of the page's JavaScript with it) and `TbModalManager` (Bootstrap 5
+  stacks modals natively). All keep throwing stubs.
+- **(enh)** `TbActiveForm::chosenGroup()` and `passFieldGroup()` are gone with their widgets, as is
+  the `pass` alias in `TbFormInputElement`.
 - **(enh)** `TbButton::$toggle` and `TbButtonGroup::$toggle` now throw. Bootstrap 5 removed the
   button plugin's toggle and checkbox/radio behaviour outright - there is no attribute to rename
   them to, and emitting the old one would look migrated while doing nothing. Use inputs with the

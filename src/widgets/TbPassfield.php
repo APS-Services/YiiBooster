@@ -1,97 +1,29 @@
 <?php
 /**
- *## TbPassfield widget class
- *
- * @author: Hrumpa
- * @copyright
+ * YiiBooster project.
  * @license [New BSD License](http://www.opensource.org/licenses/bsd-license.php)
  */
 
 /**
- * Bootstrap Pass*Field widget
- * @see http://antelle.github.io/passfield/
+ *## TbPassfield - REMOVED in YiiBooster 5.0.
  *
+ * Pass*Field was archived upstream, and only its minified build was ever vendored here - so it
+ * could not even be patched.
+ *
+ * This stub exists only so that applications upgrading from 4.x get a message naming the
+ * replacement, at the line that used the widget, instead of Yii's opaque
+ * "include(TbPassfield.php): failed to open stream: No such file or directory" fatal.
+ * It will be deleted in 5.1.
+ *
+ * @deprecated 5.0.0
  * @package booster.widgets.forms.inputs
  */
-class TbPassfield extends CInputWidget
-{
-	/**
-	 * @var TbActiveForm when created via TbActiveForm.
-	 * This attribute is set to the form that renders the widget
-	 * @see TbActionForm->inputRow
-	 */
-	public $form;
+class TbPassfield extends CInputWidget {
 
-	/**
-	 * @var array the options for the Bootstrap JavaScript plugin.
-	 */
-	public $options = array();
+	public function init() {
 
-	/**
-	 * @var string[] the JavaScript event handlers.
-	 */
-	public $events = array();
-
-	/**
-	 *### .init()
-	 *
-	 * Initializes the widget.
-	 */
-	public function init()
-	{
-		$this->htmlOptions['type'] = 'text';
-		$this->htmlOptions['autocomplete'] = 'off';
-
-		if (!isset($this->options['language'])) {
-			$this->options['locale'] = substr(Yii::app()->getLanguage(), 0, 2);
-		} else {
-			$this->options['locale'] = $this->options['language'];
-		}
-
+		throw new CException('TbPassfield was removed in YiiBooster 5.0: the Pass*Field plugin is archived upstream and '
+			. 'only its minified build was vendored. Use a password input with your own strength '
+			. 'meter (zxcvbn or similar). See UPGRADE-5.0.md.');
 	}
-
-	/**
-	 *### .run()
-	 *
-	 * Runs the widget.
-	 */
-	public function run()
-	{
-		list($name, $id) = $this->resolveNameID();
-
-		if ($this->hasModel()) {
-			if ($this->form) {
-				echo $this->form->passwordField($this->model, $this->attribute, $this->htmlOptions);
-			} else {
-				echo CHtml::activePasswordField($this->model, $this->attribute, $this->htmlOptions);
-			}
-
-		} else {
-			echo CHtml::passwordField($name, $this->value, $this->htmlOptions);
-		}
-
-		$this->registerClientScript();
-		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
-
-		ob_start();
-		echo "jQuery('#{$id}').passField({$options})";
-		foreach ($this->events as $event => $handler) {
-			echo ".on('{$event}', " . CJavaScript::encode($handler) . ")";
-		}
-
-		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean() . ';');
-
-	}
-
-	/**
-	 *### .registerClientScript()
-	 *
-	 * Registers required client script for bootstrap datepicker. It is not used through bootstrap->registerPlugin
-	 * in order to attach events if any
-	 */
-	public function registerClientScript()
-	{
-        Booster::getBooster()->registerPackage('passfield');
-	}
-
 }

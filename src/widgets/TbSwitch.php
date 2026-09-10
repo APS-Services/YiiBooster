@@ -36,11 +36,25 @@ class TbSwitch extends CInputWidget {
 	public $events = array();
 
 	/**
-	 * js widget options
-	 * @see <http://www.bootstrap-switch.org/> options part
-	 * @var array to contain the widget js options
+	 * @var array retained for backwards compatibility; ignored.
+	 *
+	 * @deprecated 5.0.0 the bootstrap-switch plugin is gone, so its options no longer apply.
+	 * Bootstrap 5 renders a switch from CSS alone. Size and colour are utility classes on the
+	 * wrapper or the input; see $wrapperHtmlOptions.
 	 */
 	public $options = array();
+
+	/**
+	 * @var array HTML attributes for the form-check wrapper around the input and label.
+	 * @since 5.0.0
+	 */
+	public $wrapperHtmlOptions = array();
+
+	/**
+	 * @var string optional label rendered next to the switch.
+	 * @since 5.0.0
+	 */
+	public $label;
 
 	/**
 	 * Widget's run function
@@ -48,6 +62,20 @@ class TbSwitch extends CInputWidget {
 	public function run() {
 
 		list($name, $id) = $this->resolveNameID();
+
+		// Bootstrap 5 renders a switch entirely in CSS: a checkbox with form-check-input inside a
+		// form-check.form-switch wrapper. The bootstrap-switch plugin this used to drive was
+		// archived without ever supporting Bootstrap 4, let alone 5.
+		self::addCssClass($this->htmlOptions, 'form-check-input');
+		if (!isset($this->htmlOptions['role'])) {
+			$this->htmlOptions['role'] = 'switch';
+		}
+
+		$wrapperHtmlOptions = $this->wrapperHtmlOptions;
+		self::addCssClass($wrapperHtmlOptions, 'form-check');
+		self::addCssClass($wrapperHtmlOptions, 'form-switch');
+
+		echo CHtml::openTag('div', $wrapperHtmlOptions);
 
 		if ($this->hasModel()) {
 			if ($this->form) {
@@ -59,7 +87,26 @@ class TbSwitch extends CInputWidget {
 			echo CHtml::checkBox($name, $this->value, $this->htmlOptions);
 		}
 
+		if ($this->label !== null && $this->label !== '') {
+			echo CHtml::label($this->label, $id, array('class' => 'form-check-label'));
+		}
+
+		echo CHtml::closeTag('div');
+
 		$this->registerClientScript($id);
+	}
+
+	/**
+	 * @param array $htmlOptions
+	 * @param string $class
+	 */
+	protected static function addCssClass(&$htmlOptions, $class) {
+
+		if (isset($htmlOptions['class']) && $htmlOptions['class'] !== '') {
+			$htmlOptions['class'] .= ' ' . $class;
+		} else {
+			$htmlOptions['class'] = $class;
+		}
 	}
 
 	/**
@@ -69,14 +116,16 @@ class TbSwitch extends CInputWidget {
 	 */
 	protected function registerClientScript($id) {
 
-        $booster = Booster::getBooster();
-        $booster->registerPackage('switch');
-		$config = CJavaScript::encode($this->options);
+		if (empty($this->events)) {
+			return;
+		}
 
 		ob_start();
-		echo "$('input#$id').bootstrapSwitch({$config})";
+		echo "jQuery('input#$id')";
 		foreach ($this->events as $event => $handler) {
-			$event = $event.'.bootstrapSwitch';
+			// Plain DOM events now. The plugin namespaced everything as `.bootstrapSwitch`, and
+			// its custom `switchChange` event no longer exists - a Bootstrap 5 switch is an
+			// ordinary checkbox, so listen for `change`.
 			if (!$handler instanceof CJavaScriptExpression && strpos($handler, 'js:') === 0)
 				$handler = new CJavaScriptExpression($handler);
 			echo ".on('{$event}', " . $handler . ")";

@@ -323,7 +323,6 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 			array('typeAheadGroup', 'booster.widgets.TbTypeahead'),
 			array('maskedTextFieldGroup', 'CMaskedTextField'),
 			array('colorPickerGroup', 'booster.widgets.TbColorPicker'),
-			array('passFieldGroup', 'booster.widgets.TbPassfield'),
 		);
 	}
 

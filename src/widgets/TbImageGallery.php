@@ -1,76 +1,31 @@
 <?php
 /**
- *## TbImageGallery class file.
- *
- * @author Ruslan Fadeev <fadeevr@gmail.com>
+ * YiiBooster project.
+ * @license [New BSD License](http://www.opensource.org/licenses/bsd-license.php)
  */
 
 /**
- *## TbImageGallery widget
+ *## TbImageGallery - REMOVED in YiiBooster 5.0.
  *
- * Implementation of Bootstrap Image Gallery
- * @link https://github.com/blueimp/Bootstrap-Image-Gallery/
+ * The bundled blueimp Bootstrap Image Gallery reads $.fn.modal.Constructor.prototype and
+ * $.fn.modal.defaults at script-execution time. Under Bootstrap 5 neither exists at that point
+ * - the jQuery bridge is only installed on DOMContentLoaded, and `defaults` was renamed - so the
+ * plugin throws on load and takes the rest of the page's JavaScript with it.
  *
+ * This stub exists only so that applications upgrading from 4.x get a message naming the
+ * replacement, at the line that used the widget, instead of Yii's opaque
+ * "include(TbImageGallery.php): failed to open stream: No such file or directory" fatal.
+ * It will be deleted in 5.1.
+ *
+ * @deprecated 5.0.0
  * @package booster.widgets.grouping
  */
-class TbImageGallery extends CWidget
-{
-	/**
-	 * @var string name of the view to display images (modal dialog used for the image gallery)
-	 */
-	public $previewImagesView = 'booster.views.gallery.preview';
+class TbImageGallery extends CWidget {
 
-	/**
-	 * @var bool enable full screen
-	 */
-	public $fullScreen = true;
+	public function init() {
 
-	/**
-	 * @var bool enable/disable Modal Gallery event listener
-	 * @see https://github.com/blueimp/Bootstrap-Image-Gallery/blob/master/README.md#deinitialize-the-click-event-listener
-	 */
-	public $eventListener = true;
-
-	/**
-	 * @var array htmlOptions for gallery div
-	 * @see https://github.com/blueimp/Bootstrap-Image-Gallery/blob/master/README.md#api
-	 */
-	public $htmlOptions = array();
-
-	public static $defaultHtmlOptions = array(
-		// Deliberately not data-bs-*: these belong to the bundled blueimp gallery plugin, not to
-		// Bootstrap's data API. That plugin monkey-patches Bootstrap 3's modal prototype and does
-		// not survive Bootstrap 5; it is scheduled for replacement, at which point these go away.
-		'data-toggle' => 'modal-gallery',
-		'data-target' => '#modal-gallery',
-		'data-filter' => '*',
-	);
-
-	public function init()
-	{
-        $booster = Booster::getBooster();
-        $booster->registerAssetCss('bootstrap-image-gallery' . (!YII_DEBUG ? '.min' : '') . '.css');
-        $booster->registerAssetJs('fileupload/load-image.min.js');
-        $booster->registerAssetJs('bootstrap-image-gallery' . (!YII_DEBUG ? '.min' : '') . '.js');
-		if ($this->fullScreen) {
-			Yii::app()->clientScript->registerScript(
-				$this->id,
-				'jQuery("#' . $this->id . '").addClass("modal-fullscreen");',
-				CClientScript::POS_READY
-			);
-		}
-		if (!$this->eventListener) {
-			Yii::app()->clientScript->registerScript($this->id, '$(document.body).off(".modal-gallery.data-api");');
-		}
-		if (!isset($this->htmlOptions['id'])) {
-			$this->htmlOptions['id'] = $this->id;
-		}
-		echo CHtml::openTag('div', CMap::mergeArray(self::$defaultHtmlOptions, $this->htmlOptions));
-	}
-
-	public function run()
-	{
-		$this->render($this->previewImagesView);
-		echo CHtml::closeTag('div');
+		throw new CException('TbImageGallery was removed in YiiBooster 5.0: the bundled blueimp gallery plugin patches '
+			. 'Bootstrap 3 modal internals that no longer exist. Use a framework-neutral lightbox '
+			. '(blueimp Gallery, GLightbox, PhotoSwipe). See UPGRADE-5.0.md.');
 	}
 }

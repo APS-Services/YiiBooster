@@ -28,8 +28,6 @@ return array(
 	'control-label'          => array(
 	),
 	'data-api-attribute'     => array(
-		'src/views/fileupload/form.php',
-		'src/widgets/TbImageGallery.php',
 	),
 	'float-utility'          => array(
 	),

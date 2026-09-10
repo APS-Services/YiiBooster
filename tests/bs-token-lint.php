@@ -43,9 +43,9 @@ class BsTokenLint
 			'navbar-removed'       => '/navbar-(default|inverse|header|toggle\b|fixed-)/',
 			'progress-context'     => '/progress-(striped|success|info|warning|danger)/',
 			'form-inline'          => '/form-inline/',
-			// Bootstrap 5 registers no jQuery plugins. Any of these left in emitted JS is a call
-			// into something that no longer exists - or, worse, into jQuery UI's same-named
-			// widget, which fails silently rather than erroring.
+			// Bootstrap 5 still bridges these onto jQuery when it is present, but only from
+			// DOMContentLoaded onwards, and the bridge gives no way to dispose an instance.
+			// Widgets construct components explicitly instead; these calls should not come back.
 			'bs3-jquery-plugin'    => '/\)\s*\.\s*(modal|carousel|collapse|tab|alert|popover|tooltip|scrollspy)\s*\(/',
 			// Anchored to a class attribute on purpose: a bare `hide` also matches the colorpicker's
 			// JS event name, `.popover('hide')`, and the words "show/hide" in docblocks.
