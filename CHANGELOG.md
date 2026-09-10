@@ -116,6 +116,21 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   every item, which took the entire menu out of the keyboard tab order; it now applies only to
   genuinely disabled items.
 
+- **(enh)** `TbActiveForm` rebuilt for Bootstrap 5: `form-group` becomes a margin utility
+  (`$groupCssClass`, default `mb-3`), horizontal groups render as a grid `row`, labels use
+  `col-form-label` (horizontal) or `form-label` (vertical), hints use `form-text`, add-ons use
+  `input-group-text`, selects use `form-select`, and checkboxes/radios use `form-check` with
+  `form-check-input`/`form-check-label`. `form-inline` and `form-horizontal` no longer exist as
+  classes; inline forms use flex utilities and horizontal layout is per-group.
+- **(enh)** the hardcoded `col-sm-3`/`col-sm-9` horizontal grid is now configurable via
+  `$labelCssClass` and `$controlCssClass`.
+- **(fix)** validation state reaches the control. Bootstrap 5 styles `is-invalid` on the input,
+  while Yii's client validation toggles a class on the *container* - the Bootstrap 3 `has-error`
+  model. Yii keeps flagging the container (with a neutral marker class), and an
+  `afterValidateAttribute` hook mirrors the state onto the input. Server-rendered errors are
+  covered separately: every control group adds `is-invalid` when the model already has an error,
+  which is the common path in a classic Yii POST-and-re-render cycle.
+
 ### Removed
 - **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
   callers inside the library; it existed only for `yii-auth` compatibility (#443).

@@ -34,7 +34,6 @@ return array(
 	'control-group'          => array(
 	),
 	'control-label'          => array(
-		'src/widgets/TbActiveForm.php',
 	),
 	'data-api-attribute'     => array(
 		'src/views/fileupload/form.php',
@@ -55,7 +54,6 @@ return array(
 	),
 	'help-block'             => array(
 		'src/gii/bootstrap/templates/default/_form.php',
-		'src/widgets/TbActiveForm.php',
 	),
 	'hero-unit'              => array(
 	),
@@ -66,7 +64,6 @@ return array(
 	'img-utility'            => array(
 	),
 	'input-group-addon'      => array(
-		'src/widgets/TbActiveForm.php',
 		'src/widgets/TbTimePicker.php',
 	),
 	'jumbotron'              => array(
@@ -87,6 +84,5 @@ return array(
 		'src/views/fileupload/upload.php',
 	),
 	'validation-state'       => array(
-		'src/widgets/TbActiveForm.php',
 	),
 );

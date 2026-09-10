@@ -142,6 +142,39 @@
 	};
 
 	/**
+	 * Mirrors Yii's validation result onto the control, for Bootstrap 5.
+	 *
+	 * Yii's jquery.yiiactiveform.js toggles its errorCssClass on the *container* element, which is
+	 * how Bootstrap 3's `has-error` worked. Bootstrap 5 dropped that entirely: the invalid state
+	 * lives on the control as `.is-invalid`, and `.invalid-feedback` is only revealed next to one.
+	 * So rather than fight Yii's contract, we let it keep flagging the container and translate
+	 * that into the class Bootstrap actually reads.
+	 *
+	 * Only the invalid state is applied. Marking every field green the moment it validates is
+	 * noisier than most forms want, and `is-valid` can always be added by an application's own
+	 * afterValidateAttribute.
+	 *
+	 * @param {Object} attribute Yii's attribute descriptor; carries inputID.
+	 * @param {boolean} hasError
+	 */
+	Booster.markValidationState = function (attribute, hasError) {
+		if (!attribute || !attribute.inputID) {
+			return;
+		}
+
+		var el = document.getElementById(attribute.inputID);
+		if (!el) {
+			return;
+		}
+
+		if (hasError) {
+			el.classList.add('is-invalid');
+		} else {
+			el.classList.remove('is-invalid');
+		}
+	};
+
+	/**
 	 * Creates - or returns the existing - Bootstrap component instance for an element id.
 	 *
 	 * Replaces the Bootstrap 3 jQuery plugin calls (`jQuery('#id').modal(opts)` and friends),
