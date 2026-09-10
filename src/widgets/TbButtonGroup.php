@@ -118,6 +118,9 @@ class TbButtonGroup extends CWidget {
 		$validToggles = array(self::TOGGLE_CHECKBOX, self::TOGGLE_RADIO);
 
 		if (isset($this->toggle) && in_array($this->toggle, $validToggles)) {
+			// NOT renamed to data-bs-toggle: Bootstrap 5 removed the button plugin's
+			// checkbox/radio behaviour outright, so this needs btn-check inputs rather than
+			// an attribute rename. @todo handle in the TbButtonGroup rewrite.
 			$this->htmlOptions['data-toggle'] = 'buttons';
 		}
 	}

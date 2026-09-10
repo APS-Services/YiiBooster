@@ -197,7 +197,7 @@ class Booster extends CApplicationComponent {
 	 * Now the popovers are always being bound to specific elements.
 	 * According to the documentation: http://twitter.github.io/bootstrap/javascript.html#popovers
 	 */
-	public $popoverSelector = '[data-toggle=popover]';
+	public $popoverSelector = '[data-bs-toggle=popover]';
 
 	/**
 	 * @var string default tooltip CSS selector.
@@ -210,7 +210,7 @@ class Booster extends CApplicationComponent {
 	 * previously it was the direct selector to which to apply the `tooltip` plugin,
 	 * now it is the value for `selector` plugin option.
 	 */
-	public $tooltipSelector = '[data-toggle=tooltip]';
+	public $tooltipSelector = '[data-bs-toggle=tooltip]';
 
 	/**
 	 * @var array list of script packages (name=>package spec).
@@ -591,11 +591,11 @@ class Booster extends CApplicationComponent {
 	}
 	
 	public function registerPopoverJs() {
-		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-toggle=popover]').popover();");
+		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-bs-toggle=popover]').popover();");
 	}
 	
 	public function registerTooltipJs() {
-		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-toggle=tooltip]').tooltip();");
+		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-bs-toggle=tooltip]').tooltip();");
 	}
 
 	/**

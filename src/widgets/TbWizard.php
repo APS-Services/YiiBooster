@@ -206,7 +206,7 @@ class TbWizard extends CWidget
 				$item['itemOptions'] = array();
 			}
 
-			$item['linkOptions']['data-toggle'] = 'tab';
+			$item['linkOptions']['data-bs-toggle'] = 'tab';
 
 			if (isset($tab['items'])) {
 				$item['items'] = $this->normalizeTabs($item['items'], $panes, $i);

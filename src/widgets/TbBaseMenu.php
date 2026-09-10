@@ -166,7 +166,7 @@ abstract class TbBaseMenu extends CMenu {
 				$item['linkOptions']['class'] = 'dropdown-toggle';
 			}
 
-			$item['linkOptions']['data-toggle'] = 'dropdown';
+			$item['linkOptions']['data-bs-toggle'] = 'dropdown';
 			$item['label'] .= ' <span class="caret"></span>';
 		}
 

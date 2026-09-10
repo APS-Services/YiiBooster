@@ -104,8 +104,8 @@ class TbCarousel extends CWidget {
 		echo '</div>';
 
 		if ($this->displayPrevAndNext) {
-			echo '<a class="carousel-control left" href="#' . $id . '" data-slide="prev">' . $this->prevLabel . '</a>';
-			echo '<a class="carousel-control right" href="#' . $id . '" data-slide="next">' . $this->nextLabel . '</a>';
+			echo '<a class="carousel-control left" href="#' . $id . '" data-bs-slide="prev">' . $this->prevLabel . '</a>';
+			echo '<a class="carousel-control right" href="#' . $id . '" data-bs-slide="next">' . $this->nextLabel . '</a>';
 		}
 
 		echo '</div>';
@@ -129,7 +129,7 @@ class TbCarousel extends CWidget {
 		echo '<ol class="carousel-indicators">';
 		$count = count($this->items);
 		for ($i = 0; $i < $count; $i++) {
-			echo '<li data-target="#'.$this->id.'" data-slide-to="'.$i.'" class="'.($i===0?'active':'').'"></li>';
+			echo '<li data-bs-target="#'.$this->id.'" data-bs-slide-to="'.$i.'" class="'.($i===0?'active':'').'"></li>';
 		}
 		echo '</ol>';
 	}

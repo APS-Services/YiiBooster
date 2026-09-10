@@ -139,8 +139,8 @@ class TbNavbar extends CWidget {
 			if (!isset($this->toggleButtonWidgetOptions['htmlOptions'])) {
 				$this->toggleButtonWidgetOptions['htmlOptions'] = array(
 					'class' => 'navbar-toggle',
-					'data-toggle' => 'collapse',
-					'data-target' => '#'.self::CONTAINER_PREFIX.$this->id,
+					'data-bs-toggle' => 'collapse',
+					'data-bs-target' => '#'.self::CONTAINER_PREFIX.$this->id,
 				);
 			}
 		}

@@ -38,6 +38,9 @@ class TbImageGallery extends CWidget
 	public $htmlOptions = array();
 
 	public static $defaultHtmlOptions = array(
+		// Deliberately not data-bs-*: these belong to the bundled blueimp gallery plugin, not to
+		// Bootstrap's data API. That plugin monkey-patches Bootstrap 3's modal prototype and does
+		// not survive Bootstrap 5; it is scheduled for replacement, at which point these go away.
 		'data-toggle' => 'modal-gallery',
 		'data-target' => '#modal-gallery',
 		'data-filter' => '*',

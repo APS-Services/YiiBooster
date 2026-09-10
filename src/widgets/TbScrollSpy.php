@@ -44,14 +44,14 @@ class TbScrollSpy extends CWidget
 	 */
 	public function run()
 	{
-		$script = "jQuery('{$this->selector}').attr('data-spy', 'scroll');";
+		$script = "jQuery('{$this->selector}').attr('data-bs-spy', 'scroll');";
 
 		if (isset($this->target)) {
-			$script .= "jQuery('{$this->selector}').attr('data-target', '{$this->target}');";
+			$script .= "jQuery('{$this->selector}').attr('data-bs-target', '{$this->target}');";
 		}
 
 		if (isset($this->offset)) {
-			$script .= "jQuery('{$this->selector}').attr('data-offset', '{$this->offset}');";
+			$script .= "jQuery('{$this->selector}').attr('data-bs-offset', '{$this->offset}');";
 		}
 
 		/** @var CClientScript $cs */

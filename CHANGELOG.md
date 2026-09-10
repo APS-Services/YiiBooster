@@ -27,6 +27,21 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   **Note:** jQuery UI now owns `$.fn.tooltip` and `$.fn.button`, so application code calling
   `$el.tooltip()` silently gets jQuery UI's widget. Use `new bootstrap.Tooltip(el)`.
 
+- **(enh)** icons are now rendered by a single `TbIcon` helper instead of eight hand-rolled blocks
+  in two inconsistent flavours. Bootstrap Icons 1.11.3 is bundled and used by default; set
+  `Booster::$iconPrefix` to `fa` for Font Awesome. Legacy names (`trash`, `glyphicon-trash`,
+  `glyphicon glyphicon-trash`, `icon-trash`) are translated automatically, and Font Awesome classes
+  pass through untouched. Unmapped legacy names are logged under `YII_DEBUG`.
+- **(fix)** icon names containing `fa` or `icon` (e.g. `forward`, `fan`) were silently left
+  unprefixed by the old `strpos($icon, 'fa') === false` heuristic, and `TbButtonColumn` produced a
+  run-together class from `implode('glyphicon-', ...)` with no separating space.
+- **(enh)** contextual state names gained `secondary`, `light` and `dark`. `default` remains a valid
+  name but now renders as `secondary`, since Bootstrap 5 has no `default` variant.
+- **(enh)** Bootstrap's data API attributes are now emitted as `data-bs-*` (27 sites). Three sites
+  are deliberately unchanged because they are removals rather than renames: `data-toggle="button"`
+  in `TbButton`, `data-toggle="buttons"` in `TbButtonGroup` (Bootstrap 5 deleted the button plugin's
+  toggle behaviour) and the blueimp gallery's own `modal-gallery` attributes.
+
 ### Removed
 - **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
   callers inside the library; it existed only for `yii-auth` compatibility (#443).

@@ -10,19 +10,36 @@
  */
 abstract class TbWidget extends CWidget {
 
+	/**
+	 * Contextual state names accepted in $context.
+	 *
+	 * Each has a matching CTX_*_CLASS constant giving the CSS suffix it renders as. The
+	 * indirection is what lets a name outlive a Bootstrap rename: `default` is still an accepted
+	 * context, but Bootstrap 5 has no `-default` variant, so it now renders as `secondary`.
+	 */
 	const CTX_DEFAULT = 'default';
 	const CTX_PRIMARY = 'primary';
+	const CTX_SECONDARY = 'secondary';
 	const CTX_SUCCESS = 'success';
 	const CTX_INFO = 'info';
 	const CTX_WARNING = 'warning';
 	const CTX_DANGER = 'danger';
-	
-	const CTX_DEFAULT_CLASS = 'default';
+	const CTX_LIGHT = 'light';
+	const CTX_DARK = 'dark';
+
+	/**
+	 * @deprecated 5.0.0 Bootstrap 5 removed the `default` contextual variant that buttons and
+	 * panels used. The name still works and now renders as `secondary`; prefer CTX_SECONDARY.
+	 */
+	const CTX_DEFAULT_CLASS = 'secondary';
 	const CTX_PRIMARY_CLASS = 'primary';
+	const CTX_SECONDARY_CLASS = 'secondary';
 	const CTX_SUCCESS_CLASS = 'success';
 	const CTX_INFO_CLASS = 'info';
 	const CTX_WARNING_CLASS = 'warning';
 	const CTX_DANGER_CLASS = 'danger';
+	const CTX_LIGHT_CLASS = 'light';
+	const CTX_DARK_CLASS = 'dark';
 	
 	/**
 	 * easily make a widget more meaningful to a particular context by adding any of the contextual state classes

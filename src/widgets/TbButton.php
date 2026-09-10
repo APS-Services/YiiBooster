@@ -228,7 +228,7 @@ class TbButton extends TbWidget {
 
 			$classes[] = 'dropdown-toggle';
 			$this->label .= ' <span class="caret"></span>';
-			$this->htmlOptions['data-toggle'] = 'dropdown';
+			$this->htmlOptions['data-bs-toggle'] = 'dropdown';
 		}
 
 		if (!empty($classes)) {
@@ -252,6 +252,9 @@ class TbButton extends TbWidget {
 		}
 
 		if (isset($this->toggle)) {
+			// NOT renamed to data-bs-toggle: Bootstrap 5 removed the button plugin's toggle
+			// behaviour outright. This needs replacing with a btn-check input, not a rename.
+			// @todo remove in the TbButton rewrite; see UPGRADE-5.0.md.
 			$this->htmlOptions['data-toggle'] = 'button';
 		}
 
@@ -268,7 +271,7 @@ class TbButton extends TbWidget {
                 $this->tooltipOptions = array();
             }
 
-            $this->htmlOptions['data-toggle'] = 'tooltip';
+            $this->htmlOptions['data-bs-toggle'] = 'tooltip';
             foreach ($this->tooltipOptions as $key => $value) {
                 $this->htmlOptions['data-' . $key] = $value;
             }
