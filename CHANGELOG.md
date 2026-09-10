@@ -11,7 +11,8 @@ Antonio Ramirez.
 ## YiiBooster 5.0.0 (unreleased) - Bootstrap 5 migration
 
 This is a breaking release. Widgets emit Bootstrap 5 markup; there are no Bootstrap 3 compatibility
-shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the migration guide.
+shims and no configuration switch between the two. See **`UPGRADE-5.0.md`** for the migration
+guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) separately.
 
 ### Changed (breaking)
 - **(enh)** upgrade Bootstrap 3.3.2 to 5.3.3. Assets pruned to the files actually served
@@ -161,6 +162,13 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   bootstrap-switch plugin is gone. `$options` is accepted but ignored - a Bootstrap 5 switch is
   styled entirely in CSS - and `$events` are now plain DOM events rather than the plugin's
   `.bootstrapSwitch`-namespaced ones. New `$label` and `$wrapperHtmlOptions`.
+
+- **(enh)** added `UPGRADE-5.0.md`, with a separate section for applications coming from YiiBooster
+  3.x - those cross two Bootstrap majors and hit the 3.x->4.x renames (`xxxRow()` -> `xxxGroup()`,
+  `TbBox` -> `TbPanel`, `TbToggleButton` -> `TbSwitch`, `type` -> `context`, `Bootstrap` ->
+  `Booster`) before anything Bootstrap 5 specific.
+- **(enh)** `TbBox`, `TbToggleButton` and `TbPickerColumn` - renamed back in 4.0 and never given a
+  migration path - now have throwing stubs naming their replacements.
 
 ### Removed
 - **(enh)** removed `TbChosen` (Chosen archived upstream; use `TbSelect2`), `TbPassfield`
