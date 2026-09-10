@@ -24,6 +24,14 @@ class TbNavbar extends CWidget {
 	const TYPE_INVERSE = 'inverse';
 
 	// Navbar fix locations.
+	/**
+	 * @var string breakpoint at which the navbar expands from its collapsed state.
+	 * One of 'sm', 'md', 'lg', 'xl', 'xxl'. Bootstrap 4 made this mandatory - a navbar with no
+	 * navbar-expand-* class never expands.
+	 * @since 5.0.0
+	 */
+	public $expand = 'lg';
+
 	const FIXED_TOP = 'top';
 	const FIXED_BOTTOM = 'bottom';
 
@@ -110,14 +118,24 @@ class TbNavbar extends CWidget {
 
 		$classes = array('navbar');
 
-		if (isset($this->type) && in_array($this->type, array(self::TYPE_DEFAULT, self::TYPE_INVERSE))) {
-			$classes[] = 'navbar-' . $this->type;
+		// Required in Bootstrap 4+: without navbar-expand-* the collapse never expands and the
+		// navbar stays permanently stacked.
+		$classes[] = 'navbar-expand-' . $this->expand;
+
+		// navbar-default and navbar-inverse are gone. Bootstrap 5.3 expresses the light/dark
+		// distinction with a background utility plus a colour mode, rather than a navbar variant.
+		if ($this->type === self::TYPE_INVERSE) {
+			$classes[] = 'bg-dark';
+			if (!isset($this->htmlOptions['data-bs-theme'])) {
+				$this->htmlOptions['data-bs-theme'] = 'dark';
+			}
 		} else {
-			$classes[] = 'navbar-' . self::TYPE_DEFAULT;
+			$classes[] = 'bg-body-tertiary';
 		}
 
+		// navbar-fixed-* became the general-purpose fixed-* utility.
 		if ($this->fixed !== false && in_array($this->fixed, array(self::FIXED_TOP, self::FIXED_BOTTOM))) {
-			$classes[] = 'navbar-fixed-' . $this->fixed;
+			$classes[] = 'fixed-' . $this->fixed;
 		}
 
 		if (!empty($classes)) {
@@ -130,19 +148,25 @@ class TbNavbar extends CWidget {
 		}
 		
 		if ($this->collapse) {
+			// The three icon-bar spans became a single element whose glyph comes from CSS.
 			if (!isset($this->toggleButtonWidgetOptions['label'])) {
-				$this->toggleButtonWidgetOptions['label'] = '<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>';
-			}
-			if (!isset($this->toggleButtonWidgetOptions['encodeLabel'])) {
-				$this->toggleButtonWidgetOptions['encodeLabel'] = false;
+				$this->toggleButtonWidgetOptions['label'] = '<span class="navbar-toggler-icon"></span>';
 			}
 			if (!isset($this->toggleButtonWidgetOptions['htmlOptions'])) {
-				$this->toggleButtonWidgetOptions['htmlOptions'] = array(
-					'class' => 'navbar-toggle',
-					'data-bs-toggle' => 'collapse',
-					'data-bs-target' => '#'.self::CONTAINER_PREFIX.$this->id,
-				);
+				$this->toggleButtonWidgetOptions['htmlOptions'] = array();
 			}
+
+			$target = '#' . self::CONTAINER_PREFIX . $this->id;
+			$defaults = array(
+				'class' => 'navbar-toggler',
+				'type' => 'button',
+				'data-bs-toggle' => 'collapse',
+				'data-bs-target' => $target,
+				'aria-controls' => self::CONTAINER_PREFIX . $this->id,
+				'aria-expanded' => 'false',
+				'aria-label' => Yii::t('zii', 'Toggle navigation'),
+			);
+			$this->toggleButtonWidgetOptions['htmlOptions'] += $defaults;
 		}
 	}
 
@@ -155,12 +179,9 @@ class TbNavbar extends CWidget {
 		
 		echo CHtml::openTag('nav', $this->htmlOptions);
 		echo '<div class="' . $this->getContainerCssClass() . '">';
-		
-		echo '<div class="navbar-header">';
-		if($this->collapse) {
-			$this->controller->widget('booster.widgets.TbButton', $this->toggleButtonWidgetOptions);
-		}
-		
+
+		// Bootstrap 4 removed the navbar-header wrapper: brand and toggler are now direct
+		// children of the container, with the brand first.
 		if ($this->brand !== false) {
 			if ($this->brandUrl !== false) {
 				echo CHtml::openTag('a', $this->brandOptions) . $this->brand . '</a>';
@@ -169,8 +190,17 @@ class TbNavbar extends CWidget {
 				echo CHtml::openTag('span', $this->brandOptions) . $this->brand . '</span>';
 			}
 		}
-		echo '</div>';
-		
+
+		if ($this->collapse) {
+			// Rendered directly rather than through TbButton, which would add its own `btn`
+			// class - navbar-toggler brings its own sizing and would fight with it.
+			echo CHtml::tag(
+				'button',
+				$this->toggleButtonWidgetOptions['htmlOptions'],
+				$this->toggleButtonWidgetOptions['label']
+			);
+		}
+
 		echo '<div class="collapse navbar-collapse" id="'.self::CONTAINER_PREFIX.$this->id.'">';
 		foreach ($this->items as $item) {
 			if (is_string($item)) {

@@ -179,7 +179,20 @@ class TbAlert extends TbWidget {
 	 */
 	protected function renderSingleAlert($alert, $context, $alertText) {
 		
-		$classes = array('alert in');
+		// Bootstrap 4 renamed the `in` state class to `show`.
+		$classes = array('alert', 'show');
+
+		// Resolved up here because the dismissible variant needs its own class on the container:
+		// if no type-specific closeText was defined, fall back to the widget-level one.
+		if (!isset($alert['closeText'])) {
+			$alert['closeText'] = (isset($this->closeText) && $this->closeText !== false)
+				? $this->closeText
+				: false;
+		}
+
+		if ($alert['closeText'] !== false) {
+			$classes[] = 'alert-dismissible';
+		}
 
 		if (!isset($alert['fade'])) {
 			$alert['fade'] = $this->fade;
@@ -206,17 +219,25 @@ class TbAlert extends TbWidget {
 
 		echo CHtml::openTag('div', $alert['htmlOptions']);
 
-		// Logic is this: if no type-specific `closeText` was defined, let's show `$this->closeText`.
-		// Else, show type-specific `closeText`. Treat 'false' differently.
-		if (!isset($alert['closeText'])) {
-			$alert['closeText'] = (isset($this->closeText) && $this->closeText !== false)
-				? $this->closeText
-				: false;
-		}
-
-		// If `closeText` which is in effect now is `false` then do not show button.
+		// If the effective `closeText` is false, no dismiss button.
+		//
+		// Bootstrap 5's close control is a <button class="btn-close"> whose glyph comes from CSS,
+		// so it carries no text content. `closeText` therefore no longer supplies the visible
+		// character - it now serves as the accessible label when it is plain text.
 		if ($alert['closeText'] !== false) {
-			echo '<a href="#" class="close" data-bs-dismiss="alert">' . $alert['closeText'] . '</a>';
+			// Only use closeText as the label when it is actual words. The default is a multiply
+			// sign, which was the visible glyph under Bootstrap 3 and would make a poor label.
+			$label = trim(strip_tags(html_entity_decode($alert['closeText'], ENT_QUOTES, 'UTF-8')));
+			if ($label === '' || !preg_match('/\pL/u', $label)) {
+				$label = Yii::t('zii', 'Close');
+			}
+
+			echo CHtml::tag('button', array(
+				'type' => 'button',
+				'class' => 'btn-close',
+				'data-bs-dismiss' => 'alert',
+				'aria-label' => $label,
+			), '');
 		}
 
 		echo $alertText;

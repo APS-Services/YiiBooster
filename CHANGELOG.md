@@ -79,6 +79,32 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   jQuery event alongside the native one when jQuery is present, so `'shown.bs.modal'` handlers keep
   working.
 
+- **(enh)** `TbPanel` renders a card. A contextual panel gets a border utility on the card and a
+  text/background utility on the header, matching Bootstrap 3's coloured-header-plain-body look;
+  `text-bg-*` on the card itself would colour the body too.
+- **(enh)** `TbNavbar` rebuilt for Bootstrap 5: the `navbar-header` wrapper is gone, brand comes
+  before the toggler, `navbar-fixed-*` became `fixed-*`, and `navbar-default`/`navbar-inverse` are
+  replaced by a background utility plus `data-bs-theme`. New `$expand` property (default `lg`)
+  emits the mandatory `navbar-expand-*` - without it a Bootstrap 4+ navbar never expands.
+  The toggler is a real `navbar-toggler` button with a single `navbar-toggler-icon`, rendered
+  directly rather than through `TbButton`, whose `btn` class fights with it.
+- **(enh)** `TbLabel` and `TbBadge` both render `badge text-bg-*`. Bootstrap 4 removed the label
+  component and Bootstrap 5 removed the `badge-*` colour classes.
+- **(enh)** `TbBreadcrumbs` emits `breadcrumb-item`, without which Bootstrap 5 draws no separators,
+  and marks the current crumb `aria-current`.
+- **(fix)** `TbProgress` put `progress-striped` and `active` on the container. Both belong on the
+  bar, so striped and animated progress bars have never actually worked - even under Bootstrap 3.
+  Now emits `progress-bar-striped`/`progress-bar-animated` plus `bg-*` and the progressbar ARIA
+  attributes. Also fixes a copy/paste slip in the stacked branch that appended a separator to
+  `style` instead of `class`, running the caller's class into ours.
+- **(enh)** `TbAlert` uses `<button class="btn-close">` and marks the container `alert-dismissible`;
+  `in` became `show`. Because Bootstrap 5's close control draws its glyph from CSS and carries no
+  text, `closeText` no longer supplies the visible character - it is used as the accessible label
+  when it is actual words, and `false` still means "no button".
+- **(enh)** `TbButton`: `btn-block` became a width utility, `btn-xs` renders at the small size
+  (Bootstrap 4 removed it; `SIZE_EXTRA_SMALL` stays accepted), and the explicit caret span is gone
+  since Bootstrap draws it from `.dropdown-toggle::after`.
+
 ### Removed
 - **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
   callers inside the library; it existed only for `yii-auth` compatibility (#443).

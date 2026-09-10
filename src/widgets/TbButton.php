@@ -44,11 +44,15 @@ class TbButton extends TbWidget {
 	const SIZE_SMALL = 'small';
 	const SIZE_EXTRA_SMALL = 'extra_small';
 	
+	/**
+	 * Bootstrap 4 removed the extra-small button size. SIZE_EXTRA_SMALL stays an accepted value
+	 * so existing configuration keeps working, and now renders at the small size.
+	 */
 	protected static $sizeClasses = array(
 		self::SIZE_LARGE => 'btn-lg',
 		self::SIZE_DEFAULT => '',
 		self::SIZE_SMALL => 'btn-sm',
-		self::SIZE_EXTRA_SMALL => 'btn-xs',
+		self::SIZE_EXTRA_SMALL => 'btn-sm',
 	);
 
 	/**
@@ -186,8 +190,10 @@ class TbButton extends TbWidget {
 			$classes[] = self::$sizeClasses[$this->size];
 		}
 
+		// Bootstrap 5 removed btn-block; a full-width button is now a sizing utility, or a
+		// d-grid wrapper when several are stacked.
 		if ($this->block) {
-			$classes[] = 'btn-block';
+			$classes[] = 'w-100';
 		}
 
 		if ($this->active) {
@@ -226,8 +232,9 @@ class TbButton extends TbWidget {
 				$this->url = '#';
 			}
 
+			// No caret element: Bootstrap 4 onwards draws it from .dropdown-toggle::after, so an
+			// explicit span renders a second, misplaced triangle.
 			$classes[] = 'dropdown-toggle';
-			$this->label .= ' <span class="caret"></span>';
 			$this->htmlOptions['data-bs-toggle'] = 'dropdown';
 		}
 

@@ -47,7 +47,6 @@ return array(
 	),
 	'float-utility'          => array(
 		'src/widgets/TbBulkActions.php',
-		'src/widgets/TbPanel.php',
 	),
 	'form-inline'            => array(
 	),
@@ -87,12 +86,10 @@ return array(
 		'src/widgets/TbNavbar.php',
 	),
 	'panel'                  => array(
-		'src/widgets/TbPanel.php',
 	),
 	'progress-context'       => array(
 		'src/views/fileupload/form.php',
 		'src/views/fileupload/upload.php',
-		'src/widgets/TbProgress.php',
 	),
 	'validation-state'       => array(
 		'src/widgets/TbActiveForm.php',

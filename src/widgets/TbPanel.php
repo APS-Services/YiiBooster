@@ -13,7 +13,7 @@ Yii::import('booster.helpers.TbIcon');
 /**
  * TbPanel widget.
  *
- *@see <http://getbootstrap.com/components/#panels>
+ *@see <https://getbootstrap.com/docs/5.3/components/card/>
  *
  * @package booster.widgets.grouping
  */
@@ -89,22 +89,26 @@ class TbPanel extends TbWidget {
 	 */
 	public function init() {
 		
-		$this->addCssClass($this->htmlOptions, 'panel');
-		
+		// Bootstrap 4 replaced the panel with the card. A contextual panel coloured its heading
+		// and border while leaving the body plain, so the closest Bootstrap 5 equivalent is a
+		// border utility on the card plus a text/background utility on the header - not
+		// text-bg-* on the card itself, which would colour the body too.
+		$this->addCssClass($this->htmlOptions, 'card');
+
 		if($this->isValidContext())
-			self::addCssClass($this->htmlOptions, 'panel-'.$this->getContextClass());
+			self::addCssClass($this->htmlOptions, 'border-'.$this->getContextClass());
 
 		if ($this->padContent)
-			self::addCssClass($this->contentHtmlOptions, 'panel-body');
+			self::addCssClass($this->contentHtmlOptions, 'card-body');
 
 		if (!isset($this->contentHtmlOptions['id'])) {
 			$this->contentHtmlOptions['id'] = $this->getId();
 		}
 
-		if (isset($this->headerHtmlOptions['class'])) {
-			$this->headerHtmlOptions['class'] = 'panel-heading ' . $this->headerHtmlOptions['class'];
-		} else {
-			$this->headerHtmlOptions['class'] = 'panel-heading';
+		self::addCssClass($this->headerHtmlOptions, 'card-header');
+
+		if ($this->isValidContext() && $this->getContextClass() !== self::CTX_SECONDARY_CLASS) {
+			self::addCssClass($this->headerHtmlOptions, 'text-bg-' . $this->getContextClass());
 		}
 
 		echo CHtml::openTag('div', $this->htmlOptions);
@@ -134,7 +138,7 @@ class TbPanel extends TbWidget {
 		if ($this->title !== false) {
 			echo CHtml::openTag('div', $this->headerHtmlOptions);
 			if ($this->title) {
-				$this->title = '<h3 class="panel-title" style="display: inline;">' . $this->title . '</h3>';
+				$this->title = '<h3 class="card-title d-inline">' . $this->title . '</h3>';
 
 				if ($this->headerIcon) {
 					$icon = TbIcon::render($this->headerIcon);
@@ -161,7 +165,7 @@ class TbPanel extends TbWidget {
 		if (empty($this->headerButtons))
 			return;
 
-		echo '<div class="pull-right">';
+		echo '<div class="float-end">';
 
 		if (!empty($this->headerButtons) && is_array($this->headerButtons)) {
 			
@@ -176,7 +180,7 @@ class TbPanel extends TbWidget {
 				if (!isset($options['htmlOptions']))
 					$options['htmlOptions'] = array();
 
-				self::addCssClass($options['htmlOptions'], 'pull-right');
+				self::addCssClass($options['htmlOptions'], 'float-end');
 				
 				$this->controller->widget($class, $options);
 			}
