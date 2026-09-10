@@ -8,6 +8,7 @@
  */
 
 Yii::import('booster.widgets.TbWidget');
+Yii::import('booster.helpers.TbIcon');
 
 /**
  * TbPanel widget.
@@ -136,10 +137,10 @@ class TbPanel extends TbWidget {
 				$this->title = '<h3 class="panel-title" style="display: inline;">' . $this->title . '</h3>';
 
 				if ($this->headerIcon) {
-					if (strpos($this->headerIcon, 'icon') === false && strpos($this->headerIcon, 'fa') === false)
-						$this->title = '<span class="glyphicon glyphicon-' . $this->headerIcon . '"></span> ' . $this->title;
-					else
-						$this->title = '<i class="' . $this->headerIcon . '"></i> ' . $this->title;
+					$icon = TbIcon::render($this->headerIcon);
+					if ($icon !== '') {
+						$this->title = $icon . ' ' . $this->title;
+					}
 				}
 				
 				$this->renderButtons();

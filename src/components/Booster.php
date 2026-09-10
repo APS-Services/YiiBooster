@@ -93,6 +93,29 @@ class Booster extends CApplicationComponent {
 	public $fontAwesomeCss = false;
 
 	/**
+	 * @var boolean Whether to register the Bootstrap Icons CSS. Defaults to true.
+	 *
+	 * Bootstrap 4 dropped Glyphicons and ships no icons of its own, so a widget asked for an
+	 * icon has to get it from somewhere. Bootstrap Icons is the set maintained alongside
+	 * Bootstrap itself. Set to false if the application supplies its own icon font.
+	 *
+	 * @since 5.0.0
+	 */
+	public $bootstrapIconsCss = true;
+
+	/**
+	 * @var string CSS class prefix of the icon family widgets should emit.
+	 *
+	 * Defaults to `bi` (Bootstrap Icons). Set to `fa` to emit Font Awesome classes instead -
+	 * note that in that case you are responsible for loading Font Awesome, and that icon names
+	 * are passed through unmapped.
+	 *
+	 * @see TbIcon
+	 * @since 5.0.0
+	 */
+	public $iconPrefix = 'bi';
+
+	/**
 	 * @var bool Whether to use minified CSS and Javascript files. Default to true.
 	 */
 	public $minify = true;
@@ -228,6 +251,8 @@ class Booster extends CApplicationComponent {
 
         $this->setRootAliasIfUndefined();
 
+        $this->configureIconFamily();
+
 		$this->setAssetsRegistryIfNotDefined();
 
 		$this->includeAssets();
@@ -315,6 +340,9 @@ class Booster extends CApplicationComponent {
 
 		if ($this->fontAwesomeCss)
 			$this->registerFontAwesomeCss();
+
+		if ($this->bootstrapIconsCss)
+			$this->registerBootstrapIconsCss();
 
 		if ($this->responsiveCss)
 			$this->registerMetadataForResponsive();
@@ -534,6 +562,29 @@ class Booster extends CApplicationComponent {
 	 * Registers the Font Awesome CSS.
 	 * @since 1.0.6
 	 */
+	/**
+	 * Tells TbIcon which icon family widgets should emit.
+	 *
+	 * Done in init() so that $iconPrefix is a normal component configuration option, while
+	 * TbIcon itself stays a standalone helper the grid columns can use without reaching for
+	 * the Booster singleton.
+	 *
+	 * @since 5.0.0
+	 */
+	protected function configureIconFamily() {
+
+		Yii::import('booster.helpers.TbIcon');
+		TbIcon::$family = $this->iconPrefix;
+	}
+
+	/**
+	 * @since 5.0.0
+	 */
+	public function registerBootstrapIconsCss() {
+
+		$this->registerPackage('bootstrap-icons');
+	}
+
 	public function registerFontAwesomeCss() {
 		
         $this->registerPackage('font-awesome');

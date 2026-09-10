@@ -14,6 +14,8 @@
  *
  * @package booster.widgets.grids.columns
  */
+Yii::import('booster.helpers.TbIcon');
+
 class TbToggleColumn extends TbDataColumn {
 
 	public $value;
@@ -265,16 +267,6 @@ function() {
 	}
 
 	/**
-	 * @param string $iconClass
-	 *
-	 * @return bool
-	 */
-	protected function isNotGlyphiconsIcon($iconClass)
-	{
-		return strpos($iconClass, 'icon') === false and strpos($iconClass, 'fa') === false;
-	}
-
-	/**
 	 * @param $label
 	 * @param $icon
 	 * @param $url
@@ -287,11 +279,7 @@ function() {
 		if (!isset($htmlOptions['data-toggle']))
 			$htmlOptions['data-toggle'] = 'tooltip';
 
-		$iconHtmlTemplate = $this->isNotGlyphiconsIcon($icon)
-			? '<span class="glyphicon glyphicon-%s"></span>'
-			: '<i class="%s"></i>';
-
-		$iconHtml = sprintf($iconHtmlTemplate, $icon);
+		$iconHtml = TbIcon::render($icon);
 
 		echo CHtml::link($iconHtml, $url, $htmlOptions);
 	}

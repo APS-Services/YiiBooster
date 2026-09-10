@@ -65,14 +65,9 @@ return array(
 	),
 	'glyphicon'              => array(
 		'src/gii/bootstrap/BootstrapCode.php',
-		'src/widgets/TbBaseMenu.php',
-		'src/widgets/TbButton.php',
-		'src/widgets/TbButtonColumn.php',
 		'src/widgets/TbCarousel.php',
 		'src/widgets/TbExtendedFilter.php',
-		'src/widgets/TbPanel.php',
 		'src/widgets/TbTimePicker.php',
-		'src/widgets/TbToggleColumn.php',
 	),
 	'help-block'             => array(
 		'src/gii/bootstrap/templates/default/_form.php',

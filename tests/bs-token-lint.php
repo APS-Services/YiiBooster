@@ -59,6 +59,23 @@ class BsTokenLint
 	}
 
 	/**
+	 * Repo-relative files exempt from the scan.
+	 *
+	 * Only for code whose *job* is to know the legacy names. This is not an escape hatch for
+	 * unmigrated widgets - those belong in the baseline, where they stay visible.
+	 *
+	 * @return array
+	 */
+	public static function excludedFiles()
+	{
+		return array(
+			// The Glyphicons-to-Bootstrap-Icons compatibility layer necessarily spells out the
+			// old class names; that is the feature, not a leftover.
+			'src/helpers/TbIcon.php',
+		);
+	}
+
+	/**
 	 * @return string absolute path of the repository root.
 	 */
 	public static function rootDir()
@@ -90,6 +107,9 @@ class BsTokenLint
 					continue;
 				}
 				$path = str_replace($root . '/', '', $file->getPathname());
+				if (in_array($path, self::excludedFiles(), true)) {
+					continue;
+				}
 				$contents = file_get_contents($file->getPathname());
 				foreach (self::patterns() as $token => $pattern) {
 					if (preg_match($pattern, $contents)) {

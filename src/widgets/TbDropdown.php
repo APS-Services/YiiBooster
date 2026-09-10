@@ -9,6 +9,7 @@
  */
 
 Yii::import('booster.widgets.TbBaseMenu');
+Yii::import('booster.helpers.TbIcon');
 
 /**
  *## Bootstrap dropdown menu.
@@ -47,11 +48,10 @@ class TbDropdown extends TbBaseMenu {
 	protected function renderMenuItem($item) {
 		
 		if (isset($item['icon'])) {
-			if (strpos($item['icon'], 'icon') === false && strpos($item['icon'], 'fa') === false) {
-				$item['icon'] = 'icon-' . implode(' icon-', explode(' ', $item['icon']));
+			$icon = TbIcon::render($item['icon']);
+			if ($icon !== '') {
+				$item['label'] = $icon . ' ' . $item['label'];
 			}
-
-			$item['label'] = '<i class="' . $item['icon'] . '"></i> ' . $item['label'];
 		}
 
 		if (!isset($item['linkOptions'])) {

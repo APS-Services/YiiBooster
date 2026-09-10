@@ -26,6 +26,14 @@ return array(
 		// Dropping it is a script-ordering bug that only shows up in production.
 		'depends' => array('jquery'),
 	),
+	'bootstrap-icons' => array(
+		// Bootstrap 4 dropped Glyphicons and Bootstrap 5 ships no icon set, so widgets that render
+		// an icon need one. Bootstrap Icons is the set maintained alongside Bootstrap itself.
+		// The stylesheet references its font files relatively (fonts/bootstrap-icons.woff2), so the
+		// two must stay in the same directory.
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/' : $this->getAssetsUrl() . '/bootstrap-icons/',
+		'css' => array($this->minify ? 'bootstrap-icons.min.css' : 'bootstrap-icons.css'),
+	),
 	'bootstrap-yii' => array(
 		'baseUrl' => $this->getAssetsUrl(),
 		'css' => array('css/bootstrap-yii.css'),
