@@ -26,6 +26,13 @@ return array(
 		// Dropping it is a script-ordering bug that only shows up in production.
 		'depends' => array('jquery'),
 	),
+	'booster' => array(
+		// YiiBooster's own runtime helpers: tooltip/popover instance lifecycle around Yii's AJAX
+		// grid updates. See assets/js/booster.js.
+		'baseUrl' => $this->getAssetsUrl(),
+		'js' => array('js/booster.js'),
+		'depends' => array('bootstrap.js'),
+	),
 	'bootstrap-icons' => array(
 		// Bootstrap 4 dropped Glyphicons and Bootstrap 5 ships no icon set, so widgets that render
 		// an icon need one. Bootstrap Icons is the set maintained alongside Bootstrap itself.

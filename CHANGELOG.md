@@ -42,6 +42,23 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   in `TbButton`, `data-toggle="buttons"` in `TbButtonGroup` (Bootstrap 5 deleted the button plugin's
   toggle behaviour) and the blueimp gallery's own `modal-gallery` attributes.
 
+- **(fix)** pagination now emits Bootstrap 5's `page-item`/`page-link`. Without them every grid's
+  pagination rendered as plain bullets. Applies to `TbPager`, `TbJsonPager` and the client-side
+  pager template in `TbJsonGridView`, which share one class builder so they cannot drift apart.
+  Disabled items are taken out of the tab order and the current page is marked `aria-current`.
+- **(enh)** pager alignment uses flex utilities instead of a float class and an inline
+  `text-align` style.
+- **(fix)** tooltips and popovers are now created and disposed through real Bootstrap 5 instance
+  lifecycle around AJAX updates. The previous code ran `jQuery('.popover').remove()` followed by a
+  re-init after every grid refresh, which under Bootstrap 5 strands a Popper instance per refresh
+  and, being global, tore down every tooltip on the page when any one grid updated. Teardown now
+  happens in `beforeAjaxUpdate` - while the replaced nodes still exist and can actually be disposed
+  - and both halves are scoped to the widget's own container. The duplicated closures in
+  `TbGridView` and `TbListView` are replaced by `Booster::createAjaxUpdateCallbacks()`.
+- **(enh)** new `booster` asset package (`assets/js/booster.js`) holding those runtime helpers.
+- **(enh)** `table-condensed` is now `table-sm`. The type name `condensed` remains valid and is
+  mapped to `sm`, so existing configuration - including `TbDetailView`'s own default - keeps working.
+
 ### Removed
 - **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
   callers inside the library; it existed only for `yii-auth` compatibility (#443).

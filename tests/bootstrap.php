@@ -48,6 +48,10 @@ Yii::createApplication(
 		'aliases' => [
 			'fakes' => ROOT_DIR . '/tests/fakes',
 			'bootstrap' => ROOT_DIR . '/src',
+			// Several widgets call Yii::import('booster.widgets.X') at file scope. In an
+			// application that alias is set by Booster::init(), but the component here is lazy,
+			// so a test that require_once's such a widget would fatal before anything ran.
+			'booster' => ROOT_DIR . '/src',
 		],
 		'components' => array(
 			'assetManager' => array(

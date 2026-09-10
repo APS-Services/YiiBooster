@@ -591,11 +591,51 @@ class Booster extends CApplicationComponent {
 	}
 	
 	public function registerPopoverJs() {
-		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-bs-toggle=popover]').popover();");
+
+		$this->registerPackage('booster');
+		$this->cs->registerScript(
+			$this->getUniqueScriptId(),
+			'Booster.initIn(document, null, ' . CJavaScript::encode($this->popoverSelector) . ');'
+		);
 	}
-	
+
 	public function registerTooltipJs() {
-		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-bs-toggle=tooltip]').tooltip();");
+
+		$this->registerPackage('booster');
+		$this->cs->registerScript(
+			$this->getUniqueScriptId(),
+			'Booster.initIn(document, ' . CJavaScript::encode($this->tooltipSelector) . ', null);'
+		);
+	}
+
+	/**
+	 * Builds the client-side callbacks that keep tooltips and popovers alive across Yii's AJAX
+	 * widget updates.
+	 *
+	 * Bootstrap 5 does not auto-initialise tooltips or popovers, so anything drawn into a grid
+	 * after an update has none until we rebuild them. Equally, instances belonging to the rows
+	 * that were just replaced have to be disposed or their Popper instances leak - which is why
+	 * the teardown half runs in beforeAjaxUpdate, while the old nodes still exist and are still
+	 * reachable.
+	 *
+	 * Both halves are scoped to the widget's own container. The Bootstrap 3 implementation used a
+	 * global jQuery('.popover').remove(), so refreshing one grid tore down every tooltip on the
+	 * page - and it was duplicated verbatim in TbGridView and TbListView.
+	 *
+	 * @return array beforeAjaxUpdate and afterAjaxUpdate callbacks as `js:` expressions.
+	 * @since 5.0.0
+	 */
+	public function createAjaxUpdateCallbacks() {
+
+		$this->registerPackage('booster');
+
+		$tooltip = CJavaScript::encode($this->tooltipSelector);
+		$popover = CJavaScript::encode($this->popoverSelector);
+
+		return array(
+			'beforeAjaxUpdate' => 'js:function(id) { Booster.disposeIn(Booster.container(id)); }',
+			'afterAjaxUpdate' => "js:function(id) { Booster.initIn(Booster.container(id), {$tooltip}, {$popover}); }",
+		);
 	}
 
 	/**

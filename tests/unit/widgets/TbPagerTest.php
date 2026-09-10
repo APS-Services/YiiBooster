@@ -126,34 +126,114 @@ class TbPagerTest extends WidgetTestCase
 	}
 
 	/**
-	 * KNOWN BUG, documented rather than asserted-as-correct.
-	 *
-	 * TbPager::init() overwrites htmlOptions['class'] instead of appending to it, so a
-	 * caller-supplied class is silently discarded:
-	 *
-	 *     if (isset($this->htmlOptions['class'])) {
-	 *         $this->htmlOptions['class'] = ' ' . $classes;   // <- should append
-	 *     }
-	 *
-	 * Every other widget in this library appends via TbWidget::addCssClass(). This test records
-	 * today's behaviour so the Bootstrap 5 rewrite of TbPager has to make a deliberate decision
-	 * about it - fixing the bug will fail this test, which is the intended prompt to update it.
+	 * Was a bug until 5.0: init() assigned htmlOptions['class'] instead of appending, silently
+	 * discarding whatever the caller passed. Fixed with the Bootstrap 5 rewrite.
 	 *
 	 * @test
 	 */
-	public function callerSuppliedListClassIsCurrentlyDiscarded()
+	public function callerSuppliedListClassSurvives()
 	{
 		$xpath = $this->renderXPath(self::WIDGET_CLASS, array(
 			'pages' => $this->makePages(),
 			'htmlOptions' => array('class' => 'my-custom-class'),
 		));
 
-		$list = $this->firstNode($xpath, '//ul');
-		$this->assertStringNotContainsString(
-			'my-custom-class',
-			$list->getAttribute('class'),
-			'If this now passes through, the init() bug was fixed - update this test to assert it survives.'
+		$class = $this->firstNode($xpath, '//ul')->getAttribute('class');
+
+		$this->assertStringContainsString('my-custom-class', $class, 'Caller class was discarded.');
+		$this->assertStringContainsString('pagination', $class, 'Base class was lost.');
+	}
+
+	/**
+	 * Bootstrap 5 needs page-item/page-link; without them pagination renders as plain bullets.
+	 *
+	 * @test
+	 */
+	public function everyItemCarriesBootstrap5PaginationClasses()
+	{
+		$xpath = $this->renderXPath(self::WIDGET_CLASS, array(
+			'pages' => $this->makePages(100, 10, 3),
+		));
+
+		$items = $xpath->query('//ul/li');
+		$this->assertGreaterThan(0, $items->length);
+
+		$this->assertNodeCount(
+			$xpath,
+			'//ul/li[contains(concat(" ", normalize-space(@class), " "), " page-item ")]',
+			$items->length,
+			'Every list item needs page-item.'
 		);
+		$this->assertNodeCount(
+			$xpath,
+			'//ul/li/a[contains(concat(" ", normalize-space(@class), " "), " page-link ")]',
+			$items->length,
+			'Every anchor needs page-link.'
+		);
+	}
+
+	/**
+	 * @test
+	 */
+	public function currentPageIsMarkedActiveAndAnnounced()
+	{
+		$xpath = $this->renderXPath(self::WIDGET_CLASS, array(
+			'pages' => $this->makePages(100, 10, 3),
+		));
+
+		$active = $this->firstNode($xpath, '//li[contains(@class, "active")]');
+
+		$this->assertStringContainsString('page-item', $active->getAttribute('class'));
+		$this->assertEquals('page', $active->getAttribute('aria-current'));
+		$this->assertEquals('4', trim($active->textContent), 'Page 4 is current when currentPage is 3.');
+	}
+
+	/**
+	 * @test
+	 */
+	public function disabledItemsAreRemovedFromTheTabOrder()
+	{
+		$xpath = $this->renderXPath(self::WIDGET_CLASS, array(
+			'pages' => $this->makePages(100, 10, 0),
+		));
+
+		$link = $this->firstNode($xpath, '//li[contains(@class, "disabled")]/a');
+
+		$this->assertEquals('-1', $link->getAttribute('tabindex'));
+		$this->assertEquals('true', $link->getAttribute('aria-disabled'));
+	}
+
+	/**
+	 * @return array
+	 */
+	public function alignments()
+	{
+		return array(
+			array(TbPager::ALIGNMENT_RIGHT, 'justify-content-end'),
+			array(TbPager::ALIGNMENT_CENTER, 'justify-content-center'),
+		);
+	}
+
+	/**
+	 * Bootstrap 5 aligns pagination with flex utilities; this used to float the list with
+	 * pull-right, or set text-align on the container with an inline style.
+	 *
+	 * @test
+	 * @dataProvider alignments
+	 *
+	 * @param string $alignment
+	 * @param string $expectedClass
+	 */
+	public function alignmentUsesFlexUtilities($alignment, $expectedClass)
+	{
+		$html = $this->render(self::WIDGET_CLASS, array(
+			'pages' => $this->makePages(),
+			'alignment' => $alignment,
+		));
+
+		$this->assertStringContainsString($expectedClass, $html);
+		$this->assertStringNotContainsString('pull-right', $html);
+		$this->assertStringNotContainsString('text-align', $html);
 	}
 
 	/**

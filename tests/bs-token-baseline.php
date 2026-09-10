@@ -45,7 +45,6 @@ return array(
 	),
 	'float-utility'          => array(
 		'src/widgets/TbBulkActions.php',
-		'src/widgets/TbPager.php',
 		'src/widgets/TbPanel.php',
 	),
 	'form-inline'            => array(
