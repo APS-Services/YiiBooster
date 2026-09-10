@@ -127,21 +127,21 @@ class TbSelect2 extends CInputWidget {
 
 		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
 
+		// Select2 4.x dropped the 3.x programmatic API. Setting a value is now a plain jQuery
+		// .val() followed by a change event, and readonly/disabled are ordinary DOM properties -
+		// .select2('val'), .select2('readonly') and .select2('enable') no longer exist.
 		if (!empty($this->val)) {
-			if (is_array($this->val)) {
-				$data = CJSON::encode($this->val);
-			} else {
-				$data = $this->val;
-			}
-
-			$defValue = ".select2('val', $data)";
+			$data = is_array($this->val) ? CJSON::encode($this->val) : CJavaScript::encode($this->val);
+			$defValue = ".val($data).trigger('change')";
 		} else
 			$defValue = '';
 
 		if ($this->readonly) {
-			$defValue .= ".select2('readonly', true)";
+			// Select2 has no readonly state of its own; a disabled control is the closest thing
+			// that still submits nothing, which is what the 3.x option effectively did.
+			$defValue .= ".prop('disabled', true).trigger('change')";
 		} elseif ($this->disabled) {
-			$defValue .= ".select2('enable', false)";
+			$defValue .= ".prop('disabled', true).trigger('change')";
 		}
 
 		ob_start();
@@ -157,6 +157,12 @@ class TbSelect2 extends CInputWidget {
 	private function setDefaultWidthIfEmpty() {
 		if (empty($this->options['width'])) {
 			$this->options['width'] = 'resolve';
+		}
+
+		// select2-bootstrap-5-theme only applies when Select2 is told to use it by name; without
+		// this the control renders in Select2's own default skin next to Bootstrap 5 inputs.
+		if (empty($this->options['theme'])) {
+			$this->options['theme'] = 'bootstrap-5';
 		}
 	}
 

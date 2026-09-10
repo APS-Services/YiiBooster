@@ -43,6 +43,10 @@ jobs:
         working-directory: tests
         run: ../vendor/bin/phpunit
 
-      - name: Check coding standard (advisory during the Bootstrap 5 migration)
+      # Advisory, and not because of this migration: src/ has never satisfied build/ruleset.xml.
+      # master reports ~9,200 violations across 102 files, almost all whitespace, in files this
+      # branch never touched. Bringing that to zero is a worthwhile job but a separate one, and
+      # gating on it here would mean a permanently red build that everyone learns to ignore.
+      - name: Check coding standard (advisory - see note above)
         continue-on-error: true
-        run: vendor/bin/phpcs --standard=build/ruleset.xml --extensions=php src
+        run: vendor/bin/phpcs --standard=build/ruleset.xml --extensions=php src --report=summary

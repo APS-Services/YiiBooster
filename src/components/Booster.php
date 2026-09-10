@@ -503,35 +503,66 @@ class Booster extends CApplicationComponent {
         
 	/**
 	 * Make select2 package definition
+	 *
 	 * @return array
 	 */
 	protected function createSelect2Package() {
-		
-		$jsFiles = array($this->minify ? 'select2.min.js' : 'select2.js');
 
-		if (strpos(Yii::app()->language, 'en') !== 0) {
-			$locale = 'select2_locale_'. substr(Yii::app()->language, 0, 2). '.js';
-			if (@file_exists(Yii::getPathOfAlias('booster.assets.select2') . DIRECTORY_SEPARATOR . $locale )) {
-				$jsFiles[] = $locale;
-			} else {
-				$locale = 'select2_locale_'. Yii::app()->language . '.js';
-				if (@file_exists(Yii::getPathOfAlias('booster.assets.select2') . DIRECTORY_SEPARATOR . $locale )) {
-					$jsFiles[] = $locale;
-				}else{
-					$locale = 'select2_locale_'. substr(Yii::app()->language, 0, 2) . '-' . strtoupper(substr(Yii::app()->language, 3, 2)) . '.js';
-					if (@file_exists(Yii::getPathOfAlias('booster.assets.select2') . DIRECTORY_SEPARATOR . $locale )) {
-						$jsFiles[] = $locale;
-					}
-				}
-			}
+		$jsFiles = array($this->minify ? 'js/select2.min.js' : 'js/select2.js');
+
+		// Select2 4.x ships translations as js/i18n/<code>.js. Version 3.x used a flat
+		// select2_locale_<code>.js at the package root, which is why this used to probe three
+		// different filename shapes; the layout is predictable now, so one lookup does it.
+		$locale = $this->resolveSelect2Locale();
+		if ($locale !== null) {
+			$jsFiles[] = 'js/i18n/' . $locale . '.js';
 		}
 
 		return array('select2' => array(
 			'baseUrl' => $this->getAssetsUrl() . '/select2/',
 			'js' => $jsFiles,
-			'css' => array('select2.css', 'select2-bootstrap.css'),
+			'css' => array(
+				$this->minify ? 'css/select2.min.css' : 'css/select2.css',
+				// Select2's own Bootstrap theme only ever targeted Bootstrap 3.
+				$this->minify ? 'css/select2-bootstrap-5-theme.min.css' : 'css/select2-bootstrap-5-theme.css',
+			),
 			'depends' => array('jquery'),
 		));
+	}
+
+	/**
+	 * Finds the Select2 translation matching the application language, if one is bundled.
+	 *
+	 * Tries the full tag first (`pt-BR`), then the bare language (`pt`). Select2 renamed several
+	 * codes between 3.x and 4.x - `no` became `nb`, `rs` became `sr`, `ua` became `uk` - so those
+	 * are mapped rather than silently missing.
+	 *
+	 * @return string|null
+	 * @since 5.0.0
+	 */
+	protected function resolveSelect2Locale() {
+
+		$language = str_replace('_', '-', Yii::app()->language);
+
+		if (strpos($language, 'en') === 0) {
+			return null; // English is built in.
+		}
+
+		$renamed = array('no' => 'nb', 'rs' => 'sr', 'ua' => 'uk', 'pt-PT' => 'pt');
+		$candidates = array($language, substr($language, 0, 2));
+
+		foreach ($candidates as $candidate) {
+			if (isset($renamed[$candidate])) {
+				$candidate = $renamed[$candidate];
+			}
+			$path = Yii::getPathOfAlias('booster.assets.select2.js.i18n')
+				. DIRECTORY_SEPARATOR . $candidate . '.js';
+			if (@file_exists($path)) {
+				return $candidate;
+			}
+		}
+
+		return null;
 	}
 
 	/**

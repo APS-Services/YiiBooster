@@ -334,8 +334,35 @@ grep -rn "span[0-9]\|control-group\|form-actions" protected/   # Bootstrap 2 lef
 grep -rn "'type'\s*=>\s*'\(primary\|info\|success\|warning\|danger\|inverse\)'" protected/
 ```
 
-## Not yet migrated
+## Bundled plugin changes
 
-The following bundled plugins are still on their Bootstrap 3-era versions, so widgets using them
-will look wrong until a later 5.x release: **select2** (3.5.1), **x-editable**, the **markdown**
-and **wysihtml5** editors, **bootstrap-datetimepicker**, **bootstrap-tags** and **typeahead.js**.
+**select2 3.5.1 → 4.1.0-rc.0**, with `select2-bootstrap-5-theme`. `TbSelect2` sets
+`theme: 'bootstrap-5'` for you. If your own JavaScript drives a Select2 control, the 3.x
+programmatic API is gone:
+
+```js
+$el.select2('val', v);        // 3.x
+$el.val(v).trigger('change'); // 4.x
+
+$el.select2('enable', false);  // 3.x
+$el.prop('disabled', true).trigger('change');  // 4.x
+```
+
+`initSelection` and `query` were replaced by `dataAdapter`/`ajax`. If you pass either through
+`TbSelect2::$options`, see Select2's own 3.5 → 4.0 release notes.
+
+**bootstrap-datepicker 1.3.1 → 1.10.0.** No API change.
+
+**x-editable** is archived upstream, so its popover container and select2 adapter are patched in
+place here for Bootstrap 5. `TbEditable`, `TbEditableField`, `TbEditableColumn` and
+`TbEditableDetailView` keep their APIs. Note that only the unminified build ships - the vendored
+minified copy could not be regenerated from patched source, and shipping a stale one would have
+quietly reintroduced the Bootstrap 3 container wherever `minify` is on, which is the default.
+
+### Still not migrated
+
+These are still on their Bootstrap 3-era versions and will look wrong or misbehave until a later
+5.x release: the **markdown** and **wysihtml5** editors (`TbMarkdownEditor`, `TbMarkdownEditorJs`,
+`TbHtml5Editor`), **bootstrap-datetimepicker** (`TbDateTimePicker`), **bootstrap-tags**
+(`TbTags`), **typeahead.js** (`TbTypeahead`) and **bootstrap-colorpicker** (`TbColorPicker`).
+All are abandoned upstream and need replacing rather than upgrading.

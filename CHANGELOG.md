@@ -170,6 +170,27 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
 - **(enh)** `TbBox`, `TbToggleButton` and `TbPickerColumn` - renamed back in 4.0 and never given a
   migration path - now have throwing stubs naming their replacements.
 
+- **(enh)** select2 upgraded 3.5.1 -> 4.1.0-rc.0 with `select2-bootstrap-5-theme`, and
+  `TbSelect2` now defaults `theme` to `bootstrap-5`. The 3.x programmatic API is gone:
+  `.select2('val', v)` becomes `.val(v).trigger('change')`, and `readonly`/`enable` become DOM
+  properties. Translations moved from 47 flat `select2_locale_*.js` files to `js/i18n/<code>.js`,
+  so the three-way filename probe in `createSelect2Package()` collapses to one lookup - with a
+  rename map for the codes select2 changed (`no`->`nb`, `rs`->`sr`, `ua`->`uk`, `pt-PT`->`pt`).
+- **(enh)** bootstrap-datepicker upgraded 1.3.1 -> 1.10.0, which supports Bootstrap 4/5.
+- **(fix)** the datepicker's local filenames now match upstream's dist layout. They had been
+  renamed on import, so the CDN and local branches resolved different paths and `enableCdn` would
+  have 404'd the stylesheet.
+- **(enh)** x-editable's popover container is patched for Bootstrap 5. It read
+  `$.fn.popover.Constructor.DEFAULTS` at script-execution time, before Bootstrap installs its
+  jQuery plugins, so the whole file threw on load. Defaults are read lazily, `.popover-content`
+  becomes `.popover-body`, `destroy()` maps to `dispose()`, instances come from
+  `bootstrap.Popover.getInstance()`, and the hand-rolled `setPosition()` that reimplemented
+  Bootstrap 3's `applyPlacement` is replaced by Popper's own `update()`. Its select2 input adapter
+  is updated for select2 4.x at the same time.
+- **(enh)** only the unminified x-editable build is shipped. The vendored `.min.js` could not be
+  regenerated from the patched source, and since `minify` defaults to true, keeping it would have
+  silently served the unpatched Bootstrap 3 container in the configuration most sites run.
+
 ### Removed
 - **(enh)** removed `TbChosen` (Chosen archived upstream; use `TbSelect2`), `TbPassfield`
   (Pass*Field archived, and only its minified build was ever vendored), `TbFileUpload` (broken for

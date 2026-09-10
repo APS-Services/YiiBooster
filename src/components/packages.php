@@ -72,10 +72,16 @@ return array(
     ),
 	'datepicker' => array(
 		'depends' => array('jquery'),
-		'baseUrl' => $this->enableCdn ? '//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.1/' : $this->getAssetsUrl() . '/bootstrap-datepicker/',
-		'css' => array('css/datepicker3.css'), // array($this->minify ? 'css/datepicker3.min.css' : 'css/datepicker3.css'),
-		'js' => array($this->minify ? 'js/bootstrap-datepicker.min.js' : 'js/bootstrap-datepicker.js', 'js/bootstrap-datepicker-noconflict.js') 
-		// ... the noconflict code is in its own file so we do not want to touch the original js files to ease upgrading lib
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/' : $this->getAssetsUrl() . '/bootstrap-datepicker/',
+		// Filenames match upstream's dist layout exactly, so the CDN and local branches resolve
+		// the same relative paths. They previously diverged - the local copy was renamed on
+		// import, which would 404 the moment enableCdn was switched on.
+		'css' => array($this->minify ? 'css/bootstrap-datepicker3.min.css' : 'css/bootstrap-datepicker3.css'),
+		// The noconflict snippet lives in its own file so the vendored library stays pristine and
+		// can be dropped in wholesale on upgrade. It captures $.fn.datepicker so the patched
+		// jQuery UI build can restore it - that collision is jQuery UI vs bootstrap-datepicker and
+		// is unrelated to Bootstrap's own version.
+		'js' => array($this->minify ? 'js/bootstrap-datepicker.min.js' : 'js/bootstrap-datepicker.js', 'js/bootstrap-datepicker-noconflict.js')
 	),
 	'datetimepicker' => array(
 		'depends' => array('jquery'),
@@ -94,10 +100,16 @@ return array(
 		'js' => array($this->minify ? 'js/bootstrap-colorpicker.min.js' : 'js/bootstrap-colorpicker.js')
 	),
 	'x-editable' => array(
+		// x-editable is archived upstream and its popover container is patched in place for
+		// Bootstrap 5 (see the "Editable Popover (Bootstrap 5)" block in the js). Only the
+		// unminified build is shipped: the vendored .min.js could not be regenerated from the
+		// patched source, and serving a stale minified copy would silently reintroduce the
+		// Bootstrap 3 container in exactly the configuration most sites run - minify defaults
+		// to true.
 		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-editable/',
 		'css' => array('css/bootstrap-editable.css'),
-		'js' => array($this->minify ? 'js/bootstrap-editable.min.js' : 'js/bootstrap-editable.js'),
-		'depends' => array('jquery','bootstrap.js', 'datepicker') /* this is to ensure that datepicker always come before editable */
+		'js' => array('js/bootstrap-editable.js'),
+		'depends' => array('jquery', 'bootstrap.js', 'datepicker') /* datepicker must come before editable */
 	),
 	'moment' => array(
 		'baseUrl' => $this->getAssetsUrl(),

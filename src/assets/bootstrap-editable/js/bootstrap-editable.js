@@ -3830,15 +3830,21 @@ $(function(){
                if(!customId && !customText) {
                    var $el = $(this.options.scope);
                    if (!$el.data('editable').isEmpty) {
-                       var data = {id: value, text: $el.text()};
-                       this.$input.select2('data', data); 
+                       // Select2 4.x dropped the 'data' command. Injecting the option directly
+                       // is the documented way to seed a value whose text is not in the DOM.
+                       var text = $el.text();
+                       if (!this.$input.find('option[value="' + value + '"]').length) {
+                           this.$input.append(new Option(text, value, true, true));
+                       }
+                       this.$input.val(value).trigger('change');
                    }
                }
            }
        },
        
-       input2value: function() { 
-           return this.$input.select2('val');
+       input2value: function() {
+           // Select2 4.x removed the 'val' command; the underlying <select> holds the value.
+           return this.$input.val();
        },
 
        str2value: function(str, separator) {
@@ -4692,228 +4698,134 @@ Editableform based on Twitter Bootstrap 3
     $.fn.editableform.engine = 'bs3';  
 }(window.jQuery));
 /**
-* Editable Popover3 (for Bootstrap 3) 
+* Editable Popover (Bootstrap 5)
 * ---------------------
-* requires bootstrap-popover.js
+* Patched for YiiBooster 5.0.
+*
+* x-editable is archived upstream and its Popover3 container was written against Bootstrap 3's
+* jQuery plugin. Three things broke under Bootstrap 5:
+*
+*  1. `defaults: $.fn.popover.Constructor.DEFAULTS` was evaluated at script-execution time.
+*     Bootstrap 5 only installs its jQuery plugins on DOMContentLoaded, so $.fn.popover was
+*     undefined here and the whole file threw on load. Defaults are now read lazily.
+*  2. The content element is `.popover-body`; `.popover-content` was the Bootstrap 3 name.
+*  3. `destroy()` became `dispose()`, and instances are no longer stored in jQuery .data(),
+*     so the container is fetched through bootstrap.Popover.getInstance().
+*
+* The hand-rolled setPosition() that reimplemented Bootstrap 3's applyPlacement is gone
+* entirely - Bootstrap 5 positions popovers with Popper, and asking the instance to update()
+* does the same job correctly.
 */
 (function ($) {
     "use strict";
+
+    function bsPopover() {
+        return (window.bootstrap && window.bootstrap.Popover) || null;
+    }
 
     //extend methods
     $.extend($.fn.editableContainer.Popup.prototype, {
         containerName: 'popover',
         containerDataName: 'bs.popover',
-        innerCss: '.popover-content',
-        defaults: $.fn.popover.Constructor.DEFAULTS,
+        innerCss: '.popover-body',
+
+        /* Bootstrap 5 exposes its defaults as Popover.Default, and only once it has loaded. */
+        defaults: {},
+
+        containerDefaults: function() {
+            var Popover = bsPopover();
+            return (Popover && Popover.Default) || {};
+        },
+
+        /* Bootstrap 5 keeps instances in its own registry rather than jQuery .data(). */
+        container: function() {
+            var Popover = bsPopover();
+            if (Popover && this.$element.length) {
+                return Popover.getInstance(this.$element[0]);
+            }
+            return null;
+        },
+
+        call: function() {
+            var Popover = bsPopover();
+            if (!Popover || !this.$element.length) {
+                return;
+            }
+
+            var element = this.$element[0];
+            var first = arguments[0];
+
+            if (typeof first === 'string') {
+                var instance = Popover.getInstance(element);
+                if (!instance) {
+                    return;
+                }
+                // Bootstrap 5 renamed destroy() to dispose().
+                var method = first === 'destroy' ? 'dispose' : first;
+                if (typeof instance[method] === 'function') {
+                    instance[method]();
+                }
+                return;
+            }
+
+            Popover.getOrCreateInstance(element, first || {});
+        },
 
         initContainer: function(){
             $.extend(this.containerOptions, {
                 trigger: 'manual',
                 selector: false,
                 content: ' ',
-                template: this.defaults.template
+                html: true,
+                template: this.containerDefaults().template
             });
-            
+
             //as template property is used in inputs, hide it from popover
             var t;
             if(this.$element.data('template')) {
                t = this.$element.data('template');
-               this.$element.removeData('template');  
-            } 
-            
+               this.$element.removeData('template');
+            }
+
             this.call(this.containerOptions);
-            
+
             if(t) {
                //restore data('template')
-               this.$element.data('template', t); 
+               this.$element.data('template', t);
             }
-        }, 
-        
+        },
+
         /* show */
         innerShow: function () {
-            this.call('show');                
-        },  
-        
+            this.call('show');
+        },
+
         /* hide */
         innerHide: function () {
-            this.call('hide');       
-        }, 
-        
+            this.call('hide');
+        },
+
         /* destroy */
         innerDestroy: function() {
             this.call('destroy');
-        },                               
-        
+        },
+
         setContainerOption: function(key, value) {
-            this.container().options[key] = value; 
-        },               
+            var instance = this.container();
+            if (instance && instance._config) {
+                instance._config[key] = value;
+            }
+        },
 
         /**
-        * move popover to new position. This function mainly copied from bootstrap-popover.
+        * Re-position after the content changed size. Popper does the actual work.
         */
-        /*jshint laxcomma: true, eqeqeq: false*/
-        setPosition: function () { 
-
-            (function() {
-            /*    
-                var $tip = this.tip()
-                , inside
-                , pos
-                , actualWidth
-                , actualHeight
-                , placement
-                , tp
-                , tpt
-                , tpb
-                , tpl
-                , tpr;
-
-                placement = typeof this.options.placement === 'function' ?
-                this.options.placement.call(this, $tip[0], this.$element[0]) :
-                this.options.placement;
-
-                inside = /in/.test(placement);
-               
-                $tip
-              //  .detach()
-              //vitalets: remove any placement class because otherwise they dont influence on re-positioning of visible popover
-                .removeClass('top right bottom left')
-                .css({ top: 0, left: 0, display: 'block' });
-              //  .insertAfter(this.$element);
-               
-                pos = this.getPosition(inside);
-
-                actualWidth = $tip[0].offsetWidth;
-                actualHeight = $tip[0].offsetHeight;
-
-                placement = inside ? placement.split(' ')[1] : placement;
-
-                tpb = {top: pos.top + pos.height, left: pos.left + pos.width / 2 - actualWidth / 2};
-                tpt = {top: pos.top - actualHeight, left: pos.left + pos.width / 2 - actualWidth / 2};
-                tpl = {top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth};
-                tpr = {top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width};
-
-                switch (placement) {
-                    case 'bottom':
-                        if ((tpb.top + actualHeight) > ($(window).scrollTop() + $(window).height())) {
-                            if (tpt.top > $(window).scrollTop()) {
-                                placement = 'top';
-                            } else if ((tpr.left + actualWidth) < ($(window).scrollLeft() + $(window).width())) {
-                                placement = 'right';
-                            } else if (tpl.left > $(window).scrollLeft()) {
-                                placement = 'left';
-                            } else {
-                                placement = 'right';
-                            }
-                        }
-                        break;
-                    case 'top':
-                        if (tpt.top < $(window).scrollTop()) {
-                            if ((tpb.top + actualHeight) < ($(window).scrollTop() + $(window).height())) {
-                                placement = 'bottom';
-                            } else if ((tpr.left + actualWidth) < ($(window).scrollLeft() + $(window).width())) {
-                                placement = 'right';
-                            } else if (tpl.left > $(window).scrollLeft()) {
-                                placement = 'left';
-                            } else {
-                                placement = 'right';
-                            }
-                        }
-                        break;
-                    case 'left':
-                        if (tpl.left < $(window).scrollLeft()) {
-                            if ((tpr.left + actualWidth) < ($(window).scrollLeft() + $(window).width())) {
-                                placement = 'right';
-                            } else if (tpt.top > $(window).scrollTop()) {
-                                placement = 'top';
-                            } else if (tpt.top > $(window).scrollTop()) {
-                                placement = 'bottom';
-                            } else {
-                                placement = 'right';
-                            }
-                        }
-                        break;
-                    case 'right':
-                        if ((tpr.left + actualWidth) > ($(window).scrollLeft() + $(window).width())) {
-                            if (tpl.left > $(window).scrollLeft()) {
-                                placement = 'left';
-                            } else if (tpt.top > $(window).scrollTop()) {
-                                placement = 'top';
-                            } else if (tpt.top > $(window).scrollTop()) {
-                                placement = 'bottom';
-                            }
-                        }
-                        break;
-                }
-
-                switch (placement) {
-                    case 'bottom':
-                        tp = tpb;
-                        break;
-                    case 'top':
-                        tp = tpt;
-                        break;
-                    case 'left':
-                        tp = tpl;
-                        break;
-                    case 'right':
-                        tp = tpr;
-                        break;
-                }
-
-                $tip
-                .offset(tp)
-                .addClass(placement)
-                .addClass('in');
-           */
-                     
-           
-            var $tip = this.tip();
-            
-            var placement = typeof this.options.placement == 'function' ?
-                this.options.placement.call(this, $tip[0], this.$element[0]) :
-                this.options.placement;            
-
-            var autoToken = /\s?auto?\s?/i;
-            var autoPlace = autoToken.test(placement);
-            if (autoPlace) {
-                placement = placement.replace(autoToken, '') || 'top';
+        setPosition: function () {
+            var instance = this.container();
+            if (instance && typeof instance.update === 'function') {
+                instance.update();
             }
-            
-            
-            var pos = this.getPosition();
-            var actualWidth = $tip[0].offsetWidth;
-            var actualHeight = $tip[0].offsetHeight;
-
-            if (autoPlace) {
-                var $parent = this.$element.parent();
-
-                var orgPlacement = placement;
-                var docScroll    = document.documentElement.scrollTop || document.body.scrollTop;
-                var parentWidth  = this.options.container == 'body' ? window.innerWidth  : $parent.outerWidth();
-                var parentHeight = this.options.container == 'body' ? window.innerHeight : $parent.outerHeight();
-                var parentLeft   = this.options.container == 'body' ? 0 : $parent.offset().left;
-
-                placement = placement == 'bottom' && pos.top   + pos.height  + actualHeight - docScroll > parentHeight  ? 'top'    :
-                            placement == 'top'    && pos.top   - docScroll   - actualHeight < 0                         ? 'bottom' :
-                            placement == 'right'  && pos.right + actualWidth > parentWidth                              ? 'left'   :
-                            placement == 'left'   && pos.left  - actualWidth < parentLeft                               ? 'right'  :
-                            placement;
-
-                $tip
-                  .removeClass(orgPlacement)
-                  .addClass(placement);
-            }
-
-
-            var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight);
-
-            this.applyPlacement(calculatedOffset, placement);            
-                     
-                
-            }).call(this.container());
-          /*jshint laxcomma: false, eqeqeq: true*/  
-        }            
+        }
     });
 
 }(window.jQuery));
