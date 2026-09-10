@@ -24,6 +24,14 @@ is_dir(APP_ASSETS) or mkdir(APP_ASSETS);
 // composer autoloader
 require_once(ROOT_DIR . '/vendor/autoload.php');
 
+// The suite was written against PHPUnit 4.8, which is unusable on any PHP we can install today
+// (and every release up to 7.5.20 is blocked by a security advisory). We run PHPUnit 8.5, which
+// dropped the underscored class names in favour of namespaced ones. Aliasing here keeps the
+// existing test cases - and any new ones written in the same style - working unchanged.
+if (!class_exists('PHPUnit_Framework_TestCase') && class_exists('PHPUnit\Framework\TestCase')) {
+	class_alias('PHPUnit\Framework\TestCase', 'PHPUnit_Framework_TestCase');
+}
+
 require_once(YII_PATH . '/YiiBase.php');
 require_once(ROOT_DIR . '/tests/fakes/Yii.php');
 

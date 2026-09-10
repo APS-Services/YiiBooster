@@ -11,7 +11,7 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 	
 	const WIDGET_CLASS = 'TbActiveForm';
 
-	public function setUp() {
+	protected function setUp(): void {
 		
 		$_SERVER['REQUEST_URI'] = 'test';
 		$controller = new FakeController('fake');
@@ -207,12 +207,12 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$actual = new DOMDocument();
 		$actual->loadHTML(ob_get_clean() . "</{$form->addOnWrapperTag}>");
 		$addonWrapper = $actual->documentElement->getElementsByTagName($form->addOnWrapperTag)->item(0);
-		$this->assertContains($form->prependCssClass, $addonWrapper->attributes->getNamedItem('class')->nodeValue);
-		$this->assertContains($form->appendCssClass, $addonWrapper->attributes->getNamedItem('class')->nodeValue);
+		$this->assertStringContainsString($form->prependCssClass, $addonWrapper->attributes->getNamedItem('class')->nodeValue);
+		$this->assertStringContainsString($form->appendCssClass, $addonWrapper->attributes->getNamedItem('class')->nodeValue);
 		$addon = $actual->documentElement->getElementsByTagName($form->addOnTag)->item(0);
 		$this->assertEquals('foo', $addon->nodeValue);
-		$this->assertContains('input-group-addon', $addon->attributes->getNamedItem('class')->nodeValue);
-		$this->assertContains('foobar', $addon->attributes->getNamedItem('class')->nodeValue);
+		$this->assertStringContainsString('input-group-addon', $addon->attributes->getNamedItem('class')->nodeValue);
+		$this->assertStringContainsString('foobar', $addon->attributes->getNamedItem('class')->nodeValue);
 
 		ob_start();
 		$method->invokeArgs($form, array('foobar', '', array('isRaw' => true)));
@@ -233,8 +233,8 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$actual = new DOMDocument();
 		$actual->loadHTML("<{$form->addOnWrapperTag}>" . ob_get_clean());
 		$addon = $actual->documentElement->getElementsByTagName($form->addOnTag)->item(0);
-		$this->assertContains('input-group-addon', $addon->attributes->getNamedItem('class')->nodeValue);
-		$this->assertContains('foobar', $addon->attributes->getNamedItem('class')->nodeValue);
+		$this->assertStringContainsString('input-group-addon', $addon->attributes->getNamedItem('class')->nodeValue);
+		$this->assertStringContainsString('foobar', $addon->attributes->getNamedItem('class')->nodeValue);
 		$this->assertEquals('foo', $addon->nodeValue);
 
 		ob_start();
@@ -256,7 +256,7 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$model = new FakeModel();
 		$attribute = 'foobar';
 
-		$mock = $this->getMock(self::WIDGET_CLASS, array($innerMethod));
+		$mock = $this->getMockBuilder(self::WIDGET_CLASS)->setMethods(array($innerMethod))->getMock();
 		$mock->expects($this->once())->method($innerMethod);
 		if(in_array($outerMethod, array('dropDownListGroup', 'listBoxGroup', 'checkboxListGroup', 'radioButtonListGroup')))
 			$mock->$outerMethod($model, $attribute, array('widgetOptions'=>array('data'=>array())));
@@ -299,7 +299,7 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$model = new FakeModel();
 		$attribute = 'foobar';
 
-		$mock = $this->getMock(self::WIDGET_CLASS, array('widgetGroupInternal'));
+		$mock = $this->getMockBuilder(self::WIDGET_CLASS)->setMethods(array('widgetGroupInternal'))->getMock();
 		$mock->expects($this->once())->method('widgetGroupInternal')->with($className, $this->anything(),
 			$this->anything(), $this->anything());
 		$mock->$outerMethod($model, $attribute, array());
@@ -357,6 +357,9 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 
 	public function testCaptchaGroup()
 	{
+		if (!function_exists('imagettftext')) {
+			$this->markTestSkipped('CCaptcha requires GD with FreeType or ImageMagick.');
+		}
 		$model = new FakeModel();
 		$form = $this->makeWidget();
 		$data = $form->captchaGroup($model, 'login');
@@ -370,7 +373,7 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 
 	public function testCustomFieldGroup()
 	{
-		$mock = $this->getMock(self::WIDGET_CLASS, array('customFieldGroupInternal', 'initOptions'));
+		$mock = $this->getMockBuilder(self::WIDGET_CLASS)->setMethods(array('customFieldGroupInternal', 'initOptions'))->getMock();
 		$mock->expects($this->once())->method('initOptions');
 		$mock->expects($this->once())->method('customFieldGroupInternal');
 
@@ -379,7 +382,7 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 
 	public function testWidgetGroup()
 	{
-		$mock = $this->getMock(self::WIDGET_CLASS, array('customFieldGroupInternal', 'initOptions'));
+		$mock = $this->getMockBuilder(self::WIDGET_CLASS)->setMethods(array('customFieldGroupInternal', 'initOptions'))->getMock();
 		$mock->expects($this->once())->method('initOptions');
 		$mock->expects($this->once())->method('customFieldGroupInternal');
 
@@ -389,7 +392,7 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 	public function testCustomFieldGroupInternal() {
 		
 		$model = new FakeModel();
-		$mock = $this->getMock(self::WIDGET_CLASS, array('horizontalGroup', 'verticalGroup', 'inlineGroup'));
+		$mock = $this->getMockBuilder(self::WIDGET_CLASS)->setMethods(array('horizontalGroup', 'verticalGroup', 'inlineGroup'))->getMock();
 
 		$mock->type = 'horizontal';
 		$mock->expects($this->once())->method('horizontalGroup');
@@ -405,7 +408,7 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 
 		$form = $this->makeWidget();
 		$form->type = 'foobar';
-		$this->setExpectedException('CException');
+		$this->expectException('CException');
 		$form->textFieldGroup($model, 'login');
 	}
 
@@ -416,6 +419,8 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$attribute = 'login';
 		$model->addError($attribute, 'simple error text');
 		$form = $this->makeWidget();
+		// init() is what normally seeds this; reflection-invoking the renderer bypasses it.
+		$form->clientOptions['errorCssClass'] = 'has-error';
 		$method = new ReflectionMethod($form, 'horizontalGroup');
 		$method->setAccessible(true);
 
@@ -459,6 +464,8 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$attribute = 'login';
 		$model->addError($attribute, 'simple error text');
 		$form = $this->makeWidget();
+		// init() is what normally seeds this; reflection-invoking the renderer bypasses it.
+		$form->clientOptions['errorCssClass'] = 'has-error';
 		$method = new ReflectionMethod($form, 'verticalGroup');
 		$method->setAccessible(true);
 

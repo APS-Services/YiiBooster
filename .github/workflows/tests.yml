@@ -1,0 +1,48 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master, 'feature/**' ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # The library targets PHP 5.3 syntax, but the dev toolchain cannot run there:
+        # PHPUnit 4.8 will not install on a modern PHP, and every release up to 7.5.20 is
+        # blocked by a security advisory. 7.4 is the runtime the suite is verified against.
+        php: [ '7.4' ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, mbstring, json, tokenizer, xml
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.json') }}
+          restore-keys: composer-${{ matrix.php }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Run test suite
+        working-directory: tests
+        run: ../vendor/bin/phpunit
+
+      - name: Check coding standard (advisory during the Bootstrap 5 migration)
+        continue-on-error: true
+        run: vendor/bin/phpcs --standard=build/ruleset.xml --extensions=php src
