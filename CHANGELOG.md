@@ -105,6 +105,17 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   (Bootstrap 4 removed it; `SIZE_EXTRA_SMALL` stays accepted), and the explicit caret span is gone
   since Bootstrap draws it from `.dropdown-toggle::after`.
 
+- **(enh)** navs and dropdowns rebuilt for Bootstrap 5: items carry `nav-item`/`nav-link` or
+  `dropdown-item`, and the `active` and `disabled` states moved from the `<li>` onto the `<a>`,
+  where Bootstrap 4+ expects them. Dividers render as `<hr class="dropdown-divider">` instead of a
+  styled empty list item, dropdown toggles no longer emit a caret span (Bootstrap draws it from
+  `.dropdown-toggle::after`), `nav-stacked` became `flex-column`, and the Bootstrap 2 `nav-header`
+  became `dropdown-header`. Two new overridable hooks, `getItemCssClass()` and `getLinkCssClass()`,
+  let navs and dropdowns differ without special-casing.
+- **(fix)** dropdown links are no longer given `tabindex="-1"`. Bootstrap 3's markup did that on
+  every item, which took the entire menu out of the keyboard tab order; it now applies only to
+  genuinely disabled items.
+
 ### Removed
 - **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
   callers inside the library; it existed only for `yii-auth` compatibility (#443).

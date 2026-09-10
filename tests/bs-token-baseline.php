@@ -25,11 +25,8 @@ return array(
 		'src/widgets/TbButtonGroup.php',
 	),
 	'btn-removed'            => array(
-		'src/widgets/TbButton.php',
 	),
 	'caret'                  => array(
-		'src/widgets/TbBaseMenu.php',
-		'src/widgets/TbButton.php',
 		'src/widgets/TbDataColumn.php',
 		'src/widgets/TbEditableColumn.php',
 		'src/widgets/TbJsonGridColumn.php',
@@ -80,10 +77,8 @@ return array(
 		'src/widgets/TbExtendedFilter.php',
 	),
 	'nav-stacked'            => array(
-		'src/widgets/TbMenu.php',
 	),
 	'navbar-removed'         => array(
-		'src/widgets/TbNavbar.php',
 	),
 	'panel'                  => array(
 	),

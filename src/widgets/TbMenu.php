@@ -69,8 +69,9 @@ class TbMenu extends TbBaseMenu {
 			$classes[] = $this->type === self::TYPE_NAVBAR ? 'navbar-nav' : 'nav-' . $this->type;
 		}
 
+		// nav-stacked was removed in Bootstrap 4; stacking is a flex utility now.
 		if ($this->stacked && $this->type !== self::TYPE_LIST) {
-			$classes[] = 'nav-stacked';
+			$classes[] = 'flex-column';
 		}
 		
 		if ($this->justified && $this->type !== self::TYPE_LIST) {
@@ -104,8 +105,28 @@ class TbMenu extends TbBaseMenu {
 	 * @return string the class name
 	 */
 	public function getDividerCssClass() {
-		
-		return (isset($this->type) && $this->type === self::TYPE_LIST) ? 'nav-divider' : 'divider-vertical';
+
+		// nav-divider and divider-vertical were both Bootstrap 2 names and have been dead since
+		// Bootstrap 3; the surviving separator is the dropdown one.
+		return 'dropdown-divider';
+	}
+
+	/**
+	 * @return string
+	 * @since 5.0.0
+	 */
+	public function getItemCssClass() {
+
+		return 'nav-item';
+	}
+
+	/**
+	 * @return string
+	 * @since 5.0.0
+	 */
+	public function getLinkCssClass() {
+
+		return 'nav-link';
 	}
 
 	/**

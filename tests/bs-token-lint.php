@@ -88,6 +88,36 @@ class BsTokenLint
 	}
 
 	/**
+	 * Returns a file's source with PHP comments removed.
+	 *
+	 * The lint is about markup we *emit*, not about how we describe it. Without this, explaining
+	 * a migration in a docblock - "nav-stacked was removed in Bootstrap 4" - registers as a
+	 * violation, which pushes you into writing deliberately vague comments to appease the test.
+	 * Stripping comments lets the documentation name the old classes plainly.
+	 *
+	 * @param string $path
+	 * @return string
+	 * @since 5.0.0
+	 */
+	protected static function strippedSource($path)
+	{
+		$stripped = '';
+
+		foreach (token_get_all(file_get_contents($path)) as $token) {
+			if (is_array($token)) {
+				if ($token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
+					continue;
+				}
+				$stripped .= $token[1];
+			} else {
+				$stripped .= $token;
+			}
+		}
+
+		return $stripped;
+	}
+
+	/**
 	 * Scans the source tree and returns token name => sorted list of repo-relative files using it.
 	 *
 	 * @return array
@@ -114,7 +144,7 @@ class BsTokenLint
 				if (in_array($path, self::excludedFiles(), true)) {
 					continue;
 				}
-				$contents = file_get_contents($file->getPathname());
+				$contents = self::strippedSource($file->getPathname());
 				foreach (self::patterns() as $token => $pattern) {
 					if (preg_match($pattern, $contents)) {
 						$found[$token][] = $path;
