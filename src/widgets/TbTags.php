@@ -189,15 +189,20 @@ class TbTags extends CInputWidget {
 	 * @param string $id
 	 */
 	public function registerClientScript($id) {
-		
-        $booster = Booster::getBooster();
-        $booster->registerPackage('bootstrap-tags');
 
-		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
+		Booster::getBooster()->registerPackage('select2');
+
+		// bootstrap-tags has been untouched since 2017. Select2 is already bundled and already on
+		// 4.x, and its `tags` mode is the same feature - so this drops a dependency rather than
+		// swapping one.
+		$options = array_merge(
+			array('tags' => true, 'tokenSeparators' => array(',', ' '), 'theme' => 'bootstrap-5', 'width' => '100%'),
+			(array) $this->options
+		);
 
 		Yii::app()->getClientScript()->registerScript(
 			__CLASS__ . '#' . $this->getId(),
-			"jQuery('#tags_{$id}').tags({$options});"
+			"jQuery('#tags_{$id}').select2(" . CJavaScript::encode($options) . ");"
 		);
 	}
 }

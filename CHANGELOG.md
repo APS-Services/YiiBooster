@@ -191,7 +191,26 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   regenerated from the patched source, and since `minify` defaults to true, keeping it would have
   silently served the unpatched Bootstrap 3 container in the configuration most sites run.
 
+- **(enh)** the last Bootstrap 3-era plugins are replaced with maintained, framework-neutral
+  libraries:
+  - `TbMarkdownEditor` now uses **EasyMDE 2.20** instead of bootstrap-markdown.
+  - `TbHtml5Editor` now uses **Quill 2.0** instead of bootstrap3-wysihtml5. Quill edits a div, so
+    the widget mounts one beside the original field and writes back on every change - the field
+    still submits, and nothing changes server-side.
+  - `TbDateTimePicker` now uses **daterangepicker 3.1** in `singleDatePicker` mode instead of the
+    archived smalot plugin. Its `language` option maps onto Moment's locale.
+  - `TbDateRangePicker` moves from the loose 1.3.12 copy in `assets/js` to the same packaged 3.1.
+  - `TbTags` now uses **Select2's `tags` mode** instead of bootstrap-tags - one fewer dependency
+    rather than a different one.
+  - `TbTypeahead` now uses **Awesomplete 1.1** instead of typeahead.js.
+  - `TbColorPicker` now uses **Coloris 0.25** instead of the archived bootstrap-colorpicker.
+- **(enh)** `TbTypeahead` gains a `list` property taking a flat array of suggestions. `datasets`
+  still works for local sources; Bloodhound-backed **remote** sources now throw, because
+  Awesomplete has no equivalent and returning an empty list silently would be worse.
+
 ### Removed
+- **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
+  libraries; 5.0 consolidates onto `TbMarkdownEditor`. Keeps a throwing stub.
 - **(enh)** removed `TbChosen` (Chosen archived upstream; use `TbSelect2`), `TbPassfield`
   (Pass*Field archived, and only its minified build was ever vendored), `TbFileUpload` (broken for
   years - it registered four asset files that are not in the repository), `TbImageGallery` (the

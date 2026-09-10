@@ -62,16 +62,19 @@ class TbMarkdownEditor extends CInputWidget {
 	 * Register required script files
 	 */
 	public function registerClientScript() {
-		
-        $booster = Booster::getBooster();
-        $booster->registerPackage('markdown');
-        
-        $id = $this->htmlOptions['id'];
-        $options = CJSON::encode($this->options);
-        
-		Yii::app()->clientScript->registerScript(__CLASS__ . '#' . $id, "
-			$('#$id').markdown({$options})
-			", CClientScript::POS_END
+
+		Booster::getBooster()->registerPackage('easymde');
+
+		$id = $this->htmlOptions['id'];
+		$options = CJSON::encode($this->options);
+
+		// EasyMDE replaces bootstrap-markdown, which was abandoned and Bootstrap 3-only. It takes
+		// the textarea as `element` rather than being applied to a jQuery selection.
+		Yii::app()->clientScript->registerScript(
+			__CLASS__ . '#' . $id,
+			"(function () { var o = {$options}; o.element = document.getElementById('{$id}');"
+			. " new EasyMDE(o); })();",
+			CClientScript::POS_END
 		);
 	}
 }

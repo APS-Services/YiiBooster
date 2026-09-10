@@ -89,17 +89,23 @@ class TbColorPicker extends TbBaseInputWidget {
 	 * @param string $id
 	 */
 	public function registerClientScript($id) {
-		
-		Booster::getBooster()->cs->registerPackage('colorpicker');
 
-		$options = !empty($this->format) ? CJavaScript::encode(array('format' => $this->format)) : '';
+		Booster::getBooster()->registerPackage('coloris');
 
+		$options = CJavaScript::encode(array_merge(
+			array('el' => '#' . $id),
+			$this->format ? array('format' => $this->format) : array()
+		));
+
+		// Coloris replaces bootstrap-colorpicker, archived in 2022. It binds by selector and has
+		// no jQuery dependency, so the widget's `events` are attached as plain DOM listeners -
+		// Coloris fires a `coloris:pick` event on the input.
 		ob_start();
-		echo "jQuery('#{$id}').colorpicker({$options})";
+		echo "Coloris({$options});";
 		foreach ($this->events as $event => $handler) {
-			echo ".on('{$event}', " . CJavaScript::encode($handler) . ")";
+			echo "\njQuery('#{$id}').on('{$event}', " . CJavaScript::encode($handler) . ");";
 		}
 
-		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean() . ';');
+		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean());
 	}
 }

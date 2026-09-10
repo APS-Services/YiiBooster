@@ -359,10 +359,37 @@ place here for Bootstrap 5. `TbEditable`, `TbEditableField`, `TbEditableColumn` 
 minified copy could not be regenerated from patched source, and shipping a stale one would have
 quietly reintroduced the Bootstrap 3 container wherever `minify` is on, which is the default.
 
-### Still not migrated
+### Replaced plugins
 
-These are still on their Bootstrap 3-era versions and will look wrong or misbehave until a later
-5.x release: the **markdown** and **wysihtml5** editors (`TbMarkdownEditor`, `TbMarkdownEditorJs`,
-`TbHtml5Editor`), **bootstrap-datetimepicker** (`TbDateTimePicker`), **bootstrap-tags**
-(`TbTags`), **typeahead.js** (`TbTypeahead`) and **bootstrap-colorpicker** (`TbColorPicker`).
-All are abandoned upstream and need replacing rather than upgrading.
+Every remaining Bootstrap 3-era plugin has been swapped for a maintained, framework-neutral
+library. The widgets keep their names and their PHP surface, but the **JavaScript options you pass
+through `$options` belong to the new library** — they are not translated.
+
+| Widget | Was | Now |
+|---|---|---|
+| `TbMarkdownEditor` | bootstrap-markdown (2022, Bootstrap 3 only) | **EasyMDE 2.20** |
+| `TbMarkdownEditorJs` | PageDown (unmaintained) | **removed** — use `TbMarkdownEditor` |
+| `TbHtml5Editor` | bootstrap3-wysihtml5 (2020) | **Quill 2.0** |
+| `TbDateTimePicker` | smalot datetimepicker (archived 2019) | **daterangepicker 3.1**, `singleDatePicker` mode |
+| `TbDateRangePicker` | loose daterangepicker 1.3.12 | **daterangepicker 3.1** |
+| `TbTags` | bootstrap-tags (2017) | **Select2 `tags` mode** |
+| `TbTypeahead` | typeahead.js (abandoned 2015) | **Awesomplete 1.1** |
+| `TbColorPicker` | bootstrap-colorpicker (archived 2022) | **Coloris 0.25** |
+
+Things to check when you upgrade:
+
+- **Editor options.** `TbMarkdownEditor::$options` and `TbHtml5Editor::$editorOptions` are passed
+  straight to EasyMDE and Quill. Old bootstrap-markdown / wysihtml5 option names will be ignored.
+  Quill's toolbar is configured with `modules.toolbar`.
+- **Quill edits a `div`, not the textarea.** The widget keeps your original field, hides it, and
+  syncs Quill's HTML into it on every change — so the value still posts under the same name and no
+  controller or model change is needed. If you had CSS targeting the textarea, it is now hidden.
+- **`TbTypeahead` remote sources.** Bloodhound is gone and Awesomplete has no equivalent, so a
+  Bloodhound-style `datasets` entry now throws rather than silently producing an empty list. Local
+  lists keep working; the new `list` property is the preferred way to pass one. For remote lookups,
+  drive the Awesomplete instance from your own fetch.
+- **`TbDateTimePicker` options** are now daterangepicker's. `language` is mapped onto Moment's
+  locale for you; the smalot plugin's other options are not.
+- **`TbTags` options** are now Select2's.
+- **`TbColorPicker`** binds by selector through Coloris and has no jQuery plugin. Its `events` are
+  attached as DOM listeners — Coloris fires `coloris:pick` on the input.

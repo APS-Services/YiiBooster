@@ -83,21 +83,9 @@ return array(
 		// is unrelated to Bootstrap's own version.
 		'js' => array($this->minify ? 'js/bootstrap-datepicker.min.js' : 'js/bootstrap-datepicker.js', 'js/bootstrap-datepicker-noconflict.js')
 	),
-	'datetimepicker' => array(
-		'depends' => array('jquery'),
-		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-datetimepicker/', // Not in CDN yet
-		'css' => array($this->minify ? 'css/bootstrap-datetimepicker.css' : 'css/bootstrap-datetimepicker.css'),
-		'js' => array($this->minify ? 'js/bootstrap-datetimepicker.min.js' : 'js/bootstrap-datetimepicker.js')
-	),
 	'date' => array(
 		'baseUrl' => $this->enableCdn ? '//cdnjs.cloudflare.com/ajax/libs/datejs/1.0/' : $this->getAssetsUrl() . '/js/',
 		'js' => array('date.min.js')
-	),
-	'colorpicker' => array(
-		'depends' => array('jquery'),
-		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-colorpicker/',
-		'css' => array($this->minify ? 'css/bootstrap-colorpicker.min.css' : 'css/bootstrap-colorpicker.css'),
-		'js' => array($this->minify ? 'js/bootstrap-colorpicker.min.js' : 'js/bootstrap-colorpicker.js')
 	),
 	'x-editable' => array(
 		// x-editable is archived upstream and its popover container is patched in place for
@@ -155,6 +143,40 @@ return array(
 		'css' => array($this->minify ? 'css/bootstrap-timepicker.min.css' : 'css/bootstrap-timepicker.css'),
 		'depends' => array('bootstrap.js')
 	),
+	'easymde' => array(
+		// Replaces bootstrap-markdown and the PageDown editor, both abandoned. EasyMDE is the
+		// maintained SimpleMDE fork and is framework-neutral, so it needs no Bootstrap theme.
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/easymde@2.20.0/dist/' : $this->getAssetsUrl() . '/easymde/',
+		'css' => array('easymde.min.css'),
+		'js' => array('easymde.min.js'),
+	),
+	'quill' => array(
+		// Replaces bootstrap3-wysihtml5. Quill is framework-neutral; `snow` is the toolbar theme.
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/' : $this->getAssetsUrl() . '/quill/',
+		'css' => array('quill.snow.css'),
+		'js' => array('quill.js'),
+	),
+	'daterangepicker' => array(
+		// Dan Grossman's daterangepicker, upgraded from the 1.3.12 copy that used to sit loose in
+		// assets/js. It now backs both TbDateRangePicker and TbDateTimePicker, replacing the
+		// archived smalot datetimepicker - it does single-date-with-time as well as ranges.
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/' : $this->getAssetsUrl() . '/daterangepicker/',
+		'css' => array('daterangepicker.css'),
+		'js' => array('daterangepicker.js'),
+		'depends' => array('jquery', 'moment'),
+	),
+	'awesomplete' => array(
+		// Replaces typeahead.js, abandoned since 2015. No dependencies at all.
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/awesomplete@1.1.7/' : $this->getAssetsUrl() . '/awesomplete/',
+		'css' => array('awesomplete.css'),
+		'js' => array('awesomplete.min.js'),
+	),
+	'coloris' => array(
+		// Replaces bootstrap-colorpicker, archived in 2022. Vanilla JS, no jQuery.
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/@melloware/coloris@0.25.0/dist/' : $this->getAssetsUrl() . '/coloris/',
+		'css' => array('coloris.min.css'),
+		'js' => array($this->enableCdn ? 'umd/coloris.min.js' : 'coloris.min.js'),
+	),
 	'ckeditor' => array(
 		'baseUrl' => $this->getAssetsUrl() . '/ckeditor',
 		'js' => array('ckeditor.js')
@@ -162,29 +184,5 @@ return array(
 	'highcharts' => array(
 		'baseUrl' => $this->enableCdn ? '//code.highcharts.com' : $this->getAssetsUrl() . '/highcharts',
 		'js' => array($this->minify ? 'highcharts.js' : 'highcharts.src.js')
-	),
-	'wysihtml5' => array(
-		'depends' => array('bootstrap.js'),
-		'baseUrl' => $this->getAssetsUrl() . '/bootstrap3-wysihtml5',
-		'css' => array('bootstrap-wysihtml5.css'),
-		'js' => array('wysihtml5-0.3.0.js', 'bootstrap3-wysihtml5.js'),
-	),
-	'markdown' => array(
-		'depends' => array('bootstrap.js'),
-		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-markdown',
-		'css' => array('css/bootstrap-markdown.min.css'),
-		'js' => array('js/bootstrap-markdown.js', 'js/to-markdown.js', 'js/markdown.js'),
-	),
-	'typeahead' => array(
-		'depends' => array('jquery'),
-		'baseUrl' => $this->getAssetsUrl() . '/typeahead',
-		'css' => array('css/typeahead.css'),
-		'js' => array($this->minify ? 'js/typeahead.bundle.min.js' : 'js/typeahead.bundle.js'),
-	),
-	'bootstrap-tags' => array(
-		'depends' => array('jquery'),
-		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-tags',
-		'css' => array('css/bootstrap-tags.css'),
-		'js' => array($this->minify ? 'js/bootstrap-tags.min.js' : 'js/bootstrap-tags.js'),
 	),
 );

@@ -147,8 +147,9 @@ class TbDateRangePicker extends TbBaseInputWidget {
 	public function registerClientScript() {
 		
         $booster = Booster::getBooster();
-        $booster->registerAssetCss('bootstrap-daterangepicker.css');
-        $booster->registerAssetJs('bootstrap.daterangepicker.js');
+        // Upgraded from the loose 1.3.12 copy that used to live in assets/js to the packaged
+        // 3.1.0 build, which is Bootstrap-version agnostic and still maintained.
+        $booster->registerPackage('daterangepicker');
         $booster->registerPackage('moment');
 	}
 }

@@ -1,79 +1,33 @@
 <?php
 /**
- *## TbMarkdownEditorJs class file
- *
- * @author: antonio ramirez <antonio@clevertech.biz>
- * @copyright Copyright &copy; Clevertech 2012-
- * @license http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * YiiBooster project.
+ * @license [New BSD License](http://www.opensource.org/licenses/bsd-license.php)
  */
 
 /**
- *## Class TbMarkdownEditorJS
+ *## TbMarkdownEditorJs - REMOVED in YiiBooster 5.0.
  *
- * @see <https://code.google.com/p/pagedown/wiki/PageDown>
- * @see <https://github.com/arhpreston/jquery-markdown>
+ * YiiBooster shipped two markdown editors on two different dead libraries: this one on PageDown
+ * (unversioned, long unmaintained) and TbMarkdownEditor on bootstrap-markdown (last touched 2022,
+ * Bootstrap 3 only). 5.0 consolidates onto a single maintained editor - EasyMDE - behind
+ * TbMarkdownEditor.
  *
- * @package booster.widgets.forms.inputs.wysiwyg
- * @deprecated replaced with TbMarkdownEditor
+ * This stub exists only so that applications upgrading get a message naming the replacement, at
+ * the line that used the widget, instead of Yii's opaque
+ * "include(TbMarkdownEditorJs.php): failed to open stream: No such file or directory" fatal.
+ * It will be deleted in 5.1.
+ *
+ * @deprecated 5.0.0
+ * @package booster.widgets.forms.inputs
  */
-class TbMarkdownEditorJS extends CInputWidget
-{
-	/**
-	 * Editor width
-	 */
-	public $width = '100%';
+class TbMarkdownEditorJs extends CInputWidget {
 
-	/**
-	 * Editor height
-	 */
-	public $height = '400px';
+	public function init() {
 
-	/**
-	 * Display editor
-	 */
-	public function run()
-	{
-
-		list($name, $id) = $this->resolveNameID();
-
-		$this->registerClientScript($id);
-
-		// Markdown Editor looks for an id of wmd-input...
-		$this->htmlOptions['id'] = $id;
-
-		$this->htmlOptions['class'] = (isset($this->htmlOptions['class']))
-			? $this->htmlOptions['class'] . ' wmd-input'
-			: 'wmd-input';
-
-		if (!array_key_exists('style', $this->htmlOptions)) {
-			$this->htmlOptions['style'] = "width:{$this->width};height:{$this->height};";
-		}
-		// Do we have a model?
-		if ($this->hasModel()) {
-			echo CHtml::activeTextArea($this->model, $this->attribute, $this->htmlOptions);
-		} else {
-			echo CHtml::textArea($name, $this->value, $this->htmlOptions);
-		}
-	}
-
-	/**
-	 * Register required script files
-	 *
-	 * @param integer $id
-	 */
-	public function registerClientScript($id)
-	{
-        $booster = Booster::getBooster();
-        $booster->registerAssetCss('markdown.editor.css');
-        $booster->registerAssetJs('markdown.converter.js', CClientScript::POS_HEAD);
-        $booster->registerAssetJs('markdown.sanitizer.js', CClientScript::POS_HEAD);
-        $booster->registerAssetJs('markdown.editor.js', CClientScript::POS_HEAD);
-		Yii::app()->clientScript->registerScript(
-			$id,
-			"var converter = Markdown.getSanitizingConverter();
-			var editor = new Markdown.Editor(converter, '" . $id . "');
-			editor.run();",
-			CClientScript::POS_END
+		throw new CException(
+			'TbMarkdownEditorJs was removed in YiiBooster 5.0. It was built on PageDown, which is '
+			. 'unmaintained, and YiiBooster no longer ships two markdown editors. Use '
+			. 'booster.widgets.TbMarkdownEditor, which now uses EasyMDE. See UPGRADE-5.0.md.'
 		);
 	}
 }
