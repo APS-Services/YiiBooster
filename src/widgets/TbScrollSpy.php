@@ -44,19 +44,25 @@ class TbScrollSpy extends CWidget
 	 */
 	public function run()
 	{
-		$script = "jQuery('{$this->selector}').attr('data-bs-spy', 'scroll');";
-
+		// Bootstrap 3 picked scrollspy up from its data attribute through the data-api, so
+		// setting that attribute from script was enough. Bootstrap 5 only consults it during its
+		// own start-up, so an attribute written afterwards is never seen and the component has to
+		// be constructed explicitly.
+		$options = array();
 		if (isset($this->target)) {
-			$script .= "jQuery('{$this->selector}').attr('data-bs-target', '{$this->target}');";
+			$options['target'] = $this->target;
+		}
+		if (isset($this->offset)) {
+			$options['offset'] = $this->offset;
 		}
 
-		if (isset($this->offset)) {
-			$script .= "jQuery('{$this->selector}').attr('data-bs-offset', '{$this->offset}');";
-		}
+		$selector = CJavaScript::encode($this->selector);
+		$script = 'Booster.scrollSpy(' . $selector . ', ' . CJavaScript::encode($options) . ');';
 
 		/** @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
-		$cs->registerScript(__CLASS__ . '#' . $this->selector, $script, CClientScript::POS_BEGIN);
+		Booster::getBooster()->registerPackage('booster');
+		$cs->registerScript(__CLASS__ . '#' . $this->selector, $script, CClientScript::POS_READY);
 
 		foreach ($this->events as $name => $handler) {
 			$handler = CJavaScript::encode($handler);

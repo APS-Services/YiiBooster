@@ -63,8 +63,13 @@ class TbModal extends CWidget {
 			$this->htmlOptions['id'] = $this->getId();
 		}
 
-		if ($this->autoOpen === false && !isset($this->options['show'])) {
-			$this->options['show'] = false;
+		// Bootstrap 5 removed the modal's `show` option: constructing never opens it, and show()
+		// is an explicit call. autoOpen is passed to the client helper instead. A `show` value
+		// left in options would simply be ignored by Bootstrap, so drop it rather than let it
+		// look meaningful.
+		if (isset($this->options['show'])) {
+			$this->autoOpen = (bool) $this->options['show'];
+			unset($this->options['show']);
 		}
 
 		$classes = array('modal');
@@ -115,8 +120,10 @@ class TbModal extends CWidget {
 		/** @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
 
-		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
-		$cs->registerScript(__CLASS__ . '#' . $id, "jQuery('#{$id}').modal({$options});");
+		Booster::getBooster()->registerPackage('booster');
+		$options = CJavaScript::encode($this->options);
+		$autoOpen = CJavaScript::encode((bool) $this->autoOpen);
+		$cs->registerScript(__CLASS__ . '#' . $id, "Booster.modal('{$id}', {$options}, {$autoOpen});");
 
 		foreach ($this->events as $name => $handler) {
 			$handler = CJavaScript::encode($handler);

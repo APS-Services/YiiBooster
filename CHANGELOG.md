@@ -59,6 +59,26 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
 - **(enh)** `table-condensed` is now `table-sm`. The type name `condensed` remains valid and is
   mapped to `sm`, so existing configuration - including `TbDetailView`'s own default - keeps working.
 
+- **(enh)** widgets now construct Bootstrap components through the ES6 class API instead of the
+  removed jQuery plugins: `TbModal`, `TbCarousel`, `TbCollapse`, `TbTabs`, `TbAlert`, `TbScrollSpy`
+  and `TbPopoverColumn`.
+- **(fix)** `TbModal::$autoOpen` works again. Bootstrap 3's `$el.modal(options)` opened the modal
+  unless `show: false` was passed, which is how `autoOpen` was implemented. Bootstrap 5 removed the
+  `show` option entirely - constructing never opens - so `autoOpen` now drives an explicit `show()`.
+  A `show` value passed through `options` is still honoured, translated rather than forwarded.
+- **(fix)** `TbScrollSpy` constructs the component explicitly. It used to set `data-spy` from script
+  after load and rely on the data API; Bootstrap 5 only reads that attribute during its own
+  start-up, so an attribute written afterwards has no effect.
+- **(fix)** `TbPopoverColumn` no longer stacks up a duplicate delegated click handler on every AJAX
+  update.
+- **(enh)** `assets/picker/bootstrap.picker.js` is reimplemented over `bootstrap.Popover`. It used
+  to build itself from `$.fn.tooltip.Constructor.prototype`; with Bootstrap 5 that is either
+  undefined or - once the no-conflict shim was removed - jQuery UI's tooltip, so it was inheriting
+  from the wrong object silently. Its `$.fn.picker` API is unchanged.
+- **(enh)** widget `$events` handlers stay on jQuery. Bootstrap 5's `EventHandler` still triggers a
+  jQuery event alongside the native one when jQuery is present, so `'shown.bs.modal'` handlers keep
+  working.
+
 ### Removed
 - **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
   callers inside the library; it existed only for `yii-auth` compatibility (#443).

@@ -152,7 +152,14 @@ class TbAlert extends TbWidget {
 
 		/** @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
-		$cs->registerScript(__CLASS__ . '#' . $id, "jQuery('{$selector}').alert();");
+		// Bootstrap 5 wires dismissal through its data API, so an Alert instance is only needed
+		// so that the $events below have something to fire on.
+		Booster::getBooster()->registerPackage('booster');
+		$cs->registerScript(
+			__CLASS__ . '#' . $id,
+			"document.querySelectorAll('{$selector}').forEach(function (el) {"
+			. " if (window.bootstrap) { bootstrap.Alert.getOrCreateInstance(el); } });"
+		);
 
 		foreach ($this->events as $name => $handler) {
 			$handler = CJavaScript::encode($handler);

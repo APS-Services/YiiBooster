@@ -57,7 +57,11 @@ Yii::createApplication(
 			'assetManager' => array(
 				'basePath' => APP_ASSETS // do not forget to clean this folder sometimes
 			),
-			'bootstrap' => array(
+			// INSTALL.md requires this component to be named `booster`: Booster::getBooster(),
+			// which widgets use to reach it, looks it up under that name. The harness previously
+			// registered it as `bootstrap`, so getBooster() returned null and any widget calling
+			// it fatalled - which no test noticed, because nothing rendered a widget.
+			'booster' => array(
 				'class' => 'booster.components.Booster'
 			),
 		)

@@ -112,8 +112,9 @@ class TbCarousel extends CWidget {
 
 		/** @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
-		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
-		$cs->registerScript(__CLASS__ . '#' . $id, "jQuery('#{$id}').carousel({$options});");
+		Booster::getBooster()->registerPackage('booster');
+		$options = CJavaScript::encode($this->options);
+		$cs->registerScript(__CLASS__ . '#' . $id, "Booster.component('Carousel', '{$id}', {$options});");
 
 		foreach ($this->events as $name => $handler) {
 			$handler = CJavaScript::encode($handler);

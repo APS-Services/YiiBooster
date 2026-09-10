@@ -19,6 +19,8 @@ return array(
 		'src/views/fileupload/upload.php',
 		'src/views/gallery/preview.php',
 	),
+	'bs3-jquery-plugin'      => array(
+	),
 	'btn-group-justified'    => array(
 		'src/widgets/TbButtonGroup.php',
 	),

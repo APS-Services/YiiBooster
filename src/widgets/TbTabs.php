@@ -158,7 +158,8 @@ class TbTabs extends CWidget {
 
 		/** @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
-		$cs->registerScript(__CLASS__ . '#' . $id, "jQuery('#{$id}').tab('show');");
+		Booster::getBooster()->registerPackage('booster');
+		$cs->registerScript(__CLASS__ . '#' . $id, "Booster.showTab('{$id}');");
 
 		foreach ($this->events as $name => $handler) {
 			$handler = CJavaScript::encode($handler);

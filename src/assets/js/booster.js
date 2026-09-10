@@ -140,4 +140,135 @@
 	Booster.container = function (id) {
 		return (id && document.getElementById(id)) || document;
 	};
+
+	/**
+	 * Creates - or returns the existing - Bootstrap component instance for an element id.
+	 *
+	 * Replaces the Bootstrap 3 jQuery plugin calls (`jQuery('#id').modal(opts)` and friends),
+	 * which Bootstrap 5 removed in favour of ES6 classes.
+	 *
+	 * @param {string} name component name, e.g. 'Modal'
+	 * @param {string} id element id
+	 * @param {Object} [options]
+	 * @returns {Object|null}
+	 */
+	Booster.component = function (name, id, options) {
+		var bs = components();
+		var el = document.getElementById(id);
+
+		if (!bs || !bs[name] || !el) {
+			return null;
+		}
+
+		return bs[name].getOrCreateInstance(el, options || {});
+	};
+
+	/**
+	 * Bootstrap 3's `$el.modal(options)` both constructed the modal and, unless `show: false`
+	 * was passed, opened it. Bootstrap 5 removed the `show` option entirely: constructing never
+	 * opens, and `show()` is an explicit call. So the widget's autoOpen flag has to drive it
+	 * here rather than being smuggled through the options array.
+	 *
+	 * @param {string} id
+	 * @param {Object} options
+	 * @param {boolean} autoOpen
+	 * @returns {Object|null}
+	 */
+	Booster.modal = function (id, options, autoOpen) {
+		var instance = Booster.component('Modal', id, options);
+
+		if (instance && autoOpen) {
+			instance.show();
+		}
+
+		return instance;
+	};
+
+	/**
+	 * Bootstrap 3: `$el.tab('show')`.
+	 *
+	 * @param {string} id
+	 * @returns {Object|null}
+	 */
+	Booster.showTab = function (id) {
+		var instance = Booster.component('Tab', id);
+
+		if (instance) {
+			instance.show();
+		}
+
+		return instance;
+	};
+
+	/**
+	 * Bootstrap 3 picked scrollspy up from a data attribute through its data-api, so the widget
+	 * could simply set the attribute after load. Bootstrap 5 only reads it during its own
+	 * initialisation, so an attribute written afterwards is never noticed and the component has
+	 * to be constructed explicitly.
+	 *
+	 * @param {string} selector
+	 * @param {Object} [options]
+	 */
+	Booster.scrollSpy = function (selector, options) {
+		var bs = components();
+		if (!bs || !bs.ScrollSpy) {
+			return;
+		}
+
+		toArray(document.querySelectorAll(selector)).forEach(function (el) {
+			bs.ScrollSpy.getOrCreateInstance(el, options || {});
+		});
+	};
+
+	/**
+	 * Manual-trigger popovers on a grid column: clicking one closes the others.
+	 *
+	 * The delegated listener is registered once per grid+class. The Bootstrap 3 version re-ran
+	 * its whole init script after every AJAX update, including `$(document).on('click', ...)`,
+	 * so handlers accumulated with each refresh.
+	 *
+	 * @param {string} gridId
+	 * @param {string} linkClass space-free CSS class identifying the column's links
+	 * @param {Object} [options]
+	 */
+	Booster.popoverColumn = function (gridId, linkClass, options) {
+		var bs = components();
+		if (!bs || !bs.Popover) {
+			return;
+		}
+
+		var selector = '#' + gridId + ' a.' + linkClass;
+
+		toArray(document.querySelectorAll(selector)).forEach(function (el) {
+			bs.Popover.getOrCreateInstance(el, options || {});
+		});
+
+		Booster._popoverColumns = Booster._popoverColumns || {};
+		if (Booster._popoverColumns[selector]) {
+			return;
+		}
+		Booster._popoverColumns[selector] = true;
+
+		document.addEventListener('click', function (event) {
+			var link = event.target.closest ? event.target.closest('a.' + linkClass) : null;
+			var grid = document.getElementById(gridId);
+
+			if (!link || !grid || !grid.contains(link)) {
+				return;
+			}
+
+			event.preventDefault();
+
+			toArray(document.querySelectorAll(selector)).forEach(function (el) {
+				if (el !== link) {
+					var other = bs.Popover.getInstance(el);
+					if (other) {
+						other.hide();
+					}
+				}
+			});
+
+			bs.Popover.getOrCreateInstance(link, options || {}).toggle();
+		});
+	};
 })(window, document);
