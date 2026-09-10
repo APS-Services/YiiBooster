@@ -15,8 +15,15 @@ return array(
 		'css' => array(($this->minify || $this->enableCdn) ? 'css/font-awesome.min.css' : 'css/font-awesome.css'),
 	),
 	'bootstrap.js' => array(
-		'baseUrl' => $this->enableCdn ? 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/' : $this->getAssetsUrl() . '/bootstrap/',
-		'js' => array($this->minify ? 'js/bootstrap.min.js' : 'js/bootstrap.js'),
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/' : $this->getAssetsUrl() . '/bootstrap/',
+		// The bundle build embeds Popper, which Bootstrap 5 requires for tooltips, popovers
+		// and dropdowns. Shipping it avoids adding a separate Popper package - and a script
+		// ordering dependency - to the graph.
+		'js' => array($this->minify ? 'js/bootstrap.bundle.min.js' : 'js/bootstrap.bundle.js'),
+		// Bootstrap 5 itself no longer needs jQuery, but this edge must stay: roughly twenty
+		// packages below declare `'depends' => array('bootstrap.js')` and have always relied on
+		// it to pull jQuery in first, as do Yii's own CActiveForm and CGridView client scripts.
+		// Dropping it is a script-ordering bug that only shows up in production.
 		'depends' => array('jquery'),
 	),
 	'bootstrap-yii' => array(
@@ -37,12 +44,6 @@ return array(
 		'js' => array($this->minify ? 'notify.min.js' : 'notify.js'),
 		'depends' => array('jquery'),
 	),
-    'bootstrap-noconflict' => array(
-        'baseUrl' => $this->getAssetsUrl(),
-        'js' => array('js/bootstrap-noconflict.js'),
-        'depends' => array('jquery'),
-    ),
-
 	//widgets start
     'ui-layout' => array(
         'baseUrl' => $this->getAssetsUrl() . '/ui-layout/',

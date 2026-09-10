@@ -26,7 +26,10 @@
  * Bootstrap 3.x.x
  * @author Amr Bedair <amr.bedair@gmail.com>
  * @version 4.0.0
- * 
+ *
+ * Bootstrap 5.x.x
+ * @version 5.0.0
+ *
  */
 
 /**
@@ -63,8 +66,14 @@ class Booster extends CApplicationComponent {
 	public $bootstrapCss = true;
 
 	/**
-	 * @var boolean whether to register the Bootstrap responsive CSS (bootstrap-responsive.min.css).
-	 * Defaults to false.
+	 * @var boolean whether to emit the responsive viewport meta tag.
+	 *
+	 * The name is a leftover from Bootstrap 2, which shipped a separate `bootstrap-responsive.css`.
+	 * No such file has existed since Bootstrap 3 - responsive behaviour is baked into the core
+	 * stylesheet - so this now controls only the `<meta name="viewport">` tag, which Bootstrap 5
+	 * still requires. Defaults to true.
+	 *
+	 * @see registerMetadataForResponsive
 	 */
 	public $responsiveCss = true;
 	
@@ -358,7 +367,6 @@ class Booster extends CApplicationComponent {
 			return;
 
 		$this->registerPackage('bootstrap.js');
-        $this->registerPackage('bootstrap-noconflict');
 
 		if ($this->enableBootboxJS)
 			$this->registerPackage('bootbox');
@@ -457,7 +465,10 @@ class Booster extends CApplicationComponent {
 	protected function createBootstrapCssPackage() {
 		
 		return array('bootstrap.css' => array(
-			'baseUrl' => $this->enableCdn ? '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/' : $this->getAssetsUrl() . '/bootstrap/',
+			// Must stay on the same Bootstrap version as the `bootstrap.js` package in
+			// packages.php. Before 5.0 these disagreed - CSS 3.2.0 against JS 3.3.2 - and both
+			// pointed at maxcdn.bootstrapcdn.com, which no longer exists.
+			'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/' : $this->getAssetsUrl() . '/bootstrap/',
 			'css' => array($this->minify ? 'css/bootstrap.min.css' : 'css/bootstrap.css'),
 		));
 	}
