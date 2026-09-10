@@ -8,6 +8,49 @@ Thank you all
 
 Antonio Ramirez.
 
+## YiiBooster 5.0.0 (unreleased) - Bootstrap 5 migration
+
+This is a breaking release. Widgets emit Bootstrap 5 markup; there are no Bootstrap 3 compatibility
+shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the migration guide.
+
+### Changed (breaking)
+- **(enh)** upgrade Bootstrap 3.3.2 to 5.3.3. Assets pruned to the files actually served
+  (`bootstrap.css`/`.min.css`, `bootstrap.bundle.js`/`.min.js`); source maps, ESM, RTL and partial
+  builds removed.
+- **(enh)** `bootstrap.js` now serves the Popper-inclusive bundle build. Bootstrap 5 requires Popper
+  for tooltips, popovers and dropdowns.
+- **(fix)** both CDN branches now point at `cdn.jsdelivr.net` and agree on a version. They previously
+  served Bootstrap 3.2.0 CSS against 3.3.2 JS from `maxcdn.bootstrapcdn.com`, which no longer resolves.
+- **(enh)** removed the Bootstrap 3 glyphicon fonts. Glyphicons do not exist in Bootstrap 4+.
+- **(enh)** removed `assets/js/bootstrap-noconflict.js` and its package. Bootstrap 5 registers no
+  jQuery plugins, so the `$.fn.button` / `$.fn.tooltip` collision it repaired no longer exists.
+  **Note:** jQuery UI now owns `$.fn.tooltip` and `$.fn.button`, so application code calling
+  `$el.tooltip()` silently gets jQuery UI's widget. Use `new bootstrap.Tooltip(el)`.
+
+### Removed
+- **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
+  callers inside the library; it existed only for `yii-auth` compatibility (#443).
+- **(enh)** removed the `TbInput` family (`TbInput`, `TbInputHorizontal`, `TbInputVertical`,
+  `TbInputInline`, `TbInputSearch`). These emitted Bootstrap 2 markup and were already unreachable:
+  `TbForm` dispatches through `TbFormInputElement` onto `TbActiveForm`'s `*Group()` methods.
+- **(enh)** removed `TbHeroUnit` (Bootstrap 2 `hero-unit`, dead since Bootstrap 3) and `TbJumbotron`
+  (dropped in Bootstrap 5).
+- **(enh)** removed unreferenced legacy assets: `bootstrap-wysihtml5.js`,
+  `bootstrap.responsive.tables.js`, `jquery.timepicker.js`, `jquery.toggle.buttons.js` and the
+  Bootstrap 2 `bootstrap.colorpicker.js`.
+
+Removed widgets keep a stub that throws a `CException` naming the replacement, so upgrading
+applications fail at the offending line rather than on a missing include. The stubs go away in 5.1.
+
+### Development
+- **(enh)** the test suite runs again. It previously could not execute at all: `composer.json` pinned
+  PHPUnit 4.8, `apigen ^4` and `ext-xdebug`, which cannot install on any current PHP. The dev
+  toolchain now targets PHP 7.4 with PHPUnit 8.5; `src/` still targets PHP 5.3 syntax.
+- **(enh)** added a Bootstrap 2/3 token lint that ratchets the migration, a widget render harness,
+  and contract tests for `TbPager`.
+- **(fix)** `TbPager::init()` overwrote `htmlOptions['class']` instead of appending to it, silently
+  discarding any caller-supplied class. Documented by a test; fixed with the pager rewrite.
+
 ## YiiBooster latest development alpha
 - **(fix)** fix TbEditableField params prop check is an array and js callback implementation #1016 (Oxyaction)
 - **(enh)** upgrade to select2 3.5.1 and select2-bootstrap-css 1.4.1

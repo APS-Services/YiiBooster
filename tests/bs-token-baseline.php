@@ -9,10 +9,11 @@
  * this file exactly, so migrating a widget fails the suite until you delete its entries here.
  * That is intentional: every migration commit should shrink this file, and it should be an empty
  * list per token by the time 5.0.0 ships. Never add an entry to silence a new violation.
+ *
+ * Regenerate with: php tests/update-bs-token-baseline.php
  */
 return array(
 	'bs2-icon-class'         => array(
-		'src/helpers/TbHtml.php',
 		'src/views/fileupload/download.php',
 		'src/views/fileupload/form.php',
 		'src/views/fileupload/upload.php',
@@ -22,11 +23,9 @@ return array(
 		'src/widgets/TbButtonGroup.php',
 	),
 	'btn-removed'            => array(
-		'src/helpers/TbHtml.php',
 		'src/widgets/TbButton.php',
 	),
 	'caret'                  => array(
-		'src/helpers/TbHtml.php',
 		'src/widgets/TbBaseMenu.php',
 		'src/widgets/TbButton.php',
 		'src/widgets/TbDataColumn.php',
@@ -34,17 +33,12 @@ return array(
 		'src/widgets/TbJsonGridColumn.php',
 	),
 	'control-group'          => array(
-		'src/helpers/TbHtml.php',
-		'src/widgets/input/TbInputHorizontal.php',
 	),
 	'control-label'          => array(
-		'src/helpers/TbHtml.php',
 		'src/widgets/TbActiveForm.php',
-		'src/widgets/input/TbInputHorizontal.php',
 	),
 	'data-api-attribute'     => array(
 		'src/components/Booster.php',
-		'src/helpers/TbHtml.php',
 		'src/views/fileupload/form.php',
 		'src/views/gallery/preview.php',
 		'src/widgets/TbAlert.php',
@@ -66,7 +60,6 @@ return array(
 		'src/widgets/TbBulkActions.php',
 		'src/widgets/TbPager.php',
 		'src/widgets/TbPanel.php',
-		'src/widgets/input/TbInputHorizontal.php',
 	),
 	'form-inline'            => array(
 	),
@@ -84,11 +77,8 @@ return array(
 	'help-block'             => array(
 		'src/gii/bootstrap/templates/default/_form.php',
 		'src/widgets/TbActiveForm.php',
-		'src/widgets/input/TbInput.php',
 	),
 	'hero-unit'              => array(
-		'src/helpers/TbHtml.php',
-		'src/widgets/TbHeroUnit.php',
 	),
 	'hide-utility'           => array(
 		'src/views/gallery/preview.php',
@@ -101,7 +91,6 @@ return array(
 		'src/widgets/TbTimePicker.php',
 	),
 	'jumbotron'              => array(
-		'src/widgets/TbJumbotron.php',
 	),
 	'label-context'          => array(
 		'src/views/fileupload/download.php',
@@ -109,7 +98,6 @@ return array(
 		'src/widgets/TbExtendedFilter.php',
 	),
 	'nav-stacked'            => array(
-		'src/helpers/TbHtml.php',
 		'src/widgets/TbMenu.php',
 	),
 	'navbar-removed'         => array(
@@ -119,7 +107,6 @@ return array(
 		'src/widgets/TbPanel.php',
 	),
 	'progress-context'       => array(
-		'src/helpers/TbHtml.php',
 		'src/views/fileupload/form.php',
 		'src/views/fileupload/upload.php',
 		'src/widgets/TbProgress.php',

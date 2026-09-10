@@ -1,76 +1,29 @@
 <?php
 /**
- *## TbHeroUnit class file.
- *
- * @author Christoffer Niska <ChristofferNiska@gmail.com>
- * @copyright  Copyright &copy; Christoffer Niska 2011-
+ * YiiBooster project.
  * @license [New BSD License](http://www.opensource.org/licenses/bsd-license.php)
- * @since 0.9.10
  */
 
 /**
- *## Class TbHeroUnit
+ *## TbHeroUnit - REMOVED in YiiBooster 5.0.
  *
- * Modest bootstrap hero unit widget.
- * Thanks to Christphe Boulain for suggesting content capturing.
- * @see <http://twitter.github.com/bootstrap/components.html#typography>
+ * Emitted a Bootstrap 2 class that has not existed since Bootstrap 3, so this widget has been
+ * rendering unstyled markup for years. Bootstrap 5 has no equivalent component.
  *
+ * This stub exists only so that applications upgrading from 4.x get a message naming the
+ * replacement, at the exact line that instantiated the widget, instead of Yii's opaque
+ * "include(TbHeroUnit.php): failed to open stream: No such file or directory" fatal.
+ * It will be deleted in 5.1.
+ *
+ * @deprecated 5.0.0
  * @package booster.widgets.decoration
  */
-class TbHeroUnit extends CWidget
-{
-	/**
-	 * @var string the heading text.
-	 */
-	public $heading;
+class TbHeroUnit extends CWidget {
 
-	/**
-	 * @var boolean indicates whether to encode the heading.
-	 */
-	public $encodeHeading = true;
+	public function init() {
 
-	/**
-	 * @var array the HTML attributes for the widget container.
-	 */
-	public $htmlOptions = array();
-
-	/**
-	 * @var array the HTML attributes for the heading element.
-	 * @since 1.0.0
-	 */
-	public $headingOptions = array();
-
-	/**
-	 *### .init()
-	 *
-	 * Initializes the widget.
-	 */
-	public function init()
-	{
-		if (isset($this->htmlOptions['class'])) {
-			$this->htmlOptions['class'] .= ' hero-unit';
-		} else {
-			$this->htmlOptions['class'] = 'hero-unit';
-		}
-
-		echo CHtml::openTag('div', $this->htmlOptions);
-
-		if ($this->encodeHeading) {
-			$this->heading = CHtml::encode($this->heading);
-		}
-
-		if (isset($this->heading)) {
-			echo CHtml::tag('h1', $this->headingOptions, $this->heading);
-		}
-	}
-
-	/**
-	 *### .run()
-	 *
-	 * Runs the widget.
-	 */
-	public function run()
-	{
-		echo CHtml::closeTag('div');
+		throw new CException('TbHeroUnit was removed in YiiBooster 5.0. Bootstrap dropped that component after 2.x. '
+			. 'Use a plain container with utility classes, e.g. <div class="p-5 bg-body-tertiary rounded-3">, '
+			. 'or TbPanel. See UPGRADE-5.0.md.');
 	}
 }

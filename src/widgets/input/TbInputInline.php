@@ -1,196 +1,31 @@
 <?php
 /**
- *## TbInputInline class file.
- *
- * @author Christoffer Niska <ChristofferNiska@gmail.com>
- * @copyright Copyright &copy; Christoffer Niska 2011-
- * @license http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * YiiBooster project.
+ * @license [New BSD License](http://www.opensource.org/licenses/bsd-license.php)
  */
-
-Yii::import('booster.widgets.input.TbInputVertical');
 
 /**
- *## TbInputInline class
+ *## TbInputInline - REMOVED in YiiBooster 5.0.
  *
- * Bootstrap vertical form input widget.
+ * Part of the Bootstrap 2-era input hierarchy, whose wrapper and add-on classes were dropped
+ * back in Bootstrap 3, so this emitted dead markup. It was also unreachable: TbForm sets
+ * $inputElementClass to TbFormInputElement, which maps every input type straight onto a
+ * TbActiveForm *Group() method, so the CForm path never went through this class.
  *
- * @since 0.9.8
+ * This stub exists only so that applications upgrading from 4.x get a message naming the
+ * replacement, at the exact line that instantiated the widget, instead of Yii's opaque
+ * "include(TbInputInline.php): failed to open stream: No such file or directory" fatal.
+ * It will be deleted in 5.1.
+ *
+ * @deprecated 5.0.0
  * @package booster.widgets.forms.inputs
  */
-class TbInputInline extends TbInputVertical
-{
-	/**
-	 * Renders a drop down list (select).
-	 * @return string the rendered content
-	 */
-	protected function dropDownList()
-	{
-		echo $this->form->dropDownList($this->model, $this->attribute, $this->data, $this->htmlOptions);
-	}
+class TbInputInline extends CInputWidget {
 
-	/**
-	 * Renders a password field.
-	 * @return string the rendered content
-	 */
-	protected function passwordField()
-	{
-		$this->setPlaceholder();
-		echo $this->getPrepend();
-		echo $this->form->passwordField($this->model, $this->attribute, $this->htmlOptions);
-		echo $this->getAppend();
-	}
+	public function init() {
 
-	/**
-	 * Renders a textarea.
-	 * @return string the rendered content
-	 */
-	protected function textArea()
-	{
-		$this->setPlaceholder();
-		echo $this->form->textArea($this->model, $this->attribute, $this->htmlOptions);
-	}
-
-	/**
-	 * Renders a text field.
-	 * @return string the rendered content
-	 */
-	protected function textField()
-	{
-		$this->setPlaceholder();
-		echo $this->getPrepend();
-		echo $this->form->textField($this->model, $this->attribute, $this->htmlOptions);
-		echo $this->getAppend();
-	}
-
-	/**
-	 * Renders a masked text field.
-	 * @return string the rendered content
-	 */
-	protected function maskedTextField()
-	{
-		$this->setPlaceholder();
-		echo $this->getPrepend();
-		echo $this->form->maskedTextField($this->model, $this->attribute, $this->data, $this->htmlOptions);
-		echo $this->getAppend();
-	}
-
-	/**
-	 * Renders a masked text field.
-	 * @return string the rendered content
-	 */
-	protected function typeAheadField()
-	{
-		$this->setPlaceholder();
-		echo $this->getPrepend();
-		echo $this->form->typeAheadField($this->model, $this->attribute, $this->data, $this->htmlOptions);
-		echo $this->getAppend();
-	}
-
-     /**
-     * Renders a datepicker field.
-     * @return string the rendered content
-     * @author antonio ramirez <antonio@clevertech.biz>
-     */
-    protected function datepickerField()
-    {
-        if (isset($this->htmlOptions['options'])) {
-            $options = $this->htmlOptions['options'];
-            unset($this->htmlOptions['options']);
-        }
-
-        if (isset($this->htmlOptions['events'])) {
-            $events = $this->htmlOptions['events'];
-            unset($this->htmlOptions['events']);
-        }
-
-        $this->setPlaceholder();
-        echo $this->getPrepend();
-        $this->widget(
-            'booster.widgets.TbDatePicker',
-            array(
-                'model' => $this->model,
-                'attribute' => $this->attribute,
-                'options' => isset($options) ? $options : array(),
-                'events' => isset($events) ? $events : array(),
-                'htmlOptions' => $this->htmlOptions,
-            )
-        );
-        echo $this->getAppend();
-        echo $this->getError() . $this->getHint();
-    }
-
-     /**
-     * Renders a datetimepicker field.
-     * @return string the rendered content
-     * @author Hrumpa
-     */
-    protected function datetimepickerField()
-    {
-        if (isset($this->htmlOptions['options'])) {
-            $options = $this->htmlOptions['options'];
-            unset($this->htmlOptions['options']);
-        }
-
-        if (isset($this->htmlOptions['events'])) {
-            $events = $this->htmlOptions['events'];
-            unset($this->htmlOptions['events']);
-        }
-
-        $this->setPlaceholder();
-
-        echo $this->getPrepend();
-        $this->widget(
-            'booster.widgets.TbDateTimePicker',
-            array(
-                'model' => $this->model,
-                'attribute' => $this->attribute,
-                'options' => isset($options) ? $options : array(),
-                'events' => isset($events) ? $events : array(),
-                'htmlOptions' => $this->htmlOptions,
-            )
-        );
-        echo $this->getAppend();
-        echo $this->getError() . $this->getHint();
-    }
-
-     /**
-     * Renders a dateRange field.
-     * @return string the rendered content
-     * @author Hrumpa
-     */
-    protected function dateRangeField()
-    {
-    	if (isset($this->htmlOptions['options'])) {
-			$options = $this->htmlOptions['options'];
-			unset($this->htmlOptions['options']);
-		}
-
-		if (isset($options['callback'])) {
-			$callback = $options['callback'];
-			unset($options['callback']);
-		}
-
-        $this->setPlaceholder();
-		echo $this->getPrepend();
-		$this->widget(
-			'booster.widgets.TbDateRangePicker',
-			array(
-				'model' => $this->model,
-				'attribute' => $this->attribute,
-				'options' => isset($options) ? $options : array(),
-				'callback' => isset($callback) ? $callback : '',
-				'htmlOptions' => $this->htmlOptions,
-			)
-		);
-		echo $this->getAppend();
-		echo $this->getError() . $this->getHint();
-    }
-	
-
-	protected function setPlaceholder()
-	{
-		if (!isset($this->htmlOptions['placeholder'])) {
-			$this->htmlOptions['placeholder'] = $this->model->getAttributeLabel($this->attribute);
-		}
+		throw new CException('TbInputInline was removed in YiiBooster 5.0. It emitted Bootstrap 2 markup and was not used by '
+			. 'the CForm path (TbForm -> TbFormInputElement -> TbActiveForm::*Group()). '
+			. 'Use TbActiveForm and its *Group() methods instead. See UPGRADE-5.0.md.');
 	}
 }

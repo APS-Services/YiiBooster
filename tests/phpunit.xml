@@ -22,7 +22,6 @@
     <filter>
         <whitelist>
             <directory suffix=".php">../src/widgets</directory>
-            <directory suffix=".php">../src/widgets/input</directory>
             <directory suffix=".php">../src/actions</directory>
             <directory suffix=".php">../src/components</directory>
             <directory suffix=".php">../src/filters</directory>
