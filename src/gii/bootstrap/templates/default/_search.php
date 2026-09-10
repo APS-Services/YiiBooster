@@ -19,7 +19,7 @@
 	<?php echo "<?php echo " . $this->generateActiveGroup($this->modelClass, $column) . "; ?>\n"; ?>
 
 <?php endforeach; ?>
-	<div class="form-actions">
+	<div class="mb-3">
 		<?php echo "<?php \$this->widget('booster.widgets.TbButton', array(
 			'buttonType' => 'submit',
 			'context'=>'primary',

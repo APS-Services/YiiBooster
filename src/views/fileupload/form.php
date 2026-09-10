@@ -8,10 +8,10 @@
  */
 ?>
 <?php echo CHtml::beginForm($this->url, 'post', $this->htmlOptions); ?>
-<div class="fileupload-buttonbar">
+<div class="fileupload-buttonbar row">
     <div class="col-sm-7">
         <!-- The fileinput-button span is used to style the file input field as button -->
-		<span class="btn btn-success fileinput-button"> <i class="icon-plus icon-white"></i> <span>Add files...</span>
+		<span class="btn btn-success fileinput-button"> <i class="bi bi-plus-lg" aria-hidden="true"></i> <span>Add files...</span>
 			<?php
 			if ($this->hasModel()) :
 				echo CHtml::activeFileField($this->model, $this->attribute, $htmlOptions) . "\n"; else :
@@ -20,23 +20,23 @@
 			?>
 		</span>
         <button type="submit" class="btn btn-primary start">
-            <i class="icon-upload icon-white"></i>
+            <i class="bi bi-upload" aria-hidden="true"></i>
             <span>Start upload</span>
         </button>
         <button type="reset" class="btn btn-warning cancel">
-            <i class="icon-ban-circle icon-white"></i>
+            <i class="bi bi-slash-circle" aria-hidden="true"></i>
             <span>Cancel upload</span>
         </button>
         <button type="button" class="btn btn-danger delete">
-            <i class="icon-trash icon-white"></i>
+            <i class="bi bi-trash" aria-hidden="true"></i>
             <span>Delete</span>
         </button>
         <input type="checkbox" class="toggle">
     </div>
     <div class="col-sm-5 fileupload-progress fade">
         <!-- The global progress bar -->
-        <div class="progress progress-success progress-striped active" role="progressbar">
-            <div class="bar" style="width:0;"></div>
+        <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width:0;"></div>
         </div>
         <!-- The extended global progress information -->
         <div class="progress-extended">&nbsp;</div>

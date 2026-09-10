@@ -130,7 +130,7 @@ class TbTabView extends TbTabs
 				$classes = array('tab-pane fade');
 
 				if (isset($item['active']) && $item['active']) {
-					$classes[] = 'active in';
+					$classes[] = 'active show';
 				}
 
 				$classes = implode(' ', $classes);

@@ -11,6 +11,7 @@
 Yii::import('booster.widgets.TbEditable');
 Yii::import('booster.widgets.TbEditableField');
 Yii::import('zii.widgets.grid.CDataColumn');
+Yii::import('booster.helpers.TbIcon');
 
 /**
  * TbEditableColumn widget makes editable one column in CGridView.
@@ -146,7 +147,7 @@ class TbEditableColumn extends TbDataColumn
             $label = isset($this->header) ? $this->header : $sort->resolveLabel($this->name);
 
             if ($sort->resolveAttribute($this->name) !== false)
-                $label .= '<span class="caret"></span>';
+                $label .= TbIcon::render('bi-caret-down-fill');
 
             echo $sort->link($this->name, $label, array('class'=>'sort-link'));
         }

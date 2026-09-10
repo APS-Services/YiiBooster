@@ -8,6 +8,7 @@
  */
 
 Yii::import('booster.widgets.TbDataColumn');
+Yii::import('booster.helpers.TbIcon');
 
 /**
  *## TbJsonGridColumn class
@@ -35,7 +36,7 @@ class TbJsonGridColumn extends TbDataColumn
 				$label = isset($this->header) ? $this->header : $sort->resolveLabel($this->name);
 
 				if ($sort->resolveAttribute($this->name) !== false) {
-					$label .= '<span class="caret"></span>';
+					$label .= TbIcon::render('bi-caret-down-fill');
 				}
 				$content['content'] = $sort->link($this->name, $label, array('class' => 'sort-link'));
 			} else {

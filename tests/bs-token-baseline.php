@@ -14,22 +14,14 @@
  */
 return array(
 	'bs2-icon-class'         => array(
-		'src/views/fileupload/download.php',
-		'src/views/fileupload/form.php',
-		'src/views/fileupload/upload.php',
-		'src/views/gallery/preview.php',
 	),
 	'bs3-jquery-plugin'      => array(
 	),
 	'btn-group-justified'    => array(
-		'src/widgets/TbButtonGroup.php',
 	),
 	'btn-removed'            => array(
 	),
 	'caret'                  => array(
-		'src/widgets/TbDataColumn.php',
-		'src/widgets/TbEditableColumn.php',
-		'src/widgets/TbJsonGridColumn.php',
 	),
 	'control-group'          => array(
 	),
@@ -37,41 +29,27 @@ return array(
 	),
 	'data-api-attribute'     => array(
 		'src/views/fileupload/form.php',
-		'src/widgets/TbButton.php',
-		'src/widgets/TbButtonGroup.php',
 		'src/widgets/TbImageGallery.php',
 	),
 	'float-utility'          => array(
-		'src/widgets/TbBulkActions.php',
 	),
 	'form-inline'            => array(
 	),
 	'glyphicon'              => array(
-		'src/gii/bootstrap/BootstrapCode.php',
-		'src/widgets/TbCarousel.php',
-		'src/widgets/TbExtendedFilter.php',
-		'src/widgets/TbTimePicker.php',
 	),
 	'help-block'             => array(
-		'src/gii/bootstrap/templates/default/_form.php',
 	),
 	'hero-unit'              => array(
 	),
 	'hide-utility'           => array(
-		'src/views/gallery/preview.php',
-		'src/widgets/TbRelationalColumn.php',
 	),
 	'img-utility'            => array(
 	),
 	'input-group-addon'      => array(
-		'src/widgets/TbTimePicker.php',
 	),
 	'jumbotron'              => array(
 	),
 	'label-context'          => array(
-		'src/views/fileupload/download.php',
-		'src/views/fileupload/upload.php',
-		'src/widgets/TbExtendedFilter.php',
 	),
 	'nav-stacked'            => array(
 	),
@@ -80,8 +58,6 @@ return array(
 	'panel'                  => array(
 	),
 	'progress-context'       => array(
-		'src/views/fileupload/form.php',
-		'src/views/fileupload/upload.php',
 	),
 	'validation-state'       => array(
 	),

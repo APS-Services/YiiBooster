@@ -102,7 +102,12 @@ class TbTabs extends CWidget {
 		);
 
 		if (isset($this->placement) && in_array($this->placement, $validPlacements)) {
-			$classes[] = 'tabs-' . $this->placement;
+			// Bootstrap 4 removed the tabs-left/right/below placement classes. Left and right
+			// placement is now a flex layout the application composes itself; `below` simply
+			// reverses the order, which this widget already handles when it renders.
+			if ($this->placement === self::PLACEMENT_LEFT || $this->placement === self::PLACEMENT_RIGHT) {
+				$classes[] = 'flex-column';
+			}
 		}
 
 		if (!empty($classes)) {
@@ -228,7 +233,7 @@ class TbTabs extends CWidget {
 				$classes = array('tab-pane fade');
 
 				if (isset($item['active']) && $item['active']) {
-					$classes[] = 'active in';
+					$classes[] = 'active show';
 				}
 
 				$classes = implode(' ', $classes);

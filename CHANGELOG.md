@@ -131,7 +131,30 @@ shims and no configuration switch between the two. See `UPGRADE-5.0.md` for the 
   covered separately: every control group adds `is-invalid` when the model already has an error,
   which is the common path in a classic Yii POST-and-re-render cycle.
 
+- **(enh)** `TbCarousel` rebuilt: items use `carousel-item`, controls are buttons with
+  `carousel-control-prev`/`-next` and their icon spans, and indicators are buttons in a `div`
+  rather than list items in an `<ol>`.
+- **(enh)** tab panes use `active show`; `in` became `show` in Bootstrap 4. The removed
+  `tabs-left`/`tabs-right` placement classes become a flex utility.
+- **(enh)** grid sort indicators use a Bootstrap Icons caret. `.caret` does not exist in
+  Bootstrap 5, so the old span rendered as nothing.
+- **(enh)** `src/views/**` migrated off Bootstrap **2** markup: `icon-*` sprites became Bootstrap
+  Icons, `label-*` became badges, the `.bar`/`progress-success`/`progress-striped active` progress
+  markup became `progress-bar` with the modifier classes on the bar, and the gallery modal gained
+  the `modal-dialog`/`modal-content` wrappers it has been missing since Bootstrap 3 (it still had
+  `hide` and a `<a class="close">`). The fileupload button bar's `col-*` classes had no `.row`
+  parent, so the grid never applied; added.
+- **(enh)** gii templates no longer generate Bootstrap 2 markup into new projects: `form-actions`
+  and `input-large` are gone, `help-block` became `form-text`, and the generated datepicker prepend
+  uses a Bootstrap Icon.
+- **(enh)** `btn-group-justified` became a flex utility.
+
 ### Removed
+- **(enh)** `TbButton::$toggle` and `TbButtonGroup::$toggle` now throw. Bootstrap 5 removed the
+  button plugin's toggle and checkbox/radio behaviour outright - there is no attribute to rename
+  them to, and emitting the old one would look migrated while doing nothing. Use inputs with the
+  `btn-check` class instead.
+
 - **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
   callers inside the library; it existed only for `yii-auth` compatibility (#443).
 - **(enh)** removed the `TbInput` family (`TbInput`, `TbInputHorizontal`, `TbInputVertical`,

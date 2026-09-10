@@ -259,10 +259,14 @@ class TbButton extends TbWidget {
 		}
 
 		if (isset($this->toggle)) {
-			// NOT renamed to data-bs-toggle: Bootstrap 5 removed the button plugin's toggle
-			// behaviour outright. This needs replacing with a btn-check input, not a rename.
-			// @todo remove in the TbButton rewrite; see UPGRADE-5.0.md.
-			$this->htmlOptions['data-toggle'] = 'button';
+			// Bootstrap 5 removed the button plugin's toggle behaviour outright - there is no
+			// attribute to rename it to. Emitting the old one would look migrated and do nothing,
+			// so fail loudly instead and point at the replacement.
+			throw new CException(
+				'TbButton::$toggle was removed in YiiBooster 5.0: Bootstrap 5 dropped the button '
+				. 'plugin\'s toggle behaviour. Use a checkbox or radio input with the btn-check '
+				. 'class instead. See UPGRADE-5.0.md.'
+			);
 		}
 
 		if (isset($this->loadingText)) {
