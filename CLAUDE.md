@@ -4,10 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-YiiBooster is a widget library (not an application) for **Yii 1.1**, wrapping Twitter Bootstrap 3 plus a pile of jQuery
-plugins. Everything under `src/` is what end users install; the repo root is development scaffolding (build, tests, docs).
-Targets **PHP 5.3** and Yii >= 1.1.15 — no namespaces, no short array syntax in `src/`, PHPUnit pinned to 4.8 because
-it is the last version supporting PHP 5.3.
+YiiBooster is a widget library (not an application) for **Yii 1.1**, wrapping **Bootstrap 5.3.3** plus a handful of
+frontend plugins. Everything under `src/` is what end users install; the repo root is development scaffolding (build,
+tests, docs). `src/` targets **PHP 5.3** syntax and Yii >= 1.1.15 — no namespaces, no short array syntax. The dev
+toolchain does not (see Commands).
+
+The current version is **5.0.0** (unreleased), the Bootstrap 5 migration. It is a breaking release: widgets emit
+Bootstrap 5 markup, with no Bootstrap 3 shims and no config switch. `UPGRADE-5.0.md` is the migration guide and is the
+place to record anything that changes a consumer's markup or API — it has a separate path for applications coming from
+YiiBooster 3.x, which was Bootstrap 2-based.
 
 ## Commands
 
@@ -41,13 +46,15 @@ Phing drives everything else (`build.xml`, config in `build/build.properties`):
 
 ```shell
 ./vendor/bin/phing            # = `dist`, builds end-user bundle into dist/ named after project.version
-./vendor/bin/phing check      # phploc, phpcpd, test (w/ coverage), phpmd, phpcs, pdepend, codebrowser -> reports/
+./vendor/bin/phing check      # test, phpmd, phpcs -> reports/ (the phploc/phpcpd/pdepend/codebrowser
+                              # targets fail unless you install those tools standalone; see above)
 ./vendor/bin/phing phpcs      # code style alone, ruleset in build/ruleset.xml
-./vendor/bin/phing doc        # apigen API docs + pinocchio annotated sources -> doc/
+./vendor/bin/phing doc        # apigen + pinocchio -> doc/ (both are `suggest`-only; install standalone)
 ./vendor/bin/phing clean      # removes dist/, doc/, reports/
 ```
 
-`check` needs XDebug: without a coverage report PDepend fails too.
+Coverage needs XDebug, which is not installed here either — so `check` produces no coverage report by default. The
+reliable gate is the PHPUnit suite plus the token lint; `.github/workflows/tests.yml` runs exactly that.
 
 ## Architecture
 
@@ -69,10 +76,25 @@ falls back to looking for a `booster` component on the current module, then the 
 of when a widget's assets don't show up.
 
 **Asset packages** live in `src/components/packages.php` — a plain PHP file `require`d with `$this` bound to the Booster
-instance, so each entry can branch on `$this->enableCdn` / `$this->minify` / `$this->getAssetsUrl()`. Three packages
-(`bootstrap.css`, `select2`, `chosen`) are built in Booster methods instead because they need more logic. The actual
-vendored JS/CSS lives in `src/assets/<plugin>/` and is published wholesale via `CAssetManager::publish()`; adding a
-third-party plugin means dropping files in `src/assets/` *and* adding a package entry.
+instance, so each entry can branch on `$this->enableCdn` / `$this->minify` / `$this->getAssetsUrl()`. Two packages
+(`bootstrap.css`, `select2`) are built in Booster methods instead because they need more logic. The actual vendored
+JS/CSS lives in `src/assets/<plugin>/` and is published wholesale via `CAssetManager::publish()`; adding a third-party
+plugin means dropping files in `src/assets/` *and* adding a package entry.
+
+Two rules that are easy to get wrong here. **Local and CDN filenames must match**, because both branches of a package
+resolve the same relative paths — renaming a file on import silently breaks `enableCdn` only. And **`minify` defaults to
+true**, so a stale or unpatched `.min.*` next to a patched source file is what production will actually serve; where a
+vendored library has been patched in place (x-editable), only the unminified build is shipped for exactly that reason.
+
+**Two of our own runtime pieces**, both worth knowing before adding anything:
+
+- `src/helpers/TbIcon.php` renders every icon. Bootstrap has shipped no icons since 3.x, so Bootstrap Icons is bundled
+  and `TbIcon` translates the old Glyphicons/Bootstrap 2 names onto it. Widgets call `TbIcon::render($icon)` — never
+  build an icon element by hand.
+- `src/assets/js/booster.js` holds the client-side helpers (`Booster.*`): tooltip/popover instance lifecycle, component
+  construction, and the validation-state bridge. Bootstrap 5 does still install its jQuery plugins when jQuery is
+  present, but only from `DOMContentLoaded` and with no way to dispose an instance — which is why widgets construct
+  components explicitly through these helpers rather than through `$el.modal()` and friends.
 
 **Widget class hierarchy** (all classes prefixed `Tb`, all in the flat `src/widgets/` directory, referenced from views as
 `booster.widgets.TbFoo`):
@@ -81,8 +103,9 @@ third-party plugin means dropping files in `src/assets/` *and* adding a package 
   `addCssClass()`/`getContextClass()` helpers. Most display widgets extend this.
 - `TbBaseInputWidget` (extends `CInputWidget`) — adds the `ct-form-control` class and a default placeholder from the
   model attribute label. Datepickers, Select2, colorpicker etc. extend this.
-- `src/widgets/input/TbInput*` is the older Bootstrap-2-era form-layout hierarchy (vertical/horizontal/inline/search),
-  used by `TbForm`/`CForm` integration. New work generally goes through `TbActiveForm` instead.
+- `src/widgets/input/TbInput*` are **removal stubs**, not a form hierarchy. They were Bootstrap 2 markup and were
+  already unreachable: the `CForm` path runs `TbForm` → `TbFormInputElement` → `TbActiveForm`'s `*Group()` methods and
+  never touched them.
 
 **`TbActiveForm`** (extends `CActiveForm`) is the main form API: dozens of `xxxGroup($model, $attribute, $options)`
 methods. Most are one-liners delegating to `widgetGroupInternal('booster.widgets.TbSomeWidget', ...)`, so wiring a new
@@ -96,16 +119,37 @@ same file. Server-side counterparts for the interactive columns live in `src/act
 
 Other pieces: `src/filters/BoosterFilter.php` loads the component per-action instead of preloading it;
 `TbEditableSaver` handles the X-Editable save round-trip with model rule/safe-attribute checks; `src/gii/` ships a Gii
-CRUD generator emitting Booster markup; `src/helpers/TbHtml.php` exists only for `yii-auth` compatibility (see
-`src/helpers/README.md`) and is not the canonical helper.
+CRUD generator emitting Booster markup — worth remembering that it generates into *user* projects, so stale markup there
+propagates into every new scaffold.
+
+**Removed widgets keep a throwing stub** rather than being deleted outright. Yii 1.1 resolves widgets by path, so a
+missing file gives only `include(TbFoo.php): failed to open stream`; a stub whose `init()` throws a `CException` naming
+the replacement reports at the line that used the widget instead. Follow that pattern for any further removal. The
+existing stubs are scheduled for deletion in 5.1. Removed *behaviour* (as opposed to a removed class) throws too — see
+`TbButton::$toggle` — rather than silently no-op'ing.
 
 ## Tests
 
-`tests/bootstrap.php` spins up a `MinimalApplication` (a `CApplication` subclass in `tests/fakes/`) with the alias
-`bootstrap` pointing at `src/` (the `booster` alias is set by `Booster::init()` itself), a real `CAssetManager` writing
-into `tests/runtime/assets/`, and the Booster component attached — note it is attached under the name `bootstrap` there,
-which works only because `init()` registers the singleton eagerly. `tests/fakes/AssetsRegistryHook.php` is a `CClientScript` double used to assert which
-packages/scripts a widget registered.
+`tests/bootstrap.php` spins up a `MinimalApplication` (a `CApplication` subclass in `tests/fakes/`) with both the
+`bootstrap` and `booster` aliases pointing at `src/`, a real `CAssetManager` writing into `tests/runtime/assets/`, and
+the Booster component attached **under the name `booster`** — which is what `Booster::getBooster()` looks up, so
+registering it as anything else leaves that returning `null` and any widget needing it fails.
+
+Both aliases are set because several widgets call `Yii::import('booster.widgets.X')` at file scope, and the component
+that normally defines that alias is lazy — so a test that `require_once`'s such a widget would fatal before running.
+
+Three test helpers:
+
+- `tests/fakes/WidgetTestCase.php` — base class for tests that assert on *rendered* output, with `render()` /
+  `renderXPath()`. Assert the things that must survive a framework change (ids, input names, counts, `htmlOptions`
+  passthrough), not Bootstrap's own class names.
+- `tests/fakes/AssetsRegistryHook.php` — a `CClientScript` double for asserting which packages/scripts a widget
+  registered.
+- `tests/unit/Bootstrap5TokenLintTest.php` + `tests/bs-token-lint.php` + `tests/bs-token-baseline.php` — scans `src/`
+  for Bootstrap 2/3 markup and asserts the tree matches the recorded baseline **exactly**, failing both on regression
+  and on progress. The baseline is currently empty and should stay that way. Regenerate with
+  `php7.4 tests/update-bs-token-baseline.php` after genuinely removing legacy markup — never to silence a new hit. The
+  scanner strips PHP comments first, so docblocks may name old class names freely.
 
 Test files `require_once` the widget file (and its parent class file) directly at the top — there is no autoloading of
 `src/` classes in the suite, so a new test must include the whole ancestor chain. Tests are plain
@@ -113,7 +157,9 @@ Test files `require_once` the widget file (and its parent class file) directly a
 
 ## Conventions
 
-- Tabs for indentation, Unix line endings, no closing `?>`; `build/ruleset.xml` (php_codesniffer) is the authority.
+- Tabs for indentation, Unix line endings, no closing `?>`. `build/ruleset.xml` (php_codesniffer) is nominally the
+  authority, but `src/` has never satisfied it — thousands of mostly-whitespace violations predate any current work, so
+  CI runs phpcs advisory rather than gating. Match the surrounding file; don't reformat on the way past.
 - Docblocks use the `*## ClassName class file` heading style and `@package booster.widgets.<category>` — Apigen and the
   documentation site rely on those package tags.
 - Per `CONTRIBUTING.md`, every change appends a line to `CHANGELOG.md` under the current development section:
