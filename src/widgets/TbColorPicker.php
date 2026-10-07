@@ -33,7 +33,10 @@ class TbColorPicker extends TbBaseInputWidget {
 	public $form;
 
 	/**
-	 * @var string the color format - hex | rgb | rgba. Defaults to 'hex'
+	 * @var string the color format - hex | rgb | rgba | hsl | auto | mixed. Defaults to 'hex'.
+	 *
+	 * `rgba` is kept for backwards compatibility: Coloris has no such format, so it is sent as
+	 * `rgb` with the alpha slider enabled, which produces the same rgba() output.
 	 */
 	public $format = 'hex';
 
@@ -92,10 +95,23 @@ class TbColorPicker extends TbBaseInputWidget {
 
 		Booster::getBooster()->registerPackage('coloris');
 
-		$options = CJavaScript::encode(array_merge(
-			array('el' => '#' . $id),
-			$this->format ? array('format' => $this->format) : array()
-		));
+		// Coloris accepts hex, rgb, hsl, auto or mixed. `rgba` was a valid value of $format under
+		// bootstrap-colorpicker; passing it straight through reaches a format radio that does not
+		// exist and throws as the picker opens, so it is translated instead.
+		$options = array('el' => '#' . $id);
+
+		if ($this->format) {
+			if ($this->format === 'rgba') {
+				$options['format'] = 'rgb';
+				$options['alpha'] = true;
+			} else {
+				$options['format'] = $this->format;
+				// Coloris shows the alpha slider by default; only rgba asked for it explicitly.
+				$options['alpha'] = false;
+			}
+		}
+
+		$options = CJavaScript::encode($options);
 
 		// Coloris replaces bootstrap-colorpicker, archived in 2022. It binds by selector and has
 		// no jQuery dependency, so the widget's `events` are attached as plain DOM listeners -

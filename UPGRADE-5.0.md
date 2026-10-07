@@ -390,6 +390,12 @@ Things to check when you upgrade:
   drive the Awesomplete instance from your own fetch.
 - **`TbDateTimePicker` options** are now daterangepicker's. `language` is mapped onto Moment's
   locale for you; the smalot plugin's other options are not.
-- **`TbTags` options** are now Select2's.
+- **`TbTags` options** are now Select2's, and it renders a `multiple <select>` rather than
+  bootstrap-tags' div plus hidden field — so the control that submits has changed element. Mapped
+  for you: `suggestions` → `data`, `restrictTo` → `data` with `tags: false`, `promptText` →
+  `placeholder`. **Not** mapped, because Select2 has no equivalent: `tagClass`, `displayPopovers`,
+  `popoverData`, `exclude`. A comma-separated string value still works as the initial tag list.
+- **`TbColorPicker::$format`** still accepts `rgba`; it is sent to Coloris as `rgb` with alpha
+  enabled, since Coloris has no `rgba` format. `hsl`, `auto` and `mixed` are newly available.
 - **`TbColorPicker`** binds by selector through Coloris and has no jQuery plugin. Its `events` are
   attached as DOM listeners — Coloris fires `coloris:pick` on the input.

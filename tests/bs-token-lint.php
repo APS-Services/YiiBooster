@@ -40,7 +40,7 @@ class BsTokenLint
 			'btn-group-justified'  => '/btn-group-justified/',
 			'img-utility'          => '/img-(responsive|rounded|circle)/',
 			'label-context'        => '/label-(default|primary|success|info|warning|danger)/',
-			'navbar-removed'       => '/navbar-(default|inverse|header|toggle\b|fixed-)/',
+			'navbar-removed'       => '/navbar-(default|inverse|header|inner|toggle\b|fixed-)/',
 			'progress-context'     => '/progress-(striped|success|info|warning|danger)/',
 			'form-inline'          => '/form-inline/',
 			// Bootstrap 5 still bridges these onto jQuery when it is present, but only from

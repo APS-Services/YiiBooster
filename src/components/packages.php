@@ -100,8 +100,14 @@ return array(
 		'depends' => array('jquery', 'bootstrap.js', 'datepicker') /* datepicker must come before editable */
 	),
 	'moment' => array(
+		// daterangepicker formats and parses through Moment, and Moment's locale data lives in
+		// separate files - moment.min.js alone is English-only, so moment.locale('de') silently
+		// does nothing. The bundled-locales build is ~315K larger, so it is only served when the
+		// application is not running in English.
 		'baseUrl' => $this->getAssetsUrl(),
-		'js' => array('js/moment.min.js'),
+		'js' => array(
+			strpos(Yii::app()->language, 'en') === 0 ? 'js/moment.min.js' : 'js/moment-with-locales.min.js'
+		),
 	),
 	'picker' => array(
 		'baseUrl' => $this->getAssetsUrl() . '/picker',

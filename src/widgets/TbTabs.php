@@ -102,11 +102,19 @@ class TbTabs extends CWidget {
 		);
 
 		if (isset($this->placement) && in_array($this->placement, $validPlacements)) {
-			// Bootstrap 4 removed the tabs-left/right/below placement classes. Left and right
-			// placement is now a flex layout the application composes itself; `below` simply
-			// reverses the order, which this widget already handles when it renders.
+			// Bootstrap 4 removed the tabs-left/right/below placement classes, so side placement
+			// is now built from flex utilities. The wrapper has to actually become a flex
+			// container (d-flex) - flex-column alone only sets flex-direction on a block, which
+			// changes nothing - and `right` is the same row reversed. `below` needs no class: the
+			// widget already swaps the render order.
 			if ($this->placement === self::PLACEMENT_LEFT || $this->placement === self::PLACEMENT_RIGHT) {
-				$classes[] = 'flex-column';
+				$classes[] = 'd-flex';
+				$classes[] = 'align-items-start';
+				if ($this->placement === self::PLACEMENT_RIGHT) {
+					$classes[] = 'flex-row-reverse';
+				}
+				// Side placement only reads as tabs-down-the-side if the nav stacks too.
+				$this->stacked = true;
 			}
 		}
 

@@ -165,3 +165,7 @@ Test files `require_once` the widget file (and its parent class file) directly a
 - Per `CONTRIBUTING.md`, every change appends a line to `CHANGELOG.md` under the current development section:
   `- **(fix)** description #issue (username)` or `- **(enh)** …`. Work happens on feature branches off `master`.
 - The release version lives in `build/build.properties` (`project.version`), not in composer.json.
+- **Vendoring a library means bringing its licence with it.** `phing dist` bundles `src/` into the
+  end-user archive, so an MIT/BSD notice has to travel with the copy. Keep upstream's `LICENSE` file in
+  `src/assets/<plugin>/`; where upstream ships none, check that the notice is in the file header instead
+  (daterangepicker is the one such case here) before concluding it is missing.

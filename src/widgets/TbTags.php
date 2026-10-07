@@ -118,18 +118,26 @@ class TbTags extends CInputWidget {
 		
 		parent::init();
 		
-		$this->options = CMap::mergeArray(
-			array(
-				'suggestions' => $this->suggestions,
-				'restrictTo' => $this->restrictTo,
-				'exclude' => $this->exclude,
-				'displayPopovers' => $this->displayPopovers,
-				'tagClass' => $this->tagClass,
-				'tagData' => $this->tagData,
-				'popoverData' => $this->popoverData
-			),
-			$this->options
-		);
+		// Only the options with a Select2 equivalent are forwarded. bootstrap-tags' tagClass,
+		// displayPopovers, popoverData and exclude have none, and passing them through would look
+		// honoured while doing nothing - see UPGRADE-5.0.md.
+		$mapped = array();
+
+		if (!empty($this->suggestions)) {
+			$mapped['data'] = array_values($this->suggestions);
+		}
+
+		// restrictTo means "no free-form values", which is Select2's tags flag inverted.
+		if (!empty($this->restrictTo)) {
+			$mapped['data'] = array_values($this->restrictTo);
+			$mapped['tags'] = false;
+		}
+
+		if ($this->promptText !== null && $this->promptText !== '') {
+			$mapped['placeholder'] = $this->promptText;
+		}
+
+		$this->options = CMap::mergeArray($mapped, $this->options);
 	}
 
 	/**
@@ -157,26 +165,73 @@ class TbTags extends CInputWidget {
 	 */
 	public function renderContent($id, $name) {
 
+		// bootstrap-tags decorated an empty <div> and kept the real value in a sibling hidden
+		// field that it synchronised itself. Select2 is select-backed: it reads and writes the
+		// <select>'s options directly, so the select has to be the submitting control. Keeping the
+		// old div would leave Select2 with nothing to bind to and the value never updated.
+		$this->htmlOptions['id'] = 'tags_' . $id;
+		$this->htmlOptions['multiple'] = true;
+		self::addCssClass($this->htmlOptions, 'tag-list');
+
+		$selected = $this->resolveTags();
+		// Select2's `tags` mode accepts values that are not in the option list, so the current
+		// tags are the whole list - there is nothing else to offer.
+		$data = array_combine($selected, $selected);
+
 		if ($this->hasModel()) {
 			if ($this->form) {
-				echo $this->form->hiddenField($this->model, $this->attribute);
+				echo $this->form->listBox($this->model, $this->attribute, $data, $this->htmlOptions);
 			} else {
-				echo CHtml::activeHiddenField($this->model, $this->attribute);
+				echo CHtml::activeListBox($this->model, $this->attribute, $data, $this->htmlOptions);
 			}
-
 		} else {
-			echo CHtml::hiddenField($name, $this->value);
+			echo CHtml::listBox($name, $selected, $data, $this->htmlOptions);
+		}
+	}
+
+	/**
+	 * The tags to pre-select, as a flat list of strings.
+	 *
+	 * Accepts what both this widget and bootstrap-tags accepted: an array, or a comma-separated
+	 * string as stored by a plain text column.
+	 *
+	 * @return array
+	 * @since 5.0.0
+	 */
+	protected function resolveTags() {
+
+		$value = !empty($this->tagData) ? $this->tagData : null;
+
+		if ($value === null) {
+			$value = $this->hasModel()
+				? CHtml::value($this->model, $this->attribute)
+				: $this->value;
 		}
 
-		$this->htmlOptions['id'] = 'tags_'.$id;
-		if(isset($this->htmlOptions['class']) && !empty($this->htmlOptions['class']))
-			$this->htmlOptions['class'] .= ' tag-list';
-		else
-			$this->htmlOptions['class'] = 'tag-list';
-		
-		echo CHtml::openTag('div', $this->htmlOptions);
-		echo "<div class='tags'></div>";
-		echo CHtml::closeTag('div');
+		if (is_array($value)) {
+			$tags = $value;
+		} elseif ($value === null || $value === '') {
+			$tags = array();
+		} else {
+			$tags = preg_split('/\s*,\s*/', (string) $value, -1, PREG_SPLIT_NO_EMPTY);
+		}
+
+		$tags = array_values(array_unique(array_map('strval', $tags)));
+
+		return $tags;
+	}
+
+	/**
+	 * @param array $htmlOptions
+	 * @param string $class
+	 */
+	protected static function addCssClass(&$htmlOptions, $class) {
+
+		if (isset($htmlOptions['class']) && $htmlOptions['class'] !== '') {
+			$htmlOptions['class'] .= ' ' . $class;
+		} else {
+			$htmlOptions['class'] = $class;
+		}
 	}
 
 	/**

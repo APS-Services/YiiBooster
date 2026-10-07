@@ -208,6 +208,25 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   still works for local sources; Bloodhound-backed **remote** sources now throw, because
   Awesomplete has no equivalent and returning an empty list silently would be worse.
 
+- **(fix)** `TbTags` renders a `multiple <select>` carrying the current tags. It previously kept
+  rendering bootstrap-tags' decorative `<div>` plus a sibling hidden field, which left Select2 with
+  nothing to bind to and the value never synchronised. `suggestions`, `restrictTo` and `promptText`
+  are mapped onto Select2's `data`, `tags` and `placeholder`; `tagClass`, `displayPopovers`,
+  `popoverData` and `exclude` have no equivalent and are no longer forwarded.
+- **(fix)** `TbColorPicker` translates `format => 'rgba'`. Coloris accepts only hex/rgb/hsl/auto/
+  mixed, so the documented `rgba` value reached a non-existent format radio and threw as the picker
+  opened. It is now sent as `rgb` with alpha enabled, which produces the same output.
+- **(fix)** side tab placement in `TbTabs` and `TbWizard` actually works. `flex-column` alone only
+  sets `flex-direction` on what is still a block, so left and right rendered identically to the
+  default; the wrapper is now `d-flex` (plus `flex-row-reverse` for right) and the nav stacks.
+- **(fix)** the `moment` package serves the bundled-locales build for non-English applications.
+  `moment.min.js` carries no locale data, so `TbDateTimePicker`'s `language` option silently did
+  nothing.
+- **(fix)** `TbWizard` no longer emits the Bootstrap 2 `navbar-inner` wrapper.
+- **(enh)** every vendored library now ships its upstream licence file. `phing dist` redistributes
+  `src/`, so the notice has to travel with the copy; a test asserts this and records daterangepicker
+  as the one library whose notice lives in its file header instead.
+
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
   libraries; 5.0 consolidates onto `TbMarkdownEditor`. Keeps a throwing stub.

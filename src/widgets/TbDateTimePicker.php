@@ -103,9 +103,10 @@ class TbDateTimePicker extends TbBaseInputWidget {
 
 	public function registerLanguageScript() {
 
-		// daterangepicker has no locale files: it takes its strings through the `locale` option
-		// and formats dates with Moment, which the package already pulls in. A `language` option
-		// carried over from the old smalot plugin is mapped onto Moment's locale.
+		// daterangepicker has no locale files of its own: it takes its strings through the
+		// `locale` option and formats dates with Moment. A `language` option carried over from the
+		// old smalot plugin is mapped onto Moment's locale - which only works because the
+		// `moment` package switches to the bundled-locales build for non-English applications.
 		if (isset($this->options['language']) && $this->options['language'] !== 'en') {
 			$language = $this->options['language'];
 			unset($this->options['language']);
