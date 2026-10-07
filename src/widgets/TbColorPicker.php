@@ -98,7 +98,7 @@ class TbColorPicker extends TbBaseInputWidget {
 		// Coloris accepts hex, rgb, hsl, auto or mixed. `rgba` was a valid value of $format under
 		// bootstrap-colorpicker; passing it straight through reaches a format radio that does not
 		// exist and throws as the picker opens, so it is translated instead.
-		$options = array('el' => '#' . $id);
+		$options = array();
 
 		if ($this->format) {
 			if ($this->format === 'rgba') {
@@ -116,8 +116,13 @@ class TbColorPicker extends TbBaseInputWidget {
 		// Coloris replaces bootstrap-colorpicker, archived in 2022. It binds by selector and has
 		// no jQuery dependency, so the widget's `events` are attached as plain DOM listeners -
 		// Coloris fires a `coloris:pick` event on the input.
+		// Coloris({...}) mutates one global config: `el` only adds a binding, while `format` and
+		// `alpha` are process-wide. Two pickers with different formats on one page therefore
+		// fought, and whichever script was emitted last won for both. setInstance() scopes the
+		// options to the selector, which is what this needs.
 		ob_start();
-		echo "Coloris({$options});";
+		echo "Coloris({'el':'#{$id}'});\n";
+		echo "Coloris.setInstance('#{$id}', {$options});";
 		foreach ($this->events as $event => $handler) {
 			echo "\njQuery('#{$id}').on('{$event}', " . CJavaScript::encode($handler) . ");";
 		}

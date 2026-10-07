@@ -1008,7 +1008,19 @@ Applied as jQuery method.
         @method tip()
         */         
         tip: function() {
-            return this.container() ? this.container().$tip : null;
+            var instance = this.container();
+            if (!instance) {
+                return null;
+            }
+
+            // Bootstrap 3 exposed the rendered popover as a jQuery object on `$tip`; Bootstrap 5
+            // exposes a raw Element on `tip`, and only once the popover has been shown. Every
+            // caller here uses jQuery methods (addClass/is/append/find/empty), so wrap it.
+            if (instance.$tip) {
+                return instance.$tip;
+            }
+
+            return instance.tip ? $(instance.tip) : null;
         },
 
         /* returns container object */

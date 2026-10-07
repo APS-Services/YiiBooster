@@ -25,10 +25,16 @@ class TbModalTest extends WidgetTestCase
 	 */
 	protected $clientScript;
 
+	/**
+	 * @var CClientScript the component replaced in setUp(), restored in tearDown().
+	 */
+	protected $realClientScript;
+
 	protected function setUp(): void
 	{
 		parent::setUp();
 
+		$this->realClientScript = Yii::app()->getClientScript();
 		$this->clientScript = new AssetsRegistryHook();
 		Yii::app()->setComponent('clientScript', $this->clientScript);
 	}
@@ -123,4 +129,14 @@ class TbModalTest extends WidgetTestCase
 		$this->assertStringContainsString('backdrop', $script);
 		$this->assertStringContainsString('static', $script);
 	}
+	protected function tearDown(): void
+	{
+		// Restore the real component: PHPUnit runs the whole suite in one process against one
+		// MinimalApplication, so leaving the double installed silently affects every test class
+		// that happens to run afterwards - and which those are depends on file ordering.
+		Yii::app()->setComponent('clientScript', $this->realClientScript);
+
+		parent::tearDown();
+	}
+
 }

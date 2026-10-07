@@ -8,6 +8,8 @@
  * @author amrbedair
  * @since v.4.0.0
  */
+Yii::import('booster.helpers.TbCss');
+
 abstract class TbWidget extends CWidget {
 
 	/**
@@ -54,14 +56,8 @@ abstract class TbWidget extends CWidget {
 	 * @param string $class
 	 */
 	protected static function addCssClass(&$htmlOptions, $class) {
-		
-		if (empty($class))
-			return;
-	
-		if (isset($htmlOptions['class']))
-			$htmlOptions['class'] .= ' ' . $class;
-		else 
-			$htmlOptions['class'] = $class;
+
+		TbCss::add($htmlOptions, $class);
 	}
 
 	/**

@@ -104,6 +104,22 @@ class Booster extends CApplicationComponent {
 	public $bootstrapIconsCss = true;
 
 	/**
+	 * @var boolean Whether the bundled Moment build should include every locale. Defaults to true.
+	 *
+	 * Moment keeps its locale data in separate files, so the plain build is English-only and
+	 * `moment.locale('de')` is a silent no-op against it. The date pickers format and parse
+	 * through Moment, so getting this wrong shows up as an English calendar rather than an error.
+	 *
+	 * This cannot be decided from `Yii::app()->language`: packages are built during init(), long
+	 * before a widget can say it wants `options['language'] => 'de'` on an otherwise English site.
+	 * So the correct build is the default, and a site that is genuinely English-only can set this
+	 * to false to save ~315K.
+	 *
+	 * @since 5.0.0
+	 */
+	public $momentLocales = true;
+
+	/**
 	 * @var string CSS class prefix of the icon family widgets should emit.
 	 *
 	 * Defaults to `bi` (Bootstrap Icons). Set to `fa` to emit Font Awesome classes instead -

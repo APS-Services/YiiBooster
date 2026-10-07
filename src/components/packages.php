@@ -102,11 +102,12 @@ return array(
 	'moment' => array(
 		// daterangepicker formats and parses through Moment, and Moment's locale data lives in
 		// separate files - moment.min.js alone is English-only, so moment.locale('de') silently
-		// does nothing. The bundled-locales build is ~315K larger, so it is only served when the
-		// application is not running in English.
+		// does nothing. Keying this off Yii::app()->language was wrong: a widget can ask for a
+		// locale on an otherwise English site, and packages are built long before it gets to.
+		// See Booster::$momentLocales.
 		'baseUrl' => $this->getAssetsUrl(),
 		'js' => array(
-			strpos(Yii::app()->language, 'en') === 0 ? 'js/moment.min.js' : 'js/moment-with-locales.min.js'
+			$this->momentLocales ? 'js/moment-with-locales.min.js' : 'js/moment.min.js'
 		),
 	),
 	'picker' => array(

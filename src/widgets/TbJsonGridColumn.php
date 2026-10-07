@@ -36,7 +36,7 @@ class TbJsonGridColumn extends TbDataColumn
 				$label = isset($this->header) ? $this->header : $sort->resolveLabel($this->name);
 
 				if ($sort->resolveAttribute($this->name) !== false) {
-					$label .= TbIcon::render('bi-caret-down-fill');
+					$label .= TbIcon::renderNamed('caret-down-fill');
 				}
 				$content['content'] = $sort->link($this->name, $label, array('class' => 'sort-link'));
 			} else {

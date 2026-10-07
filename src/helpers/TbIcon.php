@@ -235,6 +235,30 @@ class TbIcon
 	}
 
 	/**
+	 * Renders an icon given by its *current* name in the configured family.
+	 *
+	 * Use this for icons the library itself asks for, where the name is known to be valid for the
+	 * active family and needs no Glyphicons translation - the grid sort caret, for example.
+	 * render() would push such a name through the legacy map and log a YII_DEBUG warning for
+	 * every occurrence, and hardcoding the family prefix instead (`bi-caret-down-fill`) breaks
+	 * Booster::$iconPrefix.
+	 *
+	 * @param string $name
+	 * @param array $htmlOptions
+	 * @return string
+	 * @since 5.0.0
+	 */
+	public static function renderNamed($name, $htmlOptions = array())
+	{
+		$name = trim((string) $name);
+		if ($name === '') {
+			return '';
+		}
+
+		return self::renderWithCssClass(self::$family . ' ' . self::$family . '-' . $name, $htmlOptions);
+	}
+
+	/**
 	 * Renders an icon element, or an empty string when there is no icon.
 	 *
 	 * @param string $icon
@@ -243,7 +267,19 @@ class TbIcon
 	 */
 	public static function render($icon, $htmlOptions = array())
 	{
-		$class = self::resolveCssClass($icon);
+		return self::renderWithCssClass(self::resolveCssClass($icon), $htmlOptions);
+	}
+
+	/**
+	 * Builds the icon element from an already-resolved class string.
+	 *
+	 * @param string $class
+	 * @param array $htmlOptions
+	 * @return string
+	 * @since 5.0.0
+	 */
+	protected static function renderWithCssClass($class, $htmlOptions = array())
+	{
 		if ($class === '') {
 			return '';
 		}

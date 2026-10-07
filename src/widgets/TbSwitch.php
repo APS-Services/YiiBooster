@@ -11,6 +11,8 @@
  * @package booster.widgets.forms.buttons
  *
  */
+Yii::import('booster.helpers.TbCss');
+
 class TbSwitch extends CInputWidget {
 
 	/**
@@ -102,11 +104,7 @@ class TbSwitch extends CInputWidget {
 	 */
 	protected static function addCssClass(&$htmlOptions, $class) {
 
-		if (isset($htmlOptions['class']) && $htmlOptions['class'] !== '') {
-			$htmlOptions['class'] .= ' ' . $class;
-		} else {
-			$htmlOptions['class'] = $class;
-		}
+		TbCss::add($htmlOptions, $class);
 	}
 
 	/**

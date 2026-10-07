@@ -54,34 +54,10 @@ class TbDropdown extends TbBaseMenu {
 			}
 		}
 
-		if (!isset($item['linkOptions'])) {
-			$item['linkOptions'] = array();
-		}
-
-		// TODO: Bootstrap 3 does not support submenu 
-		// http://stackoverflow.com/questions/18023493/bootstrap-3-dropdown-sub-menu-missing
-		// we may use this to support it 
-		/* if (isset($item['items']) && !empty($item['items']) && empty($item['url'])) {
-			$item['url'] = '#';
-		} */
-
 		// Bootstrap 3's dropdown markup put tabindex="-1" on every item; Bootstrap 5 does not,
-		// and keeping it would take the whole menu out of the keyboard tab order.
-
-		// This class overrides renderMenuItem() wholesale, so the anchor styling the parent
-		// applies has to be repeated here.
-		self::addCssClass($item['linkOptions'], $this->getLinkCssClass());
-
-		if (!empty($item['active']) && $this->activeCssClass != '') {
-			self::addCssClass($item['linkOptions'], $this->activeCssClass);
-			$item['linkOptions']['aria-current'] = 'true';
-		}
-
-		if (isset($item['disabled'])) {
-			self::addCssClass($item['linkOptions'], 'disabled');
-			$item['linkOptions']['tabindex'] = '-1';
-			$item['linkOptions']['aria-disabled'] = 'true';
-		}
+		// and keeping it would take the whole menu out of the keyboard tab order - so it is now
+		// applied only to genuinely disabled items, by applyLinkOptions().
+		$this->applyLinkOptions($item);
 
 		if (isset($item['url'])) {
 			return CHtml::link($item['label'], $item['url'], $item['linkOptions']);
@@ -99,17 +75,6 @@ class TbDropdown extends TbBaseMenu {
 	public function getDividerCssClass()
 	{
 		return 'dropdown-divider';
-	}
-
-	/**
-	 * Dropdown items take no class of their own; Bootstrap styles the anchor.
-	 *
-	 * @return string
-	 * @since 5.0.0
-	 */
-	public function getItemCssClass()
-	{
-		return '';
 	}
 
 	/**

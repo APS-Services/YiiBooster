@@ -69,6 +69,8 @@
  * @see http://getbootstrap.com/2.3.2/base-css.html#forms
  * @see CActiveForm
  */
+Yii::import('booster.helpers.TbCss');
+
 class TbActiveForm extends CActiveForm {
 	
 	// Allowed form types.
@@ -573,13 +575,16 @@ class TbActiveForm extends CActiveForm {
 	public function radioButtonGroup($model, $attribute, $options = array()) {
 		
 		$this->initOptions($options);
-		$widgetOptions = $options['widgetOptions']['htmlOptions'];
-		
 		// Bootstrap 4 replaced the .radio / .radio-inline label classes with a form-check
 		// wrapper; the label itself becomes form-check-label.
 		self::addCssClass($options['labelOptions'], 'form-check-label');
+
+		// The classes have to go on the array the field is actually rendered from. PHP copies
+		// arrays on assignment, so writing through $options after taking this copy silently
+		// discarded both form-check-input and is-invalid.
 		$this->addControlCssClass($options['widgetOptions']['htmlOptions'], $model, $attribute, 'form-check-input');
-		
+		$widgetOptions = $options['widgetOptions']['htmlOptions'];
+
 		$field = $this->radioButton($model, $attribute, $widgetOptions);
 		if ((!array_key_exists('uncheckValue', $widgetOptions) || isset($widgetOptions['uncheckValue']))
 			&& preg_match('/\<input.*?type="hidden".*?\>/', $field, $matches)
@@ -603,7 +608,10 @@ class TbActiveForm extends CActiveForm {
 		echo CHtml::closeTag('label');
 		$fieldData = ob_get_clean();
 
-		$widgetOptions['label'] = '';
+		// Suppress the group label: the field above already renders it inside the form-check
+		// label. $widgetOptions is a local copy, so writing it there had no effect and the label
+		// came out twice - checkboxGroup sets $options['label'] for exactly this reason.
+		$options['label'] = '';
 
 		return $this->customFieldGroupInternal($fieldData, $model, $attribute, $options);
 	}
@@ -738,8 +746,11 @@ class TbActiveForm extends CActiveForm {
 		if (!isset($widgetOptions['labelOptions']['class']))
 			$widgetOptions['labelOptions']['class'] = 'form-check-label';
 
-		if (!isset($widgetOptions['htmlOptions']['class']))
-			$widgetOptions['htmlOptions']['class'] = 'form-check-input';
+		// $widgetOptions is already the htmlOptions array - nesting another htmlOptions key
+		// inside it made CHtml render `htmlOptions="Array"` as an attribute (a TypeError on
+		// PHP 8) and the class never reached the inputs.
+		if (!isset($widgetOptions['class']))
+			$widgetOptions['class'] = 'form-check-input';
 
 		if (!isset($widgetOptions['template']))
 			$widgetOptions['template'] = '{beginLabel}{input}{labelTitle}{endLabel}';
@@ -780,8 +791,11 @@ class TbActiveForm extends CActiveForm {
 		if (!isset($widgetOptions['labelOptions']['class']))
 			$widgetOptions['labelOptions']['class'] = 'form-check-label';
 
-		if (!isset($widgetOptions['htmlOptions']['class']))
-			$widgetOptions['htmlOptions']['class'] = 'form-check-input';
+		// $widgetOptions is already the htmlOptions array - nesting another htmlOptions key
+		// inside it made CHtml render `htmlOptions="Array"` as an attribute (a TypeError on
+		// PHP 8) and the class never reached the inputs.
+		if (!isset($widgetOptions['class']))
+			$widgetOptions['class'] = 'form-check-input';
 		
 		if (!isset($widgetOptions['template']))
 			$widgetOptions['template'] = '{beginLabel}{input}{labelTitle}{endLabel}';
@@ -812,7 +826,8 @@ class TbActiveForm extends CActiveForm {
 	 */
 	public function switchGroup($model, $attribute, $options = array()) {
 		
-		return $this->widgetGroupInternal('booster.widgets.TbSwitch', $model, $attribute, $options);
+		// TbSwitch adds form-check-input itself; form-control would fight with it.
+		return $this->widgetGroupInternal('booster.widgets.TbSwitch', $model, $attribute, $options, null);
 	}
 
 	/**
@@ -1126,13 +1141,26 @@ class TbActiveForm extends CActiveForm {
 	 * @param array $options Group attributes.
 	 * @return string The generated widget group.
 	 */
-	protected function widgetGroupInternal($className, &$model, &$attribute, &$options) {
+	protected function widgetGroupInternal($className, &$model, &$attribute, &$options, $baseClass = 'form-control') {
 		$this->initOptions($options);
 		$widgetOptions = $options['widgetOptions'];
 		$widgetOptions['model'] = $model;
 		$widgetOptions['attribute'] = $attribute;
-		
-		$this->addControlCssClass($widgetOptions['htmlOptions'], $model, $attribute);
+
+		// Not every widget wants form-control. A switch is a checkbox inside .form-check, and
+		// Bootstrap 5's .form-control brings display:block, padding and its own border - so
+		// stamping it on unconditionally rendered the switch as a full-width padded box. Widgets
+		// that style their own control pass null and add their class themselves.
+		if ($baseClass !== null) {
+			$this->addControlCssClass($widgetOptions['htmlOptions'], $model, $attribute, $baseClass);
+		} else {
+			// Still mark the invalid state, which addControlCssClass would otherwise have done.
+			$resolved = $attribute;
+			CHtml::resolveName($model, $resolved);
+			if ($model->hasErrors($resolved)) {
+				self::addCssClass($widgetOptions['htmlOptions'], 'is-invalid');
+			}
+		}
 		
 		$fieldData = array(array($this->owner, 'widget'), array($className, $widgetOptions, true));
 
@@ -1476,15 +1504,7 @@ class TbActiveForm extends CActiveForm {
 	 * @param string $class
 	 */
 	protected static function addCssClass(&$htmlOptions, $class) {
-		
-		if (empty($class)) {
-			return;
-		}
 
-		if (isset($htmlOptions['class'])) {
-			$htmlOptions['class'] .= ' ' . $class;
-		} else {
-			$htmlOptions['class'] = $class;
-		}
+		TbCss::add($htmlOptions, $class);
 	}
 }

@@ -9,12 +9,31 @@ require_once(__DIR__ . '/../../fakes/AssetsRegistryHook.php');
 require_once(__DIR__ . '/../../../src/widgets/TbTags.php');
 require_once(__DIR__ . '/../../../src/widgets/TbColorPicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbTabs.php');
+require_once(__DIR__ . '/../../../src/widgets/TbActiveForm.php');
+require_once(__DIR__ . '/../../../src/helpers/TbCss.php');
+require_once(__DIR__ . '/../../../src/helpers/TbIcon.php');
 
 /**
  * Regression tests for the Bootstrap 5 plugin replacements, covering the defects a code review
  * found after the swap - each of which was a case of the plugin call being replaced while the
  * markup or options it depended on were left behind.
  */
+/**
+ * Local model: FakeModel is declared inside TbActiveFormTest.php, so using it here would couple
+ * this file to PHPUnit's file ordering.
+ */
+class PluginReplacementModel extends CFormModel
+{
+	public $colour;
+	public $tags;
+	public $choice;
+
+	public function rules()
+	{
+		return array(array('colour, tags, choice', 'safe'));
+	}
+}
+
 class PluginReplacementTest extends WidgetTestCase
 {
 	/**
@@ -22,10 +41,16 @@ class PluginReplacementTest extends WidgetTestCase
 	 */
 	protected $clientScript;
 
+	/**
+	 * @var CClientScript the component replaced in setUp(), restored in tearDown().
+	 */
+	protected $realClientScript;
+
 	protected function setUp(): void
 	{
 		parent::setUp();
 
+		$this->realClientScript = Yii::app()->getClientScript();
 		$this->clientScript = new AssetsRegistryHook();
 		Yii::app()->setComponent('clientScript', $this->clientScript);
 	}
@@ -183,6 +208,145 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
+	 * `$widgetOptions` in the list groups IS the htmlOptions array; nesting another htmlOptions
+	 * key inside it made CHtml emit `htmlOptions="Array"` as an attribute.
+	 *
+	 * @test
+	 */
+	public function checkboxListGroupPutsTheControlClassOnTheInputs()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		$model = new PluginReplacementModel();
+
+		$html = $form->checkboxListGroup($model, 'choice', array(
+			'widgetOptions' => array('data' => array('a' => 'A', 'b' => 'B')),
+		));
+
+		$this->assertStringNotContainsString('htmlOptions', $html, 'htmlOptions leaked as an attribute.');
+		$this->assertStringContainsString('form-check-input', $html);
+	}
+
+	/**
+	 * @test
+	 */
+	public function radioButtonListGroupPutsTheControlClassOnTheInputs()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		$model = new PluginReplacementModel();
+
+		$html = $form->radioButtonListGroup($model, 'choice', array(
+			'widgetOptions' => array('data' => array('a' => 'A', 'b' => 'B')),
+		));
+
+		$this->assertStringNotContainsString('htmlOptions', $html);
+		$this->assertStringContainsString('form-check-input', $html);
+	}
+
+	/**
+	 * PHP copies arrays on assignment, so the classes had to be applied before the copy the
+	 * field is rendered from was taken - they were being written to a dead path.
+	 *
+	 * @test
+	 */
+	public function radioButtonGroupReachesTheInputWithItsClasses()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		// init() normally seeds this; constructing the form directly skips it.
+		$form->clientOptions['errorCssClass'] = 'has-validation-error';
+		$model = new PluginReplacementModel();
+		$model->addError('choice', 'nope');
+
+		$html = $form->radioButtonGroup($model, 'choice');
+
+		$this->assertStringContainsString('form-check-input', $html);
+		$this->assertStringContainsString('is-invalid', $html);
+		$this->assertStringContainsString('form-check', $html);
+	}
+
+	/**
+	 * The group renderer emitted the attribute label as well as the one inside the form-check
+	 * label, because the suppression wrote to a local copy.
+	 *
+	 * @test
+	 */
+	public function radioButtonGroupRendersItsLabelOnlyOnce()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		$model = new PluginReplacementModel();
+
+		$html = $form->radioButtonGroup($model, 'choice');
+
+		$this->assertEquals(
+			1,
+			substr_count($html, $model->getAttributeLabel('choice')),
+			'The attribute label appears more than once.'
+		);
+	}
+
+	/**
+	 * array_combine() on two empty arrays returns false on PHP 5.3, which src/ targets - and the
+	 * empty case is the normal one for a new record.
+	 *
+	 * @test
+	 */
+	public function tagsHandlesHavingNoTagsAtAll()
+	{
+		$xpath = $this->renderXPath('TbTags', array('name' => 'Post[tags]'));
+
+		$this->assertNodeCount($xpath, '//select', 1);
+		$this->assertNodeCount($xpath, '//select/option', 0);
+	}
+
+	/**
+	 * Hardcoding `bi-` defeated Booster::$iconPrefix and produced `fa fa-bi-…`.
+	 *
+	 * @test
+	 */
+	public function sortCaretFollowsTheConfiguredIconFamily()
+	{
+		TbIcon::$family = 'fa';
+		$this->assertStringContainsString('class="fa fa-caret-down-fill"', TbIcon::renderNamed('caret-down-fill'));
+
+		TbIcon::$family = 'bi';
+		$this->assertStringContainsString('class="bi bi-caret-down-fill"', TbIcon::renderNamed('caret-down-fill'));
+
+		// Guards the reason renderNamed() exists: resolveCssClass() treats a non-bi family prefix
+		// as a foreign family and hands it back untouched, losing the base class.
+		TbIcon::$family = 'fa';
+		$this->assertEquals('fa-caret-down-fill', TbIcon::resolveCssClass('fa-caret-down-fill'));
+	}
+
+	/**
+	 * Coloris' `format`/`alpha` are global; only `el` is per-binding. Two pickers with different
+	 * formats on one page overwrote each other.
+	 *
+	 * @test
+	 */
+	public function colorPickerScopesItsOptionsToTheInput()
+	{
+		$this->render('TbColorPicker', array('name' => 'Post[colour]', 'format' => 'rgba'));
+		$script = $this->registeredScripts();
+
+		$this->assertStringContainsString('Coloris.setInstance(', $script);
+	}
+
+	/**
+	 * The five drifted copies of addCssClass are now one implementation.
+	 *
+	 * @test
+	 */
+	public function cssClassHelperIsConsistentAndDeduplicates()
+	{
+		$options = array();
+		TbCss::add($options, '');
+		$this->assertArrayNotHasKey('class', $options, 'An empty class should add nothing.');
+
+		TbCss::add($options, 'a');
+		TbCss::add($options, 'b a');
+		$this->assertEquals('a b', $options['class']);
+	}
+
+	/**
 	 * Every library vendored under src/assets is redistributed by `phing dist`, so its licence
 	 * notice has to travel with it.
 	 *
@@ -217,4 +381,14 @@ class PluginReplacementTest extends WidgetTestCase
 			$this->assertRegExp('/copyright/i', $header, $library);
 		}
 	}
+	protected function tearDown(): void
+	{
+		// Restore the real component: PHPUnit runs the whole suite in one process against one
+		// MinimalApplication, so leaving the double installed silently affects every test class
+		// that happens to run afterwards - and which those are depends on file ordering.
+		Yii::app()->setComponent('clientScript', $this->realClientScript);
+
+		parent::tearDown();
+	}
+
 }

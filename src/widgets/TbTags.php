@@ -15,6 +15,8 @@
  *
  * @package booster.widgets.forms.inputs
  */
+Yii::import('booster.helpers.TbCss');
+
 class TbTags extends CInputWidget {
 	
 	/**
@@ -176,7 +178,9 @@ class TbTags extends CInputWidget {
 		$selected = $this->resolveTags();
 		// Select2's `tags` mode accepts values that are not in the option list, so the current
 		// tags are the whole list - there is nothing else to offer.
-		$data = array_combine($selected, $selected);
+		// array_combine() on two empty arrays returns false on PHP 5.3/5.4 rather than array(),
+		// and src/ targets 5.3 - the empty case is the normal one for a new record.
+		$data = empty($selected) ? array() : array_combine($selected, $selected);
 
 		if ($this->hasModel()) {
 			if ($this->form) {
@@ -227,11 +231,7 @@ class TbTags extends CInputWidget {
 	 */
 	protected static function addCssClass(&$htmlOptions, $class) {
 
-		if (isset($htmlOptions['class']) && $htmlOptions['class'] !== '') {
-			$htmlOptions['class'] .= ' ' . $class;
-		} else {
-			$htmlOptions['class'] = $class;
-		}
+		TbCss::add($htmlOptions, $class);
 	}
 
 	/**

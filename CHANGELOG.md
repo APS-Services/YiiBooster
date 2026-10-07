@@ -227,6 +227,41 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   `src/`, so the notice has to travel with the copy; a test asserts this and records daterangepicker
   as the one library whose notice lives in its file header instead.
 
+- **(fix)** x-editable's popup mode worked again. The Bootstrap 5 patch rewired `container()` but
+  left the generic `tip()` reading Bootstrap 3's `$tip` jQuery property, which Bootstrap 5 does not
+  have - so every popup edit threw `Cannot read properties of undefined`.
+- **(fix)** `TbEditable` with `type => 'datetime'` registered the `datetimepicker` package, which
+  5.0 removed - a fatal under `YII_DEBUG`. It now registers `daterangepicker`.
+- **(fix)** `checkboxListGroup()` and `radioButtonListGroup()` wrote a nested `htmlOptions` key into
+  what already *was* the htmlOptions array, emitting `htmlOptions="Array"` as an attribute (a
+  TypeError on PHP 8) while the control class never reached the inputs.
+- **(fix)** `radioButtonGroup()` applied its classes after the array the field renders from had
+  been copied, so `form-check-input` and `is-invalid` were discarded; and its label suppression
+  wrote to the same dead copy, rendering the attribute label twice.
+- **(fix)** `widgetGroupInternal()` no longer stamps `form-control` on every widget. It fought with
+  the `form-check-input` on a switch, rendering it as a full-width padded box; the base class is now
+  a parameter and `switchGroup()` opts out.
+- **(fix)** `TbSelect2::$readonly` no longer silently drops the value. It was implemented as
+  `prop('disabled')`, and browsers omit disabled controls from the payload, so saving a readonly
+  field nulled the attribute. It now disables the control *and* mirrors the value into a hidden
+  field. `$disabled` stays genuinely disabled.
+- **(fix)** the grid sort caret honours `Booster::$iconPrefix` again; it hardcoded `bi-`, which
+  produced `fa fa-bi-caret-down-fill` under Font Awesome. New `TbIcon::renderNamed()` renders a name
+  that is already current in the configured family, without the legacy map or its debug warning.
+- **(fix)** `TbColorPicker` configures Coloris per input via `setInstance()`. `format` and `alpha`
+  are global in Coloris, so two pickers with different formats on one page overwrote each other.
+- **(fix)** `TbDatePicker` loads its CDN locale from jsDelivr 1.10.0, matching the package. It
+  pointed at cdnjs 1.2.0 - the exact CSS/JS divergence 5.0 set out to remove.
+- **(enh)** new `Booster::$momentLocales` (default true) selects Moment's locale-bundled build.
+  Keying this off `Yii::app()->language` was wrong: packages are built during `init()`, long before
+  a widget can ask for a locale on an otherwise English site. Set it false to save ~315K.
+- **(enh)** the five drifted copies of `addCssClass()` now delegate to one `TbCss::add()`, which
+  also de-duplicates. Two guarded on `empty($class)`, one on `$class === ''`, and two not at all.
+- **(enh)** `TbBaseMenu::applyLinkOptions()` holds the shared anchor state; `TbDropdown` called a
+  drifted copy that set a different `aria-current` and gave nested items no `dropdown-toggle` at all.
+- **(fix)** tests that swap in a `clientScript` double now restore it in `tearDown()`, so the suite
+  stops depending on PHPUnit's file ordering.
+
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
   libraries; 5.0 consolidates onto `TbMarkdownEditor`. Keeps a throwing stub.

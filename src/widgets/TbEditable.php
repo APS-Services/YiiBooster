@@ -557,7 +557,10 @@ class TbEditable extends CWidget
             );
             $widget->registerLanguageScript();
         } elseif ($this->type == 'datetime') {
-            $booster->registerPackage('datetimepicker');
+            // The smalot `datetimepicker` package was removed in 5.0 along with the archived
+            // plugin; TbDateTimePicker now drives daterangepicker. Registering the old name
+            // throws "There is no CClientScript package" under YII_DEBUG.
+            $booster->registerPackage('daterangepicker');
 
             /** @var $widget TbDateTimePicker */
             $widget = Yii::app()->widgetFactory->createWidget(

@@ -39,7 +39,7 @@ class TbDataColumn extends CDataColumn
 
 
 			if ($sort->resolveAttribute($this->name) !== false)
-				$label .= ' ' . TbIcon::render('bi-caret-down-fill');
+				$label .= ' ' . TbIcon::renderNamed('caret-down-fill');
 
 			echo $sort->link($this->name, $label, array('class' => 'sort-link'));
 		} else {

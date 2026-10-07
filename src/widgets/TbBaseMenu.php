@@ -9,6 +9,7 @@
 
 Yii::import('zii.widgets.CMenu');
 Yii::import('booster.helpers.TbIcon');
+Yii::import('booster.helpers.TbCss');
 
 /**
  *## Base class for menu in Booster
@@ -75,15 +76,7 @@ abstract class TbBaseMenu extends CMenu {
 	 */
 	protected static function addCssClass(&$htmlOptions, $class) {
 
-		if ($class === '') {
-			return;
-		}
-
-		if (isset($htmlOptions['class']) && $htmlOptions['class'] !== '') {
-			$htmlOptions['class'] .= ' ' . $class;
-		} else {
-			$htmlOptions['class'] = $class;
-		}
+		TbCss::add($htmlOptions, $class);
 	}
 
 	/**
@@ -175,6 +168,51 @@ abstract class TbBaseMenu extends CMenu {
 	}
 
 	/**
+	 * Applies the Bootstrap 5 anchor state to a menu item, in place.
+	 *
+	 * Bootstrap 4 moved the active and disabled states from the `<li>` onto the `<a>`, so every
+	 * menu flavour needs the same three steps. TbDropdown overrides renderMenuItem() wholesale and
+	 * used to repeat them - the copies had already drifted (differing `aria-current`, and no
+	 * submenu toggle at all), which is why this lives here instead.
+	 *
+	 * @param array $item modified in place.
+	 * @since 5.0.0
+	 */
+	protected function applyLinkOptions(&$item) {
+
+		if (!isset($item['linkOptions'])) {
+			$item['linkOptions'] = array();
+		}
+
+		self::addCssClass($item['linkOptions'], $this->getLinkCssClass());
+
+		if (!empty($item['active']) && $this->activeCssClass != '') {
+			self::addCssClass($item['linkOptions'], $this->activeCssClass);
+			$item['linkOptions']['aria-current'] = 'page';
+		}
+
+		if (isset($item['disabled'])) {
+			self::addCssClass($item['linkOptions'], 'disabled');
+			// .disabled only styles the anchor; without these it stays focusable and clickable.
+			$item['linkOptions']['tabindex'] = '-1';
+			$item['linkOptions']['aria-disabled'] = 'true';
+		}
+
+		if (!empty($item['items'])) {
+			if (empty($item['url'])) {
+				$item['url'] = '#';
+			}
+
+			self::addCssClass($item['linkOptions'], 'dropdown-toggle');
+			$item['linkOptions']['data-bs-toggle'] = 'dropdown';
+			// No caret element: Bootstrap draws it from .dropdown-toggle::after, so an explicit
+			// span renders a second, misplaced triangle.
+			$item['linkOptions']['role'] = 'button';
+			$item['linkOptions']['aria-expanded'] = 'false';
+		}
+	}
+
+	/**
 	 *### .renderMenuItem()
 	 *
 	 * Renders the content of a menu item.
@@ -196,42 +234,7 @@ abstract class TbBaseMenu extends CMenu {
 			}
 		}
 
-		if (!isset($item['linkOptions'])) {
-			$item['linkOptions'] = array();
-		}
-
-		// Bootstrap 4+ styles the anchor rather than the list item.
-		self::addCssClass($item['linkOptions'], $this->getLinkCssClass());
-
-		if (!empty($item['active']) && $this->activeCssClass != '') {
-			self::addCssClass($item['linkOptions'], $this->activeCssClass);
-			$item['linkOptions']['aria-current'] = 'page';
-		}
-
-		if (isset($item['disabled'])) {
-			self::addCssClass($item['linkOptions'], 'disabled');
-			// .disabled only styles the anchor; without these it stays focusable and clickable.
-			$item['linkOptions']['tabindex'] = '-1';
-			$item['linkOptions']['aria-disabled'] = 'true';
-		}
-
-		if (isset($item['items']) && !empty($item['items'])) {
-			if (empty($item['url'])) {
-				$item['url'] = '#';
-			}
-
-			if (isset($item['linkOptions']['class'])) {
-				$item['linkOptions']['class'] .= ' dropdown-toggle';
-			} else {
-				$item['linkOptions']['class'] = 'dropdown-toggle';
-			}
-
-			$item['linkOptions']['data-bs-toggle'] = 'dropdown';
-			// No caret element: Bootstrap draws it from .dropdown-toggle::after, so an explicit
-			// span renders a second, misplaced triangle.
-			$item['linkOptions']['role'] = 'button';
-			$item['linkOptions']['aria-expanded'] = 'false';
-		}
+		$this->applyLinkOptions($item);
 
 		if (isset($item['url'])) {
 			return CHtml::link($item['label'], $item['url'], $item['linkOptions']);
