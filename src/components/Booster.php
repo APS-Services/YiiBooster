@@ -26,7 +26,10 @@
  * Bootstrap 3.x.x
  * @author Amr Bedair <amr.bedair@gmail.com>
  * @version 4.0.0
- * 
+ *
+ * Bootstrap 5.x.x
+ * @version 5.0.0
+ *
  */
 
 /**
@@ -63,8 +66,14 @@ class Booster extends CApplicationComponent {
 	public $bootstrapCss = true;
 
 	/**
-	 * @var boolean whether to register the Bootstrap responsive CSS (bootstrap-responsive.min.css).
-	 * Defaults to false.
+	 * @var boolean whether to emit the responsive viewport meta tag.
+	 *
+	 * The name is a leftover from Bootstrap 2, which shipped a separate `bootstrap-responsive.css`.
+	 * No such file has existed since Bootstrap 3 - responsive behaviour is baked into the core
+	 * stylesheet - so this now controls only the `<meta name="viewport">` tag, which Bootstrap 5
+	 * still requires. Defaults to true.
+	 *
+	 * @see registerMetadataForResponsive
 	 */
 	public $responsiveCss = true;
 	
@@ -82,6 +91,45 @@ class Booster extends CApplicationComponent {
 	 * Note that FontAwesome does not include some of the Twitter Bootstrap built-in icons!
 	 */
 	public $fontAwesomeCss = false;
+
+	/**
+	 * @var boolean Whether to register the Bootstrap Icons CSS. Defaults to true.
+	 *
+	 * Bootstrap 4 dropped Glyphicons and ships no icons of its own, so a widget asked for an
+	 * icon has to get it from somewhere. Bootstrap Icons is the set maintained alongside
+	 * Bootstrap itself. Set to false if the application supplies its own icon font.
+	 *
+	 * @since 5.0.0
+	 */
+	public $bootstrapIconsCss = true;
+
+	/**
+	 * @var boolean Whether the bundled Moment build should include every locale. Defaults to true.
+	 *
+	 * Moment keeps its locale data in separate files, so the plain build is English-only and
+	 * `moment.locale('de')` is a silent no-op against it. The date pickers format and parse
+	 * through Moment, so getting this wrong shows up as an English calendar rather than an error.
+	 *
+	 * This cannot be decided from `Yii::app()->language`: packages are built during init(), long
+	 * before a widget can say it wants `options['language'] => 'de'` on an otherwise English site.
+	 * So the correct build is the default, and a site that is genuinely English-only can set this
+	 * to false to save ~315K.
+	 *
+	 * @since 5.0.0
+	 */
+	public $momentLocales = true;
+
+	/**
+	 * @var string CSS class prefix of the icon family widgets should emit.
+	 *
+	 * Defaults to `bi` (Bootstrap Icons). Set to `fa` to emit Font Awesome classes instead -
+	 * note that in that case you are responsible for loading Font Awesome, and that icon names
+	 * are passed through unmapped.
+	 *
+	 * @see TbIcon
+	 * @since 5.0.0
+	 */
+	public $iconPrefix = 'bi';
 
 	/**
 	 * @var bool Whether to use minified CSS and Javascript files. Default to true.
@@ -165,7 +213,7 @@ class Booster extends CApplicationComponent {
 	 * Now the popovers are always being bound to specific elements.
 	 * According to the documentation: http://twitter.github.io/bootstrap/javascript.html#popovers
 	 */
-	public $popoverSelector = '[data-toggle=popover]';
+	public $popoverSelector = '[data-bs-toggle=popover]';
 
 	/**
 	 * @var string default tooltip CSS selector.
@@ -178,7 +226,7 @@ class Booster extends CApplicationComponent {
 	 * previously it was the direct selector to which to apply the `tooltip` plugin,
 	 * now it is the value for `selector` plugin option.
 	 */
-	public $tooltipSelector = '[data-toggle=tooltip]';
+	public $tooltipSelector = '[data-bs-toggle=tooltip]';
 
 	/**
 	 * @var array list of script packages (name=>package spec).
@@ -218,6 +266,8 @@ class Booster extends CApplicationComponent {
         self::setBooster($this);
 
         $this->setRootAliasIfUndefined();
+
+        $this->configureIconFamily();
 
 		$this->setAssetsRegistryIfNotDefined();
 
@@ -271,7 +321,6 @@ class Booster extends CApplicationComponent {
 		$bootstrapPackages = require(Yii::getPathOfAlias('booster.components') . '/packages.php');
 		$bootstrapPackages += $this->createBootstrapCssPackage();
 		$bootstrapPackages += $this->createSelect2Package();
-		$bootstrapPackages += $this->createChosenPackage();
 
 		$this->packages = CMap::mergeArray(
 			$bootstrapPackages,
@@ -306,6 +355,9 @@ class Booster extends CApplicationComponent {
 
 		if ($this->fontAwesomeCss)
 			$this->registerFontAwesomeCss();
+
+		if ($this->bootstrapIconsCss)
+			$this->registerBootstrapIconsCss();
 
 		if ($this->responsiveCss)
 			$this->registerMetadataForResponsive();
@@ -358,7 +410,6 @@ class Booster extends CApplicationComponent {
 			return;
 
 		$this->registerPackage('bootstrap.js');
-        $this->registerPackage('bootstrap-noconflict');
 
 		if ($this->enableBootboxJS)
 			$this->registerPackage('bootbox');
@@ -457,56 +508,77 @@ class Booster extends CApplicationComponent {
 	protected function createBootstrapCssPackage() {
 		
 		return array('bootstrap.css' => array(
-			'baseUrl' => $this->enableCdn ? '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/' : $this->getAssetsUrl() . '/bootstrap/',
+			// Must stay on the same Bootstrap version as the `bootstrap.js` package in
+			// packages.php. Before 5.0 these disagreed - CSS 3.2.0 against JS 3.3.2 - and both
+			// pointed at maxcdn.bootstrapcdn.com, which no longer exists.
+			'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/' : $this->getAssetsUrl() . '/bootstrap/',
 			'css' => array($this->minify ? 'css/bootstrap.min.css' : 'css/bootstrap.css'),
 		));
 	}
 
-	/**
-	 * Make chosen package definition
-	 * @return array
-	 */
-	protected function createChosenPackage() {
-		
-		return array('chosen' => array(
-			'baseUrl' => $this->getAssetsUrl() . '/chosen/',
-			'js' => array('chosen.jquery.min.js'),
-			'css' => array('chosen.min.css'),
-			'depends' => array('jquery'),
-		));
-	}
         
 	/**
 	 * Make select2 package definition
+	 *
 	 * @return array
 	 */
 	protected function createSelect2Package() {
-		
-		$jsFiles = array($this->minify ? 'select2.min.js' : 'select2.js');
 
-		if (strpos(Yii::app()->language, 'en') !== 0) {
-			$locale = 'select2_locale_'. substr(Yii::app()->language, 0, 2). '.js';
-			if (@file_exists(Yii::getPathOfAlias('booster.assets.select2') . DIRECTORY_SEPARATOR . $locale )) {
-				$jsFiles[] = $locale;
-			} else {
-				$locale = 'select2_locale_'. Yii::app()->language . '.js';
-				if (@file_exists(Yii::getPathOfAlias('booster.assets.select2') . DIRECTORY_SEPARATOR . $locale )) {
-					$jsFiles[] = $locale;
-				}else{
-					$locale = 'select2_locale_'. substr(Yii::app()->language, 0, 2) . '-' . strtoupper(substr(Yii::app()->language, 3, 2)) . '.js';
-					if (@file_exists(Yii::getPathOfAlias('booster.assets.select2') . DIRECTORY_SEPARATOR . $locale )) {
-						$jsFiles[] = $locale;
-					}
-				}
-			}
+		$jsFiles = array($this->minify ? 'js/select2.min.js' : 'js/select2.js');
+
+		// Select2 4.x ships translations as js/i18n/<code>.js. Version 3.x used a flat
+		// select2_locale_<code>.js at the package root, which is why this used to probe three
+		// different filename shapes; the layout is predictable now, so one lookup does it.
+		$locale = $this->resolveSelect2Locale();
+		if ($locale !== null) {
+			$jsFiles[] = 'js/i18n/' . $locale . '.js';
 		}
 
 		return array('select2' => array(
 			'baseUrl' => $this->getAssetsUrl() . '/select2/',
 			'js' => $jsFiles,
-			'css' => array('select2.css', 'select2-bootstrap.css'),
+			'css' => array(
+				$this->minify ? 'css/select2.min.css' : 'css/select2.css',
+				// Select2's own Bootstrap theme only ever targeted Bootstrap 3.
+				$this->minify ? 'css/select2-bootstrap-5-theme.min.css' : 'css/select2-bootstrap-5-theme.css',
+			),
 			'depends' => array('jquery'),
 		));
+	}
+
+	/**
+	 * Finds the Select2 translation matching the application language, if one is bundled.
+	 *
+	 * Tries the full tag first (`pt-BR`), then the bare language (`pt`). Select2 renamed several
+	 * codes between 3.x and 4.x - `no` became `nb`, `rs` became `sr`, `ua` became `uk` - so those
+	 * are mapped rather than silently missing.
+	 *
+	 * @return string|null
+	 * @since 5.0.0
+	 */
+	protected function resolveSelect2Locale() {
+
+		$language = str_replace('_', '-', Yii::app()->language);
+
+		if (strpos($language, 'en') === 0) {
+			return null; // English is built in.
+		}
+
+		$renamed = array('no' => 'nb', 'rs' => 'sr', 'ua' => 'uk', 'pt-PT' => 'pt');
+		$candidates = array($language, substr($language, 0, 2));
+
+		foreach ($candidates as $candidate) {
+			if (isset($renamed[$candidate])) {
+				$candidate = $renamed[$candidate];
+			}
+			$path = Yii::getPathOfAlias('booster.assets.select2.js.i18n')
+				. DIRECTORY_SEPARATOR . $candidate . '.js';
+			if (@file_exists($path)) {
+				return $candidate;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -523,17 +595,80 @@ class Booster extends CApplicationComponent {
 	 * Registers the Font Awesome CSS.
 	 * @since 1.0.6
 	 */
+	/**
+	 * Tells TbIcon which icon family widgets should emit.
+	 *
+	 * Done in init() so that $iconPrefix is a normal component configuration option, while
+	 * TbIcon itself stays a standalone helper the grid columns can use without reaching for
+	 * the Booster singleton.
+	 *
+	 * @since 5.0.0
+	 */
+	protected function configureIconFamily() {
+
+		Yii::import('booster.helpers.TbIcon');
+		TbIcon::$family = $this->iconPrefix;
+	}
+
+	/**
+	 * @since 5.0.0
+	 */
+	public function registerBootstrapIconsCss() {
+
+		$this->registerPackage('bootstrap-icons');
+	}
+
 	public function registerFontAwesomeCss() {
 		
         $this->registerPackage('font-awesome');
 	}
 	
 	public function registerPopoverJs() {
-		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-toggle=popover]').popover();");
+
+		$this->registerPackage('booster');
+		$this->cs->registerScript(
+			$this->getUniqueScriptId(),
+			'Booster.initIn(document, null, ' . CJavaScript::encode($this->popoverSelector) . ');'
+		);
 	}
-	
+
 	public function registerTooltipJs() {
-		$this->cs->registerScript($this->getUniqueScriptId(), "jQuery('[data-toggle=tooltip]').tooltip();");
+
+		$this->registerPackage('booster');
+		$this->cs->registerScript(
+			$this->getUniqueScriptId(),
+			'Booster.initIn(document, ' . CJavaScript::encode($this->tooltipSelector) . ', null);'
+		);
+	}
+
+	/**
+	 * Builds the client-side callbacks that keep tooltips and popovers alive across Yii's AJAX
+	 * widget updates.
+	 *
+	 * Bootstrap 5 does not auto-initialise tooltips or popovers, so anything drawn into a grid
+	 * after an update has none until we rebuild them. Equally, instances belonging to the rows
+	 * that were just replaced have to be disposed or their Popper instances leak - which is why
+	 * the teardown half runs in beforeAjaxUpdate, while the old nodes still exist and are still
+	 * reachable.
+	 *
+	 * Both halves are scoped to the widget's own container. The Bootstrap 3 implementation used a
+	 * global jQuery('.popover').remove(), so refreshing one grid tore down every tooltip on the
+	 * page - and it was duplicated verbatim in TbGridView and TbListView.
+	 *
+	 * @return array beforeAjaxUpdate and afterAjaxUpdate callbacks as `js:` expressions.
+	 * @since 5.0.0
+	 */
+	public function createAjaxUpdateCallbacks() {
+
+		$this->registerPackage('booster');
+
+		$tooltip = CJavaScript::encode($this->tooltipSelector);
+		$popover = CJavaScript::encode($this->popoverSelector);
+
+		return array(
+			'beforeAjaxUpdate' => 'js:function(id) { Booster.disposeIn(Booster.container(id)); }',
+			'afterAjaxUpdate' => "js:function(id) { Booster.initIn(Booster.container(id), {$tooltip}, {$popover}); }",
+		);
 	}
 
 	/**

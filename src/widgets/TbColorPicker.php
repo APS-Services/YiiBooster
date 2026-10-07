@@ -33,7 +33,10 @@ class TbColorPicker extends TbBaseInputWidget {
 	public $form;
 
 	/**
-	 * @var string the color format - hex | rgb | rgba. Defaults to 'hex'
+	 * @var string the color format - hex | rgb | rgba | hsl | auto | mixed. Defaults to 'hex'.
+	 *
+	 * `rgba` is kept for backwards compatibility: Coloris has no such format, so it is sent as
+	 * `rgb` with the alpha slider enabled, which produces the same rgba() output.
 	 */
 	public $format = 'hex';
 
@@ -89,17 +92,41 @@ class TbColorPicker extends TbBaseInputWidget {
 	 * @param string $id
 	 */
 	public function registerClientScript($id) {
-		
-		Booster::getBooster()->cs->registerPackage('colorpicker');
 
-		$options = !empty($this->format) ? CJavaScript::encode(array('format' => $this->format)) : '';
+		Booster::getBooster()->registerPackage('coloris');
 
-		ob_start();
-		echo "jQuery('#{$id}').colorpicker({$options})";
-		foreach ($this->events as $event => $handler) {
-			echo ".on('{$event}', " . CJavaScript::encode($handler) . ")";
+		// Coloris accepts hex, rgb, hsl, auto or mixed. `rgba` was a valid value of $format under
+		// bootstrap-colorpicker; passing it straight through reaches a format radio that does not
+		// exist and throws as the picker opens, so it is translated instead.
+		$options = array();
+
+		if ($this->format) {
+			if ($this->format === 'rgba') {
+				$options['format'] = 'rgb';
+				$options['alpha'] = true;
+			} else {
+				$options['format'] = $this->format;
+				// Coloris shows the alpha slider by default; only rgba asked for it explicitly.
+				$options['alpha'] = false;
+			}
 		}
 
-		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean() . ';');
+		$options = CJavaScript::encode($options);
+
+		// Coloris replaces bootstrap-colorpicker, archived in 2022. It binds by selector and has
+		// no jQuery dependency, so the widget's `events` are attached as plain DOM listeners -
+		// Coloris fires a `coloris:pick` event on the input.
+		// Coloris({...}) mutates one global config: `el` only adds a binding, while `format` and
+		// `alpha` are process-wide. Two pickers with different formats on one page therefore
+		// fought, and whichever script was emitted last won for both. setInstance() scopes the
+		// options to the selector, which is what this needs.
+		ob_start();
+		echo "Coloris({'el':'#{$id}'});\n";
+		echo "Coloris.setInstance('#{$id}', {$options});";
+		foreach ($this->events as $event => $handler) {
+			echo "\njQuery('#{$id}').on('{$event}', " . CJavaScript::encode($handler) . ");";
+		}
+
+		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean());
 	}
 }

@@ -8,6 +8,299 @@ Thank you all
 
 Antonio Ramirez.
 
+## YiiBooster 5.0.0 (unreleased) - Bootstrap 5 migration
+
+This is a breaking release. Widgets emit Bootstrap 5 markup; there are no Bootstrap 3 compatibility
+shims and no configuration switch between the two. See **`UPGRADE-5.0.md`** for the migration
+guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) separately.
+
+### Changed (breaking)
+- **(enh)** upgrade Bootstrap 3.3.2 to 5.3.3. Assets pruned to the files actually served
+  (`bootstrap.css`/`.min.css`, `bootstrap.bundle.js`/`.min.js`); source maps, ESM, RTL and partial
+  builds removed.
+- **(enh)** `bootstrap.js` now serves the Popper-inclusive bundle build. Bootstrap 5 requires Popper
+  for tooltips, popovers and dropdowns.
+- **(fix)** both CDN branches now point at `cdn.jsdelivr.net` and agree on a version. They previously
+  served Bootstrap 3.2.0 CSS against 3.3.2 JS from `maxcdn.bootstrapcdn.com`, which no longer resolves.
+- **(enh)** removed the Bootstrap 3 glyphicon fonts. Glyphicons do not exist in Bootstrap 4+.
+- **(enh)** removed `assets/js/bootstrap-noconflict.js` and its package. Bootstrap 5 still
+  installs its jQuery plugins when jQuery is present, but does so on `DOMContentLoaded` rather
+  than at script-execution time - after jQuery UI has registered its own - so it now wins the
+  `$.fn.button`/`$.fn.tooltip` collision on its own, and the manual capture/restore dance is
+  redundant. `$el.tooltip()` is still Bootstrap's, and jQuery UI's widgets remain reachable as
+  `uiButton`/`uiTooltip`. The one thing that changed is timing: code running *before*
+  `DOMContentLoaded` that reads `$.fn.tooltip` sees jQuery UI's, which is what broke the bundled
+  picker plugin.
+
+- **(enh)** icons are now rendered by a single `TbIcon` helper instead of eight hand-rolled blocks
+  in two inconsistent flavours. Bootstrap Icons 1.11.3 is bundled and used by default; set
+  `Booster::$iconPrefix` to `fa` for Font Awesome. Legacy names (`trash`, `glyphicon-trash`,
+  `glyphicon glyphicon-trash`, `icon-trash`) are translated automatically, and Font Awesome classes
+  pass through untouched. Unmapped legacy names are logged under `YII_DEBUG`.
+- **(fix)** icon names containing `fa` or `icon` (e.g. `forward`, `fan`) were silently left
+  unprefixed by the old `strpos($icon, 'fa') === false` heuristic, and `TbButtonColumn` produced a
+  run-together class from `implode('glyphicon-', ...)` with no separating space.
+- **(enh)** contextual state names gained `secondary`, `light` and `dark`. `default` remains a valid
+  name but now renders as `secondary`, since Bootstrap 5 has no `default` variant.
+- **(enh)** Bootstrap's data API attributes are now emitted as `data-bs-*` (27 sites). Three sites
+  are deliberately unchanged because they are removals rather than renames: `data-toggle="button"`
+  in `TbButton`, `data-toggle="buttons"` in `TbButtonGroup` (Bootstrap 5 deleted the button plugin's
+  toggle behaviour) and the blueimp gallery's own `modal-gallery` attributes.
+
+- **(fix)** pagination now emits Bootstrap 5's `page-item`/`page-link`. Without them every grid's
+  pagination rendered as plain bullets. Applies to `TbPager`, `TbJsonPager` and the client-side
+  pager template in `TbJsonGridView`, which share one class builder so they cannot drift apart.
+  Disabled items are taken out of the tab order and the current page is marked `aria-current`.
+- **(enh)** pager alignment uses flex utilities instead of a float class and an inline
+  `text-align` style.
+- **(fix)** tooltips and popovers are now created and disposed through real Bootstrap 5 instance
+  lifecycle around AJAX updates. The previous code ran `jQuery('.popover').remove()` followed by a
+  re-init after every grid refresh, which under Bootstrap 5 strands a Popper instance per refresh
+  and, being global, tore down every tooltip on the page when any one grid updated. Teardown now
+  happens in `beforeAjaxUpdate` - while the replaced nodes still exist and can actually be disposed
+  - and both halves are scoped to the widget's own container. The duplicated closures in
+  `TbGridView` and `TbListView` are replaced by `Booster::createAjaxUpdateCallbacks()`.
+- **(enh)** new `booster` asset package (`assets/js/booster.js`) holding those runtime helpers.
+- **(enh)** `table-condensed` is now `table-sm`. The type name `condensed` remains valid and is
+  mapped to `sm`, so existing configuration - including `TbDetailView`'s own default - keeps working.
+
+- **(enh)** widgets now construct Bootstrap components through the ES6 class API rather than the
+  jQuery plugin bridge: `TbModal`, `TbCarousel`, `TbCollapse`, `TbTabs`, `TbAlert`, `TbScrollSpy`
+  and `TbPopoverColumn`. The bridge still exists when jQuery is loaded, but it only appears at
+  `DOMContentLoaded` and offers no way to dispose an instance, which the AJAX grid path needs.
+- **(fix)** `TbModal::$autoOpen` works again. Bootstrap 3's `$el.modal(options)` opened the modal
+  unless `show: false` was passed, which is how `autoOpen` was implemented. Bootstrap 5 removed the
+  `show` option entirely - constructing never opens - so `autoOpen` now drives an explicit `show()`.
+  A `show` value passed through `options` is still honoured, translated rather than forwarded.
+- **(fix)** `TbScrollSpy` constructs the component explicitly. It used to set `data-spy` from script
+  after load and rely on the data API; Bootstrap 5 only reads that attribute during its own
+  start-up, so an attribute written afterwards has no effect.
+- **(fix)** `TbPopoverColumn` no longer stacks up a duplicate delegated click handler on every AJAX
+  update.
+- **(enh)** `assets/picker/bootstrap.picker.js` is reimplemented over `bootstrap.Popover`. It built
+  its prototype from `$.fn.tooltip.Constructor` at script-execution time, which is before Bootstrap
+  5 installs its jQuery plugins - so it was inheriting from jQuery UI's tooltip, silently. Its
+  `$.fn.picker` API is unchanged.
+- **(enh)** widget `$events` handlers stay on jQuery. Bootstrap 5's `EventHandler` still triggers a
+  jQuery event alongside the native one when jQuery is present, so `'shown.bs.modal'` handlers keep
+  working.
+
+- **(enh)** `TbPanel` renders a card. A contextual panel gets a border utility on the card and a
+  text/background utility on the header, matching Bootstrap 3's coloured-header-plain-body look;
+  `text-bg-*` on the card itself would colour the body too.
+- **(enh)** `TbNavbar` rebuilt for Bootstrap 5: the `navbar-header` wrapper is gone, brand comes
+  before the toggler, `navbar-fixed-*` became `fixed-*`, and `navbar-default`/`navbar-inverse` are
+  replaced by a background utility plus `data-bs-theme`. New `$expand` property (default `lg`)
+  emits the mandatory `navbar-expand-*` - without it a Bootstrap 4+ navbar never expands.
+  The toggler is a real `navbar-toggler` button with a single `navbar-toggler-icon`, rendered
+  directly rather than through `TbButton`, whose `btn` class fights with it.
+- **(enh)** `TbLabel` and `TbBadge` both render `badge text-bg-*`. Bootstrap 4 removed the label
+  component and Bootstrap 5 removed the `badge-*` colour classes.
+- **(enh)** `TbBreadcrumbs` emits `breadcrumb-item`, without which Bootstrap 5 draws no separators,
+  and marks the current crumb `aria-current`.
+- **(fix)** `TbProgress` put `progress-striped` and `active` on the container. Both belong on the
+  bar, so striped and animated progress bars have never actually worked - even under Bootstrap 3.
+  Now emits `progress-bar-striped`/`progress-bar-animated` plus `bg-*` and the progressbar ARIA
+  attributes. Also fixes a copy/paste slip in the stacked branch that appended a separator to
+  `style` instead of `class`, running the caller's class into ours.
+- **(enh)** `TbAlert` uses `<button class="btn-close">` and marks the container `alert-dismissible`;
+  `in` became `show`. Because Bootstrap 5's close control draws its glyph from CSS and carries no
+  text, `closeText` no longer supplies the visible character - it is used as the accessible label
+  when it is actual words, and `false` still means "no button".
+- **(enh)** `TbButton`: `btn-block` became a width utility, `btn-xs` renders at the small size
+  (Bootstrap 4 removed it; `SIZE_EXTRA_SMALL` stays accepted), and the explicit caret span is gone
+  since Bootstrap draws it from `.dropdown-toggle::after`.
+
+- **(enh)** navs and dropdowns rebuilt for Bootstrap 5: items carry `nav-item`/`nav-link` or
+  `dropdown-item`, and the `active` and `disabled` states moved from the `<li>` onto the `<a>`,
+  where Bootstrap 4+ expects them. Dividers render as `<hr class="dropdown-divider">` instead of a
+  styled empty list item, dropdown toggles no longer emit a caret span (Bootstrap draws it from
+  `.dropdown-toggle::after`), `nav-stacked` became `flex-column`, and the Bootstrap 2 `nav-header`
+  became `dropdown-header`. Two new overridable hooks, `getItemCssClass()` and `getLinkCssClass()`,
+  let navs and dropdowns differ without special-casing.
+- **(fix)** dropdown links are no longer given `tabindex="-1"`. Bootstrap 3's markup did that on
+  every item, which took the entire menu out of the keyboard tab order; it now applies only to
+  genuinely disabled items.
+
+- **(enh)** `TbActiveForm` rebuilt for Bootstrap 5: `form-group` becomes a margin utility
+  (`$groupCssClass`, default `mb-3`), horizontal groups render as a grid `row`, labels use
+  `col-form-label` (horizontal) or `form-label` (vertical), hints use `form-text`, add-ons use
+  `input-group-text`, selects use `form-select`, and checkboxes/radios use `form-check` with
+  `form-check-input`/`form-check-label`. `form-inline` and `form-horizontal` no longer exist as
+  classes; inline forms use flex utilities and horizontal layout is per-group.
+- **(enh)** the hardcoded `col-sm-3`/`col-sm-9` horizontal grid is now configurable via
+  `$labelCssClass` and `$controlCssClass`.
+- **(fix)** validation state reaches the control. Bootstrap 5 styles `is-invalid` on the input,
+  while Yii's client validation toggles a class on the *container* - the Bootstrap 3 `has-error`
+  model. Yii keeps flagging the container (with a neutral marker class), and an
+  `afterValidateAttribute` hook mirrors the state onto the input. Server-rendered errors are
+  covered separately: every control group adds `is-invalid` when the model already has an error,
+  which is the common path in a classic Yii POST-and-re-render cycle.
+
+- **(enh)** `TbCarousel` rebuilt: items use `carousel-item`, controls are buttons with
+  `carousel-control-prev`/`-next` and their icon spans, and indicators are buttons in a `div`
+  rather than list items in an `<ol>`.
+- **(enh)** tab panes use `active show`; `in` became `show` in Bootstrap 4. The removed
+  `tabs-left`/`tabs-right` placement classes become a flex utility.
+- **(enh)** grid sort indicators use a Bootstrap Icons caret. `.caret` does not exist in
+  Bootstrap 5, so the old span rendered as nothing.
+- **(enh)** `src/views/**` migrated off Bootstrap **2** markup: `icon-*` sprites became Bootstrap
+  Icons, `label-*` became badges, the `.bar`/`progress-success`/`progress-striped active` progress
+  markup became `progress-bar` with the modifier classes on the bar, and the gallery modal gained
+  the `modal-dialog`/`modal-content` wrappers it has been missing since Bootstrap 3 (it still had
+  `hide` and a `<a class="close">`). The fileupload button bar's `col-*` classes had no `.row`
+  parent, so the grid never applied; added.
+- **(enh)** gii templates no longer generate Bootstrap 2 markup into new projects: `form-actions`
+  and `input-large` are gone, `help-block` became `form-text`, and the generated datepicker prepend
+  uses a Bootstrap Icon.
+- **(enh)** `btn-group-justified` became a flex utility.
+
+- **(enh)** bootbox upgraded 4.2.0 -> 6.0.4, which targets Bootstrap 4/5. This one mattered by
+  default: `enableBootboxJS` is on, so every page was loading a build that drove Bootstrap 3 modal
+  internals.
+- **(enh)** `TbSwitch` renders Bootstrap 5's native switch (`form-check form-switch`) and the
+  bootstrap-switch plugin is gone. `$options` is accepted but ignored - a Bootstrap 5 switch is
+  styled entirely in CSS - and `$events` are now plain DOM events rather than the plugin's
+  `.bootstrapSwitch`-namespaced ones. New `$label` and `$wrapperHtmlOptions`.
+
+- **(enh)** added `UPGRADE-5.0.md`, with a separate section for applications coming from YiiBooster
+  3.x - those cross two Bootstrap majors and hit the 3.x->4.x renames (`xxxRow()` -> `xxxGroup()`,
+  `TbBox` -> `TbPanel`, `TbToggleButton` -> `TbSwitch`, `type` -> `context`, `Bootstrap` ->
+  `Booster`) before anything Bootstrap 5 specific.
+- **(enh)** `TbBox`, `TbToggleButton` and `TbPickerColumn` - renamed back in 4.0 and never given a
+  migration path - now have throwing stubs naming their replacements.
+
+- **(enh)** select2 upgraded 3.5.1 -> 4.1.0-rc.0 with `select2-bootstrap-5-theme`, and
+  `TbSelect2` now defaults `theme` to `bootstrap-5`. The 3.x programmatic API is gone:
+  `.select2('val', v)` becomes `.val(v).trigger('change')`, and `readonly`/`enable` become DOM
+  properties. Translations moved from 47 flat `select2_locale_*.js` files to `js/i18n/<code>.js`,
+  so the three-way filename probe in `createSelect2Package()` collapses to one lookup - with a
+  rename map for the codes select2 changed (`no`->`nb`, `rs`->`sr`, `ua`->`uk`, `pt-PT`->`pt`).
+- **(enh)** bootstrap-datepicker upgraded 1.3.1 -> 1.10.0, which supports Bootstrap 4/5.
+- **(fix)** the datepicker's local filenames now match upstream's dist layout. They had been
+  renamed on import, so the CDN and local branches resolved different paths and `enableCdn` would
+  have 404'd the stylesheet.
+- **(enh)** x-editable's popover container is patched for Bootstrap 5. It read
+  `$.fn.popover.Constructor.DEFAULTS` at script-execution time, before Bootstrap installs its
+  jQuery plugins, so the whole file threw on load. Defaults are read lazily, `.popover-content`
+  becomes `.popover-body`, `destroy()` maps to `dispose()`, instances come from
+  `bootstrap.Popover.getInstance()`, and the hand-rolled `setPosition()` that reimplemented
+  Bootstrap 3's `applyPlacement` is replaced by Popper's own `update()`. Its select2 input adapter
+  is updated for select2 4.x at the same time.
+- **(enh)** only the unminified x-editable build is shipped. The vendored `.min.js` could not be
+  regenerated from the patched source, and since `minify` defaults to true, keeping it would have
+  silently served the unpatched Bootstrap 3 container in the configuration most sites run.
+
+- **(enh)** the last Bootstrap 3-era plugins are replaced with maintained, framework-neutral
+  libraries:
+  - `TbMarkdownEditor` now uses **EasyMDE 2.20** instead of bootstrap-markdown.
+  - `TbHtml5Editor` now uses **Quill 2.0** instead of bootstrap3-wysihtml5. Quill edits a div, so
+    the widget mounts one beside the original field and writes back on every change - the field
+    still submits, and nothing changes server-side.
+  - `TbDateTimePicker` now uses **daterangepicker 3.1** in `singleDatePicker` mode instead of the
+    archived smalot plugin. Its `language` option maps onto Moment's locale.
+  - `TbDateRangePicker` moves from the loose 1.3.12 copy in `assets/js` to the same packaged 3.1.
+  - `TbTags` now uses **Select2's `tags` mode** instead of bootstrap-tags - one fewer dependency
+    rather than a different one.
+  - `TbTypeahead` now uses **Awesomplete 1.1** instead of typeahead.js.
+  - `TbColorPicker` now uses **Coloris 0.25** instead of the archived bootstrap-colorpicker.
+- **(enh)** `TbTypeahead` gains a `list` property taking a flat array of suggestions. `datasets`
+  still works for local sources; Bloodhound-backed **remote** sources now throw, because
+  Awesomplete has no equivalent and returning an empty list silently would be worse.
+
+- **(fix)** `TbTags` renders a `multiple <select>` carrying the current tags. It previously kept
+  rendering bootstrap-tags' decorative `<div>` plus a sibling hidden field, which left Select2 with
+  nothing to bind to and the value never synchronised. `suggestions`, `restrictTo` and `promptText`
+  are mapped onto Select2's `data`, `tags` and `placeholder`; `tagClass`, `displayPopovers`,
+  `popoverData` and `exclude` have no equivalent and are no longer forwarded.
+- **(fix)** `TbColorPicker` translates `format => 'rgba'`. Coloris accepts only hex/rgb/hsl/auto/
+  mixed, so the documented `rgba` value reached a non-existent format radio and threw as the picker
+  opened. It is now sent as `rgb` with alpha enabled, which produces the same output.
+- **(fix)** side tab placement in `TbTabs` and `TbWizard` actually works. `flex-column` alone only
+  sets `flex-direction` on what is still a block, so left and right rendered identically to the
+  default; the wrapper is now `d-flex` (plus `flex-row-reverse` for right) and the nav stacks.
+- **(fix)** the `moment` package serves the bundled-locales build for non-English applications.
+  `moment.min.js` carries no locale data, so `TbDateTimePicker`'s `language` option silently did
+  nothing.
+- **(fix)** `TbWizard` no longer emits the Bootstrap 2 `navbar-inner` wrapper.
+- **(enh)** every vendored library now ships its upstream licence file. `phing dist` redistributes
+  `src/`, so the notice has to travel with the copy; a test asserts this and records daterangepicker
+  as the one library whose notice lives in its file header instead.
+
+- **(fix)** x-editable's popup mode worked again. The Bootstrap 5 patch rewired `container()` but
+  left the generic `tip()` reading Bootstrap 3's `$tip` jQuery property, which Bootstrap 5 does not
+  have - so every popup edit threw `Cannot read properties of undefined`.
+- **(fix)** `TbEditable` with `type => 'datetime'` registered the `datetimepicker` package, which
+  5.0 removed - a fatal under `YII_DEBUG`. It now registers `daterangepicker`.
+- **(fix)** `checkboxListGroup()` and `radioButtonListGroup()` wrote a nested `htmlOptions` key into
+  what already *was* the htmlOptions array, emitting `htmlOptions="Array"` as an attribute (a
+  TypeError on PHP 8) while the control class never reached the inputs.
+- **(fix)** `radioButtonGroup()` applied its classes after the array the field renders from had
+  been copied, so `form-check-input` and `is-invalid` were discarded; and its label suppression
+  wrote to the same dead copy, rendering the attribute label twice.
+- **(fix)** `widgetGroupInternal()` no longer stamps `form-control` on every widget. It fought with
+  the `form-check-input` on a switch, rendering it as a full-width padded box; the base class is now
+  a parameter and `switchGroup()` opts out.
+- **(fix)** `TbSelect2::$readonly` no longer silently drops the value. It was implemented as
+  `prop('disabled')`, and browsers omit disabled controls from the payload, so saving a readonly
+  field nulled the attribute. It now disables the control *and* mirrors the value into a hidden
+  field. `$disabled` stays genuinely disabled.
+- **(fix)** the grid sort caret honours `Booster::$iconPrefix` again; it hardcoded `bi-`, which
+  produced `fa fa-bi-caret-down-fill` under Font Awesome. New `TbIcon::renderNamed()` renders a name
+  that is already current in the configured family, without the legacy map or its debug warning.
+- **(fix)** `TbColorPicker` configures Coloris per input via `setInstance()`. `format` and `alpha`
+  are global in Coloris, so two pickers with different formats on one page overwrote each other.
+- **(fix)** `TbDatePicker` loads its CDN locale from jsDelivr 1.10.0, matching the package. It
+  pointed at cdnjs 1.2.0 - the exact CSS/JS divergence 5.0 set out to remove.
+- **(enh)** new `Booster::$momentLocales` (default true) selects Moment's locale-bundled build.
+  Keying this off `Yii::app()->language` was wrong: packages are built during `init()`, long before
+  a widget can ask for a locale on an otherwise English site. Set it false to save ~315K.
+- **(enh)** the five drifted copies of `addCssClass()` now delegate to one `TbCss::add()`, which
+  also de-duplicates. Two guarded on `empty($class)`, one on `$class === ''`, and two not at all.
+- **(enh)** `TbBaseMenu::applyLinkOptions()` holds the shared anchor state; `TbDropdown` called a
+  drifted copy that set a different `aria-current` and gave nested items no `dropdown-toggle` at all.
+- **(fix)** tests that swap in a `clientScript` double now restore it in `tearDown()`, so the suite
+  stops depending on PHPUnit's file ordering.
+
+### Removed
+- **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
+  libraries; 5.0 consolidates onto `TbMarkdownEditor`. Keeps a throwing stub.
+- **(enh)** removed `TbChosen` (Chosen archived upstream; use `TbSelect2`), `TbPassfield`
+  (Pass*Field archived, and only its minified build was ever vendored), `TbFileUpload` (broken for
+  years - it registered four asset files that are not in the repository), `TbImageGallery` (the
+  bundled blueimp gallery reads `$.fn.modal.Constructor.prototype` at load time and throws under
+  Bootstrap 5, taking the rest of the page's JavaScript with it) and `TbModalManager` (Bootstrap 5
+  stacks modals natively). All keep throwing stubs.
+- **(enh)** `TbActiveForm::chosenGroup()` and `passFieldGroup()` are gone with their widgets, as is
+  the `pass` alias in `TbFormInputElement`.
+- **(enh)** `TbButton::$toggle` and `TbButtonGroup::$toggle` now throw. Bootstrap 5 removed the
+  button plugin's toggle and checkbox/radio behaviour outright - there is no attribute to rename
+  them to, and emitting the old one would look migrated while doing nothing. Use inputs with the
+  `btn-check` class instead.
+
+- **(enh)** removed `TbHtml` and `TbArray`. `TbHtml` was 4,338 lines of Bootstrap 2 markup with no
+  callers inside the library; it existed only for `yii-auth` compatibility (#443).
+- **(enh)** removed the `TbInput` family (`TbInput`, `TbInputHorizontal`, `TbInputVertical`,
+  `TbInputInline`, `TbInputSearch`). These emitted Bootstrap 2 markup and were already unreachable:
+  `TbForm` dispatches through `TbFormInputElement` onto `TbActiveForm`'s `*Group()` methods.
+- **(enh)** removed `TbHeroUnit` (Bootstrap 2 `hero-unit`, dead since Bootstrap 3) and `TbJumbotron`
+  (dropped in Bootstrap 5).
+- **(enh)** removed unreferenced legacy assets: `bootstrap-wysihtml5.js`,
+  `bootstrap.responsive.tables.js`, `jquery.timepicker.js`, `jquery.toggle.buttons.js` and the
+  Bootstrap 2 `bootstrap.colorpicker.js`.
+
+Removed widgets keep a stub that throws a `CException` naming the replacement, so upgrading
+applications fail at the offending line rather than on a missing include. The stubs go away in 5.1.
+
+### Development
+- **(enh)** the test suite runs again. It previously could not execute at all: `composer.json` pinned
+  PHPUnit 4.8, `apigen ^4` and `ext-xdebug`, which cannot install on any current PHP. The dev
+  toolchain now targets PHP 7.4 with PHPUnit 8.5; `src/` still targets PHP 5.3 syntax.
+- **(enh)** added a Bootstrap 2/3 token lint that ratchets the migration, a widget render harness,
+  and contract tests for `TbPager`.
+- **(fix)** `TbPager::init()` overwrote `htmlOptions['class']` instead of appending to it, silently
+  discarding any caller-supplied class. Documented by a test; fixed with the pager rewrite.
+
 ## YiiBooster latest development alpha
 - **(fix)** fix TbEditableField params prop check is an array and js callback implementation #1016 (Oxyaction)
 - **(enh)** upgrade to select2 3.5.1 and select2-bootstrap-css 1.4.1

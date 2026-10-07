@@ -1,126 +1,28 @@
 <?php
 /**
- *##  TbChosen class file.
- *
- * @author Yaroslav Molchan <yaroslav.molchan@gmail.com>
+ * YiiBooster project.
+ * @license [New BSD License](http://www.opensource.org/licenses/bsd-license.php)
  */
 
 /**
- *## Chosen wrapper widget
+ *## TbChosen - REMOVED in YiiBooster 5.0.
  *
- * @see http://harvesthq.github.com/chosen
+ * Harvest's Chosen was archived in 2022 and its styling never targeted Bootstrap. The library
+ * already ships TbSelect2, which covers the same ground.
  *
+ * This stub exists only so that applications upgrading from 4.x get a message naming the
+ * replacement, at the line that used the widget, instead of Yii's opaque
+ * "include(TbChosen.php): failed to open stream: No such file or directory" fatal.
+ * It will be deleted in 5.1.
+ *
+ * @deprecated 5.0.0
  * @package booster.widgets.forms.inputs
  */
 class TbChosen extends CInputWidget {
-	
-	/**
-	 * @var TbActiveForm when created via TbActiveForm.
-	 * This attribute is set to the form that renders the widget
-	 * @see TbActionForm->inputRow
-	 */
-	public $form;
-	/**
-	 * @var array @param data for generating the list options (value=>display)
-	 */
-	public $data = array();
 
-	/**
-	 * @var
-	 */
-	public $options;
+	public function init() {
 
-	/**
-	 *### .init()
-	 *
-	 * Initializes the widget.
-	 */
-	public function init()
-	{
-            $this->normalizeData();
-
-            $this->normalizeOptions();
-
-            $this->addEmptyItemIfPlaceholderDefined();
-
-            $this->setDefaultWidthIfEmpty();
-	}
-
-	/**
-	 *### .run()
-	 *
-	 * Runs the widget.
-	 */
-	public function run()
-	{
-            list($name, $id) = $this->resolveNameID();
-
-            if ($this->hasModel()) {
-                    if ($this->form) {
-                            echo $this->form->dropDownList($this->model, $this->attribute, $this->data, $this->htmlOptions);
-                    } else {
-                            echo CHtml::activeDropDownList($this->model, $this->attribute, $this->data, $this->htmlOptions);
-                    }
-            } else {
-                    echo CHtml::dropDownList($name, $this->value, $this->data, $this->htmlOptions);
-            }
-
-            $this->registerClientScript($id);
-	}
-
-	/**
-	 *### .registerClientScript()
-	 *
-	 * Registers required client script for chosen. It is not used through bootstrap->registerPlugin
-	 * in order to attach events if any
-	 *
-	 * @param $id
-	 *
-	 * @throws CException
-	 */
-	public function registerClientScript($id) {
-		
-        Booster::getBooster()->registerPackage('chosen');
-
-		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
-
-                ob_start();
-		echo "$('#{$id}').chosen({$options})";
-
-		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean() . ';');
-	}
-
-	private function setDefaultWidthIfEmpty()
-	{
-		if (empty($this->options['width'])) {
-			$this->options['width'] = '100%';
-		}
-	}
-
-	private function normalizeData()
-	{
-		if (!$this->data)
-			$this->data = array();
-	}
-
-	private function addEmptyItemIfPlaceholderDefined()
-	{
-		if (!empty($this->htmlOptions['placeholder']))
-			$this->options['placeholder'] = $this->htmlOptions['placeholder'];
-
-		if (!empty($this->options['placeholder']) && empty($this->htmlOptions['multiple']))
-			$this->prependDataWithEmptyItem();
-	}
-
-	private function normalizeOptions()
-	{
-		if (empty($this->options)) {
-			$this->options = array();
-		}
-	}
-
-	private function prependDataWithEmptyItem()
-	{
-		$this->data = array('' => '') + $this->data;
+		throw new CException('TbChosen was removed in YiiBooster 5.0: Chosen is archived upstream. '
+			. 'Use TbSelect2 (booster.widgets.TbSelect2) instead. See UPGRADE-5.0.md.');
 	}
 }

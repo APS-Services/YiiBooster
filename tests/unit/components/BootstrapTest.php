@@ -28,7 +28,9 @@ class BoosterTest extends PHPUnit_Framework_TestCase {
 
 	public function BootstrapCssFilenames() {
 		
-		$cdn_url = '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0';
+		// Keep this in step with Booster::createBootstrapCssPackage() and with the `bootstrap.js`
+		// package in src/components/packages.php - see cdnCssAndJsAgreeOnBootstrapVersion() below.
+		$cdn_url = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist';
 		$local_url = 'assets'; // make sure it's equal to `assetsUrl` defined in relevant test!
 		return array(
 			// $cdn, $responsive, $fontawesome, $mincss, $expected_filename
@@ -87,6 +89,105 @@ class BoosterTest extends PHPUnit_Framework_TestCase {
 
 		$this->assertTrue(
 			$component->cs->hasRegisteredCssFile($expected_filename)
+		);
+	}
+
+	/**
+	 * @param bool $enableCdn
+	 * @return Booster an initialized component with its package graph built.
+	 */
+	protected function makeInitializedComponent($enableCdn = false)
+	{
+		$component = new Booster();
+		$component->_assetsUrl = 'assets';
+		$component->cs = new AssetsRegistryHook();
+		$component->enableCdn = $enableCdn;
+		$component->init();
+
+		return $component;
+	}
+
+	/**
+	 * Bootstrap 5 dropped its own jQuery dependency, which makes it tempting to drop this edge -
+	 * an earlier migration attempt did exactly that. It has to stay: about twenty packages declare
+	 * `'depends' => array('bootstrap.js')` and rely on it to pull jQuery in first, as do Yii's own
+	 * CActiveForm and CGridView client scripts. Removing it is a script-ordering bug that only
+	 * shows up in production.
+	 *
+	 * @test
+	 */
+	public function bootstrapJsPackageStillPullsInJquery()
+	{
+		$packages = $this->makeInitializedComponent()->packages;
+
+		$this->assertArrayHasKey('bootstrap.js', $packages);
+		$this->assertContains(
+			'jquery',
+			$packages['bootstrap.js']['depends'],
+			'bootstrap.js must keep depending on jquery even though Bootstrap 5 itself does not.'
+		);
+	}
+
+	/**
+	 * Before 5.0 the CDN branches shipped Bootstrap 3.2.0 CSS against 3.3.2 JS, from a host that
+	 * no longer resolves. Nothing caught it because the two URLs live in different files -
+	 * packages.php for the JS, Booster::createBootstrapCssPackage() for the CSS.
+	 *
+	 * @test
+	 */
+	public function cdnCssAndJsAgreeOnBootstrapVersion()
+	{
+		$packages = $this->makeInitializedComponent(true)->packages;
+
+		// Matches both the jsdelivr form (bootstrap@5.3.3) and the old maxcdn one (bootstrap/3.3.2).
+		$pattern = '#bootstrap[@/](\d+\.\d+\.\d+)#';
+
+		$this->assertRegExp($pattern, $packages['bootstrap.js']['baseUrl']);
+		$this->assertRegExp($pattern, $packages['bootstrap.css']['baseUrl']);
+
+		preg_match($pattern, $packages['bootstrap.js']['baseUrl'], $js);
+		preg_match($pattern, $packages['bootstrap.css']['baseUrl'], $css);
+
+		$this->assertEquals(
+			$css[1],
+			$js[1],
+			'CDN-hosted Bootstrap CSS and JS must be the same version.'
+		);
+	}
+
+	/**
+	 * The local assets must not drift from the CDN version either.
+	 *
+	 * @test
+	 */
+	public function bundledAssetsMatchTheAdvertisedCdnVersion()
+	{
+		$packages = $this->makeInitializedComponent(true)->packages;
+		preg_match('#bootstrap[@/](\d+\.\d+\.\d+)#', $packages['bootstrap.css']['baseUrl'], $cdn);
+
+		$bundled = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/assets/bootstrap/css/bootstrap.min.css');
+
+		$this->assertStringContainsString(
+			'Bootstrap  v' . $cdn[1],
+			substr($bundled, 0, 200),
+			'src/assets/bootstrap/ is not the version the CDN branch points at.'
+		);
+	}
+
+	/**
+	 * Bootstrap 5 needs Popper for tooltips, popovers and dropdowns. We ship the bundle build
+	 * rather than adding a separate Popper package, so the filename matters.
+	 *
+	 * @test
+	 */
+	public function bootstrapJsPackageShipsThePopperBundle()
+	{
+		$packages = $this->makeInitializedComponent()->packages;
+
+		$this->assertStringContainsString(
+			'bootstrap.bundle',
+			$packages['bootstrap.js']['js'][0],
+			'Without the bundle build, Popper is missing and dropdowns/tooltips/popovers break.'
 		);
 	}
 }

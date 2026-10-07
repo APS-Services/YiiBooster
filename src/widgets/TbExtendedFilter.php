@@ -17,6 +17,8 @@ Yii::import('booster.components.JSONStorage', true);
  *
  * @package booster.widgets.supplementary
  */
+Yii::import('booster.helpers.TbIcon');
+
 class TbExtendedFilter extends CWidget {
 	
 	/**
@@ -157,7 +159,7 @@ class TbExtendedFilter extends CWidget {
 		echo "<td colspan='{$cols}'>\n";
 		echo "<div id='{$this->getId()}'>\n";
 		if (count($this->filteredBy)) {
-			echo '<p><span class="label label-success">Filtered by</span> ' . $this->displayExtendedFilterValues(
+			echo '<p><span class="badge text-bg-success">Filtered by</span> ' . $this->displayExtendedFilterValues(
 				$this->filteredBy
 			) . '</p>';
 		}
@@ -252,7 +254,7 @@ EOD
 			$registry = $this->jsonStorage->getRegistry($this->registry);
 			echo '<div class="row">';
 			echo '<div class="col-md-6 col-sm-12" >';
-			echo '<label class="label label-info">Saved Filters [select and click ok sign button]</label><br/>';
+			echo '<span class="badge text-bg-info">Saved Filters [select and click ok sign button]</span><br/>';
 			echo '</div></div>';
 			echo '<div class="row" style="margin-top: 5px;">';
 			echo '<div class="col-md-6 col-sm-12" >';
@@ -273,12 +275,12 @@ EOD
 			echo '</select>&nbsp;';
 
 			echo CHtml::link(
-				'<i class="glyphicon glyphicon-ok glyphicon glyphicon-white"></i>',
+				TbIcon::render('ok'),
 				'#',
 				array('class' => 'btn btn-primary btn-extended-filter-apply')
 			);
 			echo '&nbsp;';
-			echo CHtml::link('<i class="glyphicon glyphicon-trash"></i>', '#', array('class' => 'btn btn-warning btn-extended-filter-delete'));
+			echo CHtml::link(TbIcon::render('trash'), '#', array('class' => 'btn btn-warning btn-extended-filter-delete'));
 			echo '</div></div>';
 		}
 	}
@@ -311,7 +313,7 @@ EOD
 		
 		$values = array();
 		foreach ($filteredBy as $key => $value) {
-			$values[] = '<span class="label label-info">' . $key . '</span> ' . $value;
+			$values[] = '<span class="badge text-bg-info">' . $key . '</span> ' . $value;
 		}
 		return implode(', ', $values);
 	}

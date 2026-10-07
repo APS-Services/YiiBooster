@@ -71,43 +71,33 @@ class TbHtml5Editor extends CInputWidget {
 	 * @param string $id
 	 */
 	public function registerClientScript($id) {
-		
-        $booster = Booster::getBooster();
-        $booster->registerPackage('wysihtml5');
 
-		if (isset($this->editorOptions['locale'])) {
-            $booster->registerAssetJs(
-				'locales/bootstrap-wysihtml5.' . $this->editorOptions['locale'] . '.js'
-			);
-		} elseif (in_array($this->lang, array('de-DE', 'es-ES', 'fr', 'fr-NL', 'pt-BR', 'sv-SE', 'it-IT'))) {
-            $booster->registerAssetJs('locales/bootstrap-wysihtml5.' . $this->lang . '.js');
-			$this->editorOptions['locale'] = $this->lang;
-		}
-
-		$this->normalizeStylesheetsProperty();
-		$this->insertDefaultStylesheetIfColorsEnabled();
+		Booster::getBooster()->registerPackage('quill');
 
 		$options = CJSON::encode($this->editorOptions);
 
-		$script = array();
-		/**
-		 * The default stylesheet option is incompatible with yii paths so it is reset here.
-		 * The insertDefaultStylesheetIfColorsEnabled includes the correct stylesheet if needed.
-		 *
-		 * Any other changes to defaults should be made here.
-		 */
-		$script[] = "$.fn.wysihtml5.defaultOptions.stylesheets = [];";
-
-		/**
-		 * Check if we need a deep copy for the configuration.
-		 */
-		if (isset($this->editorOptions['deepExtend']) && $this->editorOptions['deepExtend'] === true) {
-			$script[] = "$('#{$id}').wysihtml5('deepExtend', {$options});";
-		} else {
-			$script[] = "$('#{$id}').wysihtml5({$options});";
-		}
-
-		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $id, implode("\n", $script));
+		// Quill replaces bootstrap3-wysihtml5, whose upstream died in 2020. Quill edits a div
+		// rather than a textarea, so it is mounted next to the field and writes its HTML back on
+		// every change - which keeps the original input as the thing that actually submits, and
+		// means no server-side change is needed.
+		Yii::app()->getClientScript()->registerScript(
+			__CLASS__ . '#' . $id,
+			"(function () {"
+			. " var input = document.getElementById('{$id}');"
+			. " if (!input) { return; }"
+			. " var host = document.createElement('div');"
+			. " host.className = 'booster-quill';"
+			. " host.innerHTML = input.value;"
+			. " input.parentNode.insertBefore(host, input.nextSibling);"
+			. " input.style.display = 'none';"
+			. " var o = {$options};"
+			. " if (!o.theme) { o.theme = 'snow'; }"
+			. " var editor = new Quill(host, o);"
+			. " editor.on('text-change', function () {"
+			. " input.value = editor.root.innerHTML;"
+			. " });"
+			. " })();"
+		);
 	}
 
 	private function insertDefaultStylesheetIfColorsEnabled()

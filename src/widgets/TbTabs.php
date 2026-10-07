@@ -102,7 +102,20 @@ class TbTabs extends CWidget {
 		);
 
 		if (isset($this->placement) && in_array($this->placement, $validPlacements)) {
-			$classes[] = 'tabs-' . $this->placement;
+			// Bootstrap 4 removed the tabs-left/right/below placement classes, so side placement
+			// is now built from flex utilities. The wrapper has to actually become a flex
+			// container (d-flex) - flex-column alone only sets flex-direction on a block, which
+			// changes nothing - and `right` is the same row reversed. `below` needs no class: the
+			// widget already swaps the render order.
+			if ($this->placement === self::PLACEMENT_LEFT || $this->placement === self::PLACEMENT_RIGHT) {
+				$classes[] = 'd-flex';
+				$classes[] = 'align-items-start';
+				if ($this->placement === self::PLACEMENT_RIGHT) {
+					$classes[] = 'flex-row-reverse';
+				}
+				// Side placement only reads as tabs-down-the-side if the nav stacks too.
+				$this->stacked = true;
+			}
 		}
 
 		if (!empty($classes)) {
@@ -158,7 +171,8 @@ class TbTabs extends CWidget {
 
 		/** @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
-		$cs->registerScript(__CLASS__ . '#' . $id, "jQuery('#{$id}').tab('show');");
+		Booster::getBooster()->registerPackage('booster');
+		$cs->registerScript(__CLASS__ . '#' . $id, "Booster.showTab('{$id}');");
 
 		foreach ($this->events as $name => $handler) {
 			$handler = CJavaScript::encode($handler);
@@ -194,7 +208,7 @@ class TbTabs extends CWidget {
 			}
 
 			if (!isset($item['url'])) {
-				$item['linkOptions']['data-toggle'] = 'tab';
+				$item['linkOptions']['data-bs-toggle'] = 'tab';
 			}
 
 			if (isset($tab['items'])) {
@@ -227,7 +241,7 @@ class TbTabs extends CWidget {
 				$classes = array('tab-pane fade');
 
 				if (isset($item['active']) && $item['active']) {
-					$classes[] = 'active in';
+					$classes[] = 'active show';
 				}
 
 				$classes = implode(' ', $classes);

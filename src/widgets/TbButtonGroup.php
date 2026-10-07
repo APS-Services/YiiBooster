@@ -103,7 +103,8 @@ class TbButtonGroup extends CWidget {
 		}
 		
 		if ($this->justified === true) {
-			$classes[] = 'btn-group-justified';
+			// btn-group-justified was removed in Bootstrap 4; a full-width group is a flex row.
+			$classes[] = 'd-flex w-100';
 		}
 
 		if (!empty($classes)) {
@@ -118,7 +119,11 @@ class TbButtonGroup extends CWidget {
 		$validToggles = array(self::TOGGLE_CHECKBOX, self::TOGGLE_RADIO);
 
 		if (isset($this->toggle) && in_array($this->toggle, $validToggles)) {
-			$this->htmlOptions['data-toggle'] = 'buttons';
+			throw new CException(
+				'TbButtonGroup::$toggle was removed in YiiBooster 5.0: Bootstrap 5 dropped the '
+				. 'button plugin\'s checkbox/radio behaviour. Use inputs with the btn-check class '
+				. 'inside the button group instead. See UPGRADE-5.0.md.'
+			);
 		}
 	}
 

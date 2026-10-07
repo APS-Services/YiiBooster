@@ -106,7 +106,20 @@ class TbWizard extends CWidget
 		);
 
 		if (isset($this->placement) && in_array($this->placement, $validPlacements)) {
-			$classes[] = 'tabs-' . $this->placement;
+			// Bootstrap 4 removed the tabs-left/right/below placement classes, so side placement
+			// is now built from flex utilities. The wrapper has to actually become a flex
+			// container (d-flex) - flex-column alone only sets flex-direction on a block, which
+			// changes nothing - and `right` is the same row reversed. `below` needs no class: the
+			// widget already swaps the render order.
+			if ($this->placement === self::PLACEMENT_LEFT || $this->placement === self::PLACEMENT_RIGHT) {
+				$classes[] = 'd-flex';
+				$classes[] = 'align-items-start';
+				if ($this->placement === self::PLACEMENT_RIGHT) {
+					$classes[] = 'flex-row-reverse';
+				}
+				// Side placement only reads as tabs-down-the-side if the nav stacks too.
+				$this->stacked = true;
+			}
 		}
 
 		if (!empty($classes)) {
@@ -132,7 +145,8 @@ class TbWizard extends CWidget
 
 		ob_start();
 		if ($this->addTabsNavBar) {
-			echo '<div class="navbar"><div class="navbar-inner">';
+			// `navbar-inner` was a Bootstrap 2 element and has not existed since Bootstrap 3.
+			echo '<div class="navbar"><div class="container-fluid">';
 		}
 		$this->controller->widget(
 			'booster.widgets.TbMenu',
@@ -206,7 +220,7 @@ class TbWizard extends CWidget
 				$item['itemOptions'] = array();
 			}
 
-			$item['linkOptions']['data-toggle'] = 'tab';
+			$item['linkOptions']['data-bs-toggle'] = 'tab';
 
 			if (isset($tab['items'])) {
 				$item['items'] = $this->normalizeTabs($item['items'], $panes, $i);
@@ -236,7 +250,7 @@ class TbWizard extends CWidget
 				$classes = array('tab-pane fade');
 
 				if (isset($item['active']) && $item['active']) {
-					$classes[] = 'active in';
+					$classes[] = 'active show';
 				}
 
 				$classes = implode(' ', $classes);

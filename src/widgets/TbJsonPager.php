@@ -54,10 +54,13 @@ class TbJsonPager extends TbPager
 	protected function createPageButton($label, $page, $class, $hidden, $selected)
 	{
 		if ($this->json) {
-			if ($hidden || $selected) {
-				$class .= ' ' . ($hidden ? 'disabled' : 'active');
-			}
-			return array('class' => $class, 'url' => $this->createPageUrl($page), 'text' => $label);
+			// Same class contract as the server-rendered pager; the client template in
+			// TbJsonGridView supplies the matching page-link on the anchor.
+			return array(
+				'class' => $this->pageItemCssClass($class, $hidden, $selected),
+				'url' => $this->createPageUrl($page),
+				'text' => $label,
+			);
 		}
 		return parent::createPageButton($label, $page, $class, $hidden, $selected);
 	}

@@ -8,6 +8,7 @@
  */
 
 Yii::import('booster.widgets.TbButtonColumn');
+Yii::import('booster.helpers.TbIcon');
 
 /**
  *## Enhanced bootstrap button column widget.
@@ -92,8 +93,8 @@ class TbButtonGroupColumn extends TbButtonColumn {
 			$options['buttonType'] = 'link';
 		}
 
-		if (!isset($options['data-toggle'])) {
-			$options['data-toggle'] = 'tooltip';
+		if (!isset($options['data-bs-toggle'])) {
+			$options['data-bs-toggle'] = 'tooltip';
 		}
 
 		if (!isset($options['class'])) {
@@ -105,11 +106,7 @@ class TbButtonGroupColumn extends TbButtonColumn {
 		}
 
 		if (isset($button['icon'])) {
-			if (strpos($button['icon'], 'icon') === false && strpos($button['icon'], 'fa') === false) {
-				$button['icon'] = 'icon-' . implode(' icon-', explode(' ', $button['icon']));
-			}
-
-			echo CHtml::link('<span class="' . $button['icon'] . '"></span>', $url, $options);
+			echo CHtml::link(TbIcon::render($button['icon']), $url, $options);
 		} else if (isset($button['imageUrl']) && is_string($button['imageUrl'])) {
 			echo CHtml::link(CHtml::image($button['imageUrl'], $label), $url, $options);
 		} else {

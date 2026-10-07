@@ -6,6 +6,12 @@
 
 require_once(__DIR__ . '/../../../src/widgets/TbBreadcrumbs.php');
 
+/**
+ * Expectations updated for Bootstrap 5: items carry breadcrumb-item, and the current one is
+ * marked aria-current. Bootstrap 5 draws the separator from
+ * `.breadcrumb-item + .breadcrumb-item::before`, so without those classes the trail renders as a
+ * plain run-together list.
+ */
 class TbBreadcrumbsTest extends PHPUnit_Framework_TestCase
 {
 	private function makeWidget()
@@ -67,7 +73,7 @@ class TbBreadcrumbsTest extends PHPUnit_Framework_TestCase
 		$actualHtml->loadHTML($content);
 
 		$expectedHtml = new DOMDocument();
-		$expectedHtml->loadHTML('<ul class="breadcrumb"><li class="active">test</li></ul>');
+		$expectedHtml->loadHTML('<ul class="breadcrumb"><li aria-current="page" class="breadcrumb-item active">test</li></ul>');
 
 		$this->assertEquals($expectedHtml, $actualHtml);
 
@@ -81,7 +87,7 @@ class TbBreadcrumbsTest extends PHPUnit_Framework_TestCase
 		$actualHtml->loadHTML($content);
 
 		$expectedHtml = new DOMDocument();
-		$expectedHtml->loadHTML('<ul class="breadcrumb"><li class="active">foobar</li><li class="active">test</li></ul>');
+		$expectedHtml->loadHTML('<ul class="breadcrumb"><li aria-current="page" class="breadcrumb-item active">foobar</li><li aria-current="page" class="breadcrumb-item active">test</li></ul>');
 
 		//echo $expectedHtml->saveHTML()."\n";
 		//echo $actualHtml->saveHTML();
@@ -106,7 +112,7 @@ class TbBreadcrumbsTest extends PHPUnit_Framework_TestCase
 		$actualHtml->loadHTML($content);
 
 		$expectedHtml = new DOMDocument();
-		$expectedHtml->loadHTML('<ul class="breadcrumb"><li class="active">foobar</li><li><a href="bar">foo</a></li><li class="active">end</li></ul>');
+		$expectedHtml->loadHTML('<ul class="breadcrumb"><li aria-current="page" class="breadcrumb-item active">foobar</li><li class="breadcrumb-item"><a href="bar">foo</a></li><li aria-current="page" class="breadcrumb-item active">end</li></ul>');
 
 		$this->assertEquals($expectedHtml, $actualHtml);
 	}

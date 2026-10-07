@@ -24,12 +24,12 @@ class TbCarousel extends CWidget {
 	/**
 	 * @var string the previous button label. Defaults to '&lsaquo;'.
 	 */
-	public $prevLabel = '<span class="glyphicon glyphicon-chevron-left"></span>';
+	public $prevLabel = '<span class="carousel-control-prev-icon" aria-hidden="true"></span>';
 
 	/**
 	 * @var string the next button label. Defaults to '&rsaquo;'.
 	 */
-	public $nextLabel = '<span class="glyphicon glyphicon-chevron-right"></span>';
+	public $nextLabel = '<span class="carousel-control-next-icon" aria-hidden="true"></span>';
 
 	/**
 	 * @var boolean indicates whether the carousel should slide items.
@@ -104,16 +104,23 @@ class TbCarousel extends CWidget {
 		echo '</div>';
 
 		if ($this->displayPrevAndNext) {
-			echo '<a class="carousel-control left" href="#' . $id . '" data-slide="prev">' . $this->prevLabel . '</a>';
-			echo '<a class="carousel-control right" href="#' . $id . '" data-slide="next">' . $this->nextLabel . '</a>';
+			// Bootstrap 5's controls are buttons with their own prev/next classes; the Bootstrap 3
+			// pair was anchors classed `carousel-control left` / `right`.
+			echo '<button class="carousel-control-prev" type="button" data-bs-target="#' . $id . '" data-bs-slide="prev">'
+				. $this->prevLabel
+				. '<span class="visually-hidden">' . CHtml::encode(Yii::t('zii', 'Previous')) . '</span></button>';
+			echo '<button class="carousel-control-next" type="button" data-bs-target="#' . $id . '" data-bs-slide="next">'
+				. $this->nextLabel
+				. '<span class="visually-hidden">' . CHtml::encode(Yii::t('zii', 'Next')) . '</span></button>';
 		}
 
 		echo '</div>';
 
 		/** @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
-		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
-		$cs->registerScript(__CLASS__ . '#' . $id, "jQuery('#{$id}').carousel({$options});");
+		Booster::getBooster()->registerPackage('booster');
+		$options = CJavaScript::encode($this->options);
+		$cs->registerScript(__CLASS__ . '#' . $id, "Booster.component('Carousel', '{$id}', {$options});");
 
 		foreach ($this->events as $name => $handler) {
 			$handler = CJavaScript::encode($handler);
@@ -126,12 +133,20 @@ class TbCarousel extends CWidget {
 	 */
 	protected function renderIndicators() {
 		
-		echo '<ol class="carousel-indicators">';
+		// Bootstrap 5 renders indicators as buttons in a div, not list items in an <ol>.
+		echo '<div class="carousel-indicators">';
 		$count = count($this->items);
 		for ($i = 0; $i < $count; $i++) {
-			echo '<li data-target="#'.$this->id.'" data-slide-to="'.$i.'" class="'.($i===0?'active':'').'"></li>';
+			echo CHtml::tag('button', array(
+				'type' => 'button',
+				'data-bs-target' => '#' . $this->id,
+				'data-bs-slide-to' => $i,
+				'class' => $i === 0 ? 'active' : '',
+				'aria-current' => $i === 0 ? 'true' : null,
+				'aria-label' => Yii::t('zii', 'Slide') . ' ' . ($i + 1),
+			), '');
 		}
-		echo '</ol>';
+		echo '</div>';
 	}
 
 	/**
@@ -156,7 +171,7 @@ class TbCarousel extends CWidget {
 				$item['itemOptions'] = array();
 			}
 
-			$classes = array('item');
+			$classes = array('carousel-item');
 
 			if ($i === 0) {
 				$classes[] = 'active';

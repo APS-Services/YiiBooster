@@ -11,6 +11,7 @@
  * @since v4.0.0 - upgraded to bootstrap 3.1.1
  */
 Yii::import('booster.widgets.TbWidget');
+Yii::import('booster.helpers.TbIcon');
 /**
  * Bootstrap button widget.
  *
@@ -43,11 +44,15 @@ class TbButton extends TbWidget {
 	const SIZE_SMALL = 'small';
 	const SIZE_EXTRA_SMALL = 'extra_small';
 	
+	/**
+	 * Bootstrap 4 removed the extra-small button size. SIZE_EXTRA_SMALL stays an accepted value
+	 * so existing configuration keeps working, and now renders at the small size.
+	 */
 	protected static $sizeClasses = array(
 		self::SIZE_LARGE => 'btn-lg',
 		self::SIZE_DEFAULT => '',
 		self::SIZE_SMALL => 'btn-sm',
-		self::SIZE_EXTRA_SMALL => 'btn-xs',
+		self::SIZE_EXTRA_SMALL => 'btn-sm',
 	);
 
 	/**
@@ -185,8 +190,10 @@ class TbButton extends TbWidget {
 			$classes[] = self::$sizeClasses[$this->size];
 		}
 
+		// Bootstrap 5 removed btn-block; a full-width button is now a sizing utility, or a
+		// d-grid wrapper when several are stacked.
 		if ($this->block) {
-			$classes[] = 'btn-block';
+			$classes[] = 'w-100';
 		}
 
 		if ($this->active) {
@@ -225,9 +232,10 @@ class TbButton extends TbWidget {
 				$this->url = '#';
 			}
 
+			// No caret element: Bootstrap 4 onwards draws it from .dropdown-toggle::after, so an
+			// explicit span renders a second, misplaced triangle.
 			$classes[] = 'dropdown-toggle';
-			$this->label .= ' <span class="caret"></span>';
-			$this->htmlOptions['data-toggle'] = 'dropdown';
+			$this->htmlOptions['data-bs-toggle'] = 'dropdown';
 		}
 
 		if (!empty($classes)) {
@@ -239,12 +247,10 @@ class TbButton extends TbWidget {
 			}
 		}
 
-		if (isset($this->icon)) { // no need for implode as newglyphicon only supports one icon
-			if (strpos($this->icon, 'icon') === false && strpos($this->icon, 'fa') === false) {
-				$this->icon = 'glyphicon glyphicon-' . $this->icon;
-				$this->label = '<span class="' . $this->icon . '"></span> ' . $this->label;
-			} else { // to support font awesome icons
-				$this->label = '<i class="' . $this->icon . '"></i> ' . $this->label;
+		if (isset($this->icon)) {
+			$icon = TbIcon::render($this->icon);
+			if ($icon !== '') {
+				$this->label = $icon . ' ' . $this->label;
 			}
 		}
 
@@ -253,7 +259,14 @@ class TbButton extends TbWidget {
 		}
 
 		if (isset($this->toggle)) {
-			$this->htmlOptions['data-toggle'] = 'button';
+			// Bootstrap 5 removed the button plugin's toggle behaviour outright - there is no
+			// attribute to rename it to. Emitting the old one would look migrated and do nothing,
+			// so fail loudly instead and point at the replacement.
+			throw new CException(
+				'TbButton::$toggle was removed in YiiBooster 5.0: Bootstrap 5 dropped the button '
+				. 'plugin\'s toggle behaviour. Use a checkbox or radio input with the btn-check '
+				. 'class instead. See UPGRADE-5.0.md.'
+			);
 		}
 
 		if (isset($this->loadingText)) {
@@ -269,7 +282,7 @@ class TbButton extends TbWidget {
                 $this->tooltipOptions = array();
             }
 
-            $this->htmlOptions['data-toggle'] = 'tooltip';
+            $this->htmlOptions['data-bs-toggle'] = 'tooltip';
             foreach ($this->tooltipOptions as $key => $value) {
                 $this->htmlOptions['data-' . $key] = $value;
             }

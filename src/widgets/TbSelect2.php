@@ -108,7 +108,7 @@ class TbSelect2 extends CInputWidget {
 				CHtml::hiddenField($name, $this->value, $this->htmlOptions);
 		}
 
-		$this->registerClientScript($id);
+		$this->registerClientScript($id, $name);
 	}
 
 	/**
@@ -121,27 +121,41 @@ class TbSelect2 extends CInputWidget {
 	 *
 	 * @throws CException
 	 */
-	public function registerClientScript($id) {
+	public function registerClientScript($id, $name = null) {
 
 		Booster::getBooster()->registerPackage('select2');
 
 		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
 
+		// Select2 4.x dropped the 3.x programmatic API. Setting a value is now a plain jQuery
+		// .val() followed by a change event, and readonly/disabled are ordinary DOM properties -
+		// .select2('val'), .select2('readonly') and .select2('enable') no longer exist.
 		if (!empty($this->val)) {
-			if (is_array($this->val)) {
-				$data = CJSON::encode($this->val);
-			} else {
-				$data = $this->val;
-			}
-
-			$defValue = ".select2('val', $data)";
+			$data = is_array($this->val) ? CJSON::encode($this->val) : CJavaScript::encode($this->val);
+			$defValue = ".val($data).trigger('change')";
 		} else
 			$defValue = '';
 
+		// Select2 4.x has no readonly state, and the comment that used to sit here claiming
+		// `disabled` was equivalent to 3.x's `readonly` was wrong in a way that loses data:
+		// browsers omit disabled controls from the submitted payload, so a readonly field with an
+		// existing value posted nothing and the model was overwritten with null on save. 3.x set
+		// the `readonly` property, which is inert on a <select> and only blocked its own UI, so
+		// the value always submitted.
+		//
+		// Readonly therefore disables the control for interaction but adds a hidden field
+		// carrying the value, keeping it in the payload. Disabled stays genuinely disabled -
+		// not submitting is the point of it.
 		if ($this->readonly) {
-			$defValue .= ".select2('readonly', true)";
+			$defValue .= ".prop('disabled', true).trigger('change')";
+			if ($name === null) {
+				$name = $this->hasModel()
+					? CHtml::activeName($this->model, $this->attribute)
+					: $this->name;
+			}
+			$this->registerReadonlyValueField($id, $name);
 		} elseif ($this->disabled) {
-			$defValue .= ".select2('enable', false)";
+			$defValue .= ".prop('disabled', true).trigger('change')";
 		}
 
 		ob_start();
@@ -154,9 +168,51 @@ class TbSelect2 extends CInputWidget {
 		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean() . ';');
 	}
 
+	/**
+	 * Mirrors a readonly control's value into a hidden field so it still posts.
+	 *
+	 * A disabled <select> is excluded from the submitted payload, which would silently blank the
+	 * attribute on save. The hidden field is written from the live Select2 value on submit, so a
+	 * multiple select posts its whole selection.
+	 *
+	 * @param string $id the select's DOM id.
+	 * @param string $name the submitted field name.
+	 * @since 5.0.0
+	 */
+	protected function registerReadonlyValueField($id, $name) {
+
+		$nameJs = CJavaScript::encode($name);
+
+		Yii::app()->getClientScript()->registerScript(
+			__CLASS__ . '#readonly#' . $id,
+			"(function () {"
+			. " var el = document.getElementById(" . CJavaScript::encode($id) . ");"
+			. " if (!el) { return; }"
+			. " var form = el.form;"
+			. " if (!form) { return; }"
+			. " form.addEventListener('submit', function () {"
+			. " var values = jQuery(el).val();"
+			. " if (values === null) { values = []; }"
+			. " if (!jQuery.isArray(values)) { values = [values]; }"
+			. " jQuery(form).find('input.booster-select2-readonly[data-for=\"' + el.id + '\"]').remove();"
+			. " jQuery.each(values, function (i, v) {"
+			. " jQuery('<input type=\"hidden\" class=\"booster-select2-readonly\">')"
+			. " .attr('name', " . $nameJs . ").attr('data-for', el.id).val(v).appendTo(form);"
+			. " });"
+			. " });"
+			. " })();"
+		);
+	}
+
 	private function setDefaultWidthIfEmpty() {
 		if (empty($this->options['width'])) {
 			$this->options['width'] = 'resolve';
+		}
+
+		// select2-bootstrap-5-theme only applies when Select2 is told to use it by name; without
+		// this the control renders in Select2's own default skin next to Bootstrap 5 inputs.
+		if (empty($this->options['theme'])) {
+			$this->options['theme'] = 'bootstrap-5';
 		}
 	}
 

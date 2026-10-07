@@ -69,14 +69,14 @@ class TbPopoverColumn extends TbDataColumn {
 		$gridId = $this->grid->id;
 		$options = CJavaScript::encode($this->options);
 		$class = $this->class;
-		$_script = "
-			$('#$gridId a.$class').popover($options);	
-			$(document).on('click', '#$gridId a.$class', function() {
-				$('#$gridId a.$class').not(this).popover('hide');
-				$(this).popover('toggle');
-				return false;
-			});
-		";
+
+		Booster::getBooster()->registerPackage('booster');
+
+		// Bootstrap 5 has no jQuery plugin, so hide/toggle need per-element instances. The helper
+		// also registers its delegated click listener only once: the Bootstrap 3 version re-ran
+		// this whole script on every AJAX update, stacking up another $(document).on handler each
+		// time.
+		$_script = "Booster.popoverColumn('{$gridId}', '{$class}', {$options});";
 		Yii::app()->clientScript->registerScript(__CLASS__ . '#' . $this->id, "
 			$_script;
 		", CClientScript::POS_READY);

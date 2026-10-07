@@ -50,7 +50,11 @@ class TbBreadcrumbs extends CBreadcrumbs {
 		}
 		if ($this->homeLink !== false) {
 			// check whether home link is not a link
-			$active = (stripos($this->homeLink, '<a') === false) ? ' class="active"' : '';
+			// Bootstrap 5 draws the separator from .breadcrumb-item + .breadcrumb-item::before,
+			// so without breadcrumb-item the trail renders as a plain run-together list.
+			$active = (stripos($this->homeLink, '<a') === false)
+				? ' class="breadcrumb-item active" aria-current="page"'
+				: ' class="breadcrumb-item"';
 			echo '<li' . $active . '>' . $this->homeLink . '</li>';
 		}
 
@@ -58,13 +62,13 @@ class TbBreadcrumbs extends CBreadcrumbs {
 
 		foreach ($this->links as $label => $url) {
 			if (is_string($label) || is_array($url)) {
-				echo '<li>';
+				echo '<li class="breadcrumb-item">';
 				echo strtr($this->activeLinkTemplate, array(
 					'{url}' => CHtml::normalizeUrl($url),
 					'{label}' => $this->encodeLabel ? CHtml::encode($label) : $label,
 				));
 			} else {
-				echo '<li class="active">';
+				echo '<li class="breadcrumb-item active" aria-current="page">';
 				echo str_replace('{label}', $this->encodeLabel ? CHtml::encode($url) : $url, $this->inactiveLinkTemplate);
 			}
 

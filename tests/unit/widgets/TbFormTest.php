@@ -64,7 +64,7 @@ class TbFormTest extends PHPUnit_Framework_TestCase {
 				),
 				'colorpicker' => array('type' => 'colorpicker'),
 				//'captcha' => array('type' => 'captcha'),
-				'pass' => array('type' => 'pass'),
+				// 'pass' was dropped in 5.0 together with TbPassfield.
 			),
 			'buttons' => array(
 				'submit' => array(
