@@ -251,8 +251,7 @@ If your own CSS targets `.has-error`, update it to `.is-invalid`.
 ### 2.6 JavaScript
 
 Bootstrap 5 still installs its jQuery plugins when jQuery is present, so `$el.modal()` and friends
-keep working — but **only from `DOMContentLoaded` onwards**, and the bridge gives you no way to
-dispose an instance. Prefer the class API:
+keep working, but the bridge gives you no way to dispose an instance. Prefer the class API:
 
 ```js
 // Bootstrap 3
@@ -264,7 +263,10 @@ bootstrap.Modal.getOrCreateInstance(document.getElementById('myModal')).show();
 new bootstrap.Tooltip(el);
 ```
 
-Code that reads `$.fn.modal` or `$.fn.tooltip` *before* `DOMContentLoaded` will not find them.
+Bootstrap itself installs the plugins at `DOMContentLoaded`, which is too late for jQuery ready
+handlers that run first - and they do whenever anything queued one before the bundle loaded (jQuery
+UI does). `booster.js` therefore installs them as soon as it loads, right after the bundle. Code that
+reads `$.fn.modal` before the bundle has loaded will still not find them.
 
 All Bootstrap data attributes are now namespaced: `data-toggle` → `data-bs-toggle`,
 `data-target` → `data-bs-target`, `data-dismiss` → `data-bs-dismiss`, `data-slide` →

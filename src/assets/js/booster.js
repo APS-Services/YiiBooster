@@ -304,4 +304,46 @@
 			bs.Popover.getOrCreateInstance(link, options || {}).toggle();
 		});
 	};
+
+	/**
+	 * Installs Bootstrap's jQuery plugins ($.fn.modal, $.fn.popover, ...) now instead of at
+	 * DOMContentLoaded.
+	 *
+	 * Bootstrap 5 defines them in its own DOMContentLoaded listener. jQuery runs every queued ready
+	 * handler from *its* listener, which comes first whenever something queued a ready handler before
+	 * the bundle loaded (jQuery UI does on load). Inline `jQuery(function () { $(el).modal(); })`
+	 * code - which is how Yii emits CClientScript::POS_READY scripts - then finds no $.fn.modal.
+	 * This file loads right after the bundle (the `booster` package depends on `bootstrap.js`), so
+	 * running here closes that gap. Bootstrap's own listener later installs the same functions again.
+	 *
+	 * Like Bootstrap, an existing plugin of the same name is replaced and kept for noConflict() -
+	 * jQuery UI's tooltip and button would otherwise stay in place until DOMContentLoaded, so the same
+	 * ready handlers would get jQuery UI widgets. Honours Bootstrap's opt-out, `data-bs-no-jquery` on
+	 * the body.
+	 */
+	Booster.installJqueryPlugins = function () {
+		var $ = window.jQuery;
+		var bs = components();
+		if (!$ || !bs || (document.body && document.body.hasAttribute('data-bs-no-jquery'))) {
+			return;
+		}
+
+		['Alert', 'Button', 'Carousel', 'Collapse', 'Dropdown', 'Modal', 'Offcanvas', 'Popover',
+			'ScrollSpy', 'Tab', 'Toast', 'Tooltip'].forEach(function (name) {
+			var Component = bs[name];
+			var plugin = Component && Component.NAME;
+			if (!plugin || $.fn[plugin] === Component.jQueryInterface) {
+				return;
+			}
+			var previous = $.fn[plugin];
+			$.fn[plugin] = Component.jQueryInterface;
+			$.fn[plugin].Constructor = Component;
+			$.fn[plugin].noConflict = function () {
+				$.fn[plugin] = previous;
+				return Component.jQueryInterface;
+			};
+		});
+	};
+
+	Booster.installJqueryPlugins();
 })(window, document);

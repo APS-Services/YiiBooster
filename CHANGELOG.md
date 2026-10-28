@@ -263,6 +263,10 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   stops depending on PHPUnit's file ordering.
 - **(fix)** `Booster::getVersion()` returned `4.0.1`; it now matches the release, `5.0.0`, and a test
   keeps it equal to `project.version` in `build/build.properties` (rather)
+- **(fix)** Bootstrap's jQuery plugins (`$.fn.modal`, `$.fn.popover`, ...) are installed by `booster.js`
+  as soon as it loads. Bootstrap installs them at `DOMContentLoaded`, after jQuery has already run
+  its ready handlers whenever one was queued before the bundle (jQuery UI queues one on load), so
+  `CClientScript::POS_READY` code calling `$(el).popover()` failed with "not a function" (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
