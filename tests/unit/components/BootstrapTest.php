@@ -190,4 +190,19 @@ class BoosterTest extends PHPUnit_Framework_TestCase {
 			'Without the bundle build, Popper is missing and dropdowns/tooltips/popovers break.'
 		);
 	}
+
+	/**
+	 * The release version lives in build/build.properties; getVersion() is a hardcoded copy of it
+	 * and was still returning 4.0.1 well into the 5.0 work.
+	 *
+	 * @test
+	 */
+	public function getVersionMatchesTheReleaseVersion()
+	{
+		$properties = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/build/build.properties');
+		preg_match('/^project\.version=(\S+)/m', $properties, $release);
+
+		$component = new Booster();
+		$this->assertEquals($release[1], $component->getVersion(), 'Booster::getVersion() drifted from project.version.');
+	}
 }

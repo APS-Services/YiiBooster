@@ -431,7 +431,7 @@ class Booster extends CApplicationComponent {
 	 */
 	public function getVersion() {
 		
-		return '4.0.1';
+		return '5.0.0';
 	}
 
 	/**

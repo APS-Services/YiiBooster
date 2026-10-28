@@ -140,7 +140,9 @@ class BsTokenLint
 				if (!$file->isFile() || substr($file->getFilename(), -4) !== '.php') {
 					continue;
 				}
-				$path = str_replace($root . '/', '', $file->getPathname());
+				// relative to the root, with forward slashes on every OS: the exclusions and the baseline are
+				// recorded that way
+				$path = substr(strtr($file->getPathname(), '\\', '/'), strlen(strtr($root, '\\', '/')) + 1);
 				if (in_array($path, self::excludedFiles(), true)) {
 					continue;
 				}

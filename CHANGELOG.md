@@ -261,6 +261,8 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   drifted copy that set a different `aria-current` and gave nested items no `dropdown-toggle` at all.
 - **(fix)** tests that swap in a `clientScript` double now restore it in `tearDown()`, so the suite
   stops depending on PHPUnit's file ordering.
+- **(fix)** `Booster::getVersion()` returned `4.0.1`; it now matches the release, `5.0.0`, and a test
+  keeps it equal to `project.version` in `build/build.properties` (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
@@ -300,6 +302,8 @@ applications fail at the offending line rather than on a missing include. The st
   and contract tests for `TbPager`.
 - **(fix)** `TbPager::init()` overwrote `htmlOptions['class']` instead of appending to it, silently
   discarding any caller-supplied class. Documented by a test; fixed with the pager rewrite.
+- **(fix)** the token lint compares paths with forward slashes on every OS. On Windows it reported
+  `src/helpers\TbIcon.php` as a regression because the exclusion list is recorded with `/` (rather)
 
 ## YiiBooster latest development alpha
 - **(fix)** fix TbEditableField params prop check is an array and js callback implementation #1016 (Oxyaction)
