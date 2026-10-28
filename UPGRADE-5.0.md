@@ -190,8 +190,8 @@ emitting the old one would look migrated while doing nothing. Use inputs with th
 inside the button group.
 
 `TbButton` with `'buttonType' => 'link'` renders an `<a>` in the colours of its context and no longer
-adds `btn-link`, which in Bootstrap 5 overrides those colours. For a button that looks like a plain
-text link, set `'context' => 'link'`.
+adds `btn-link`, which in Bootstrap 5 overrides those colours. Without a valid context (e.g. `''`) it
+is still a `btn-link`; otherwise set `'context' => 'link'` for a plain text link.
 
 ### 2.3 Icons
 

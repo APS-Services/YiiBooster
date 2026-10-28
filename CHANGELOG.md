@@ -269,7 +269,8 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   `CClientScript::POS_READY` code calling `$(el).popover()` failed with "not a function" (rather)
 - **(fix)** `TbButton` with `buttonType` `link` no longer adds `btn-link` next to its context class. In
   Bootstrap 5 `btn-link` overrides the context's colours, so a `success` link button showed
-  link-coloured text on a green background. A text-style link is `context` `link` (rather)
+  link-coloured text on a green background. Without a context it is still `btn-link`; a text-style
+  link with a context is `context` `link` (rather)
 - **(fix)** `TbDatePicker` registers its locale file at `POS_END`. In the head it ran before jQuery and
   the plugin it extends had loaded ("jQuery is not defined"), so the picker stayed English (rather)
 

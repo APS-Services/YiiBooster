@@ -171,11 +171,13 @@ class TbButton extends TbWidget {
 
 		$classes = array('btn');
 
-		// buttonType link only makes the button an <a>; it no longer adds btn-link on top of the
-		// context. In Bootstrap 5 btn-link overrides the context's colours, so a "success" link button
-		// rendered as link-coloured text on a green background. A text-style link is context "link".
+		// buttonType link adds btn-link only without a context: in Bootstrap 5 btn-link overrides the
+		// context's colours, so a "success" link button rendered as link-coloured text on a green
+		// background. A text-style link with a context is context "link".
 		if ($this->isValidContext()) {
 			$classes[] = 'btn-' . $this->getContextClass();
+		} elseif ($this->buttonType === self::BUTTON_LINK) {
+			$classes[] = 'btn-link';
 		}
 
 		$validSizes = array(

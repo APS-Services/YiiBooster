@@ -52,4 +52,22 @@ class TbButtonTest extends WidgetTestCase
 		$classes = explode(' ', $this->firstNode($xpath, '//a')->getAttribute('class'));
 		$this->assertContains('btn-link', $classes);
 	}
+
+	/**
+	 * Without a context (TbBulkActions passes '') a link button stays a text link, as before.
+	 *
+	 * @test
+	 */
+	public function linkButtonWithoutContextIsTextLink()
+	{
+		$xpath = $this->renderXPath('TbButton', array(
+			'buttonType' => TbButton::BUTTON_LINK,
+			'context' => '',
+			'label' => 'Delete',
+			'url' => '#',
+		));
+
+		$classes = explode(' ', $this->firstNode($xpath, '//a')->getAttribute('class'));
+		$this->assertContains('btn-link', $classes);
+	}
 }
