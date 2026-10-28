@@ -97,8 +97,13 @@ class TbDatePicker extends TbBaseInputWidget {
         Booster::getBooster()->registerPackage('datepicker');
 	}
 
+	/**
+	 * The locale file extends $.fn.datepicker, so it goes to POS_END: Yii renders package scripts
+	 * (the plugin) before the files registered for the same position, wherever the application puts
+	 * its core scripts. In the head it ran before jQuery and the plugin had loaded.
+	 */
 	public function registerLanguageScript() {
-		
+
 		$booster = Booster::getBooster();
 
 		if (isset($this->options['language']) && $this->options['language'] != 'en') {
@@ -112,10 +117,10 @@ class TbDatePicker extends TbBaseInputWidget {
 					Yii::app()->clientScript->registerScriptFile(
 						'https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/locales/bootstrap-datepicker.'
 						. $this->options['language'] . '.min.js',
-						CClientScript::POS_HEAD
+						CClientScript::POS_END
 					);
 				} else {
-					$booster->cs->registerScriptFile($booster->getAssetsUrl() . $filename, CClientScript::POS_HEAD);
+					$booster->cs->registerScriptFile($booster->getAssetsUrl() . $filename, CClientScript::POS_END);
 				}
 			}
 		}

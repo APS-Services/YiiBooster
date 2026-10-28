@@ -8,6 +8,8 @@ require_once(__DIR__ . '/../../fakes/WidgetTestCase.php');
 require_once(__DIR__ . '/../../fakes/AssetsRegistryHook.php');
 require_once(__DIR__ . '/../../../src/widgets/TbTags.php');
 require_once(__DIR__ . '/../../../src/widgets/TbColorPicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbBaseInputWidget.php');
+require_once(__DIR__ . '/../../../src/widgets/TbDatePicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbTabs.php');
 require_once(__DIR__ . '/../../../src/widgets/TbActiveForm.php');
 require_once(__DIR__ . '/../../../src/helpers/TbCss.php');
@@ -381,6 +383,42 @@ class PluginReplacementTest extends WidgetTestCase
 			$this->assertRegExp('/copyright/i', $header, $library);
 		}
 	}
+	/**
+	 * The datepicker's locale file extends $.fn.datepicker. Registered for the head it ran before
+	 * jQuery and the plugin had loaded - "jQuery is not defined", found in myAPS - and the picker
+	 * stayed English.
+	 *
+	 * @test
+	 */
+	public function datePickerLocaleLoadsAfterThePlugin()
+	{
+		$booster = Booster::getBooster();
+		$realClientScript = $booster->cs;
+		$booster->cs = $this->clientScript;
+		try {
+			$widget = new TbDatePicker();
+			$widget->options = array('language' => 'de');
+			$widget->registerLanguageScript();
+		} finally {
+			$booster->cs = $realClientScript;
+		}
+
+		$positionOf = function ($files) {
+			foreach ($files as $position => $urls) {
+				foreach (array_keys($urls) as $url) {
+					if (strpos($url, 'bootstrap-datepicker.de.js') !== false) {
+						return $position;
+					}
+				}
+			}
+
+			return null;
+		};
+		$scriptFiles = new ReflectionProperty('CClientScript', 'scriptFiles');
+		$scriptFiles->setAccessible(true);
+		$this->assertSame(CClientScript::POS_END, $positionOf($scriptFiles->getValue($this->clientScript)));
+	}
+
 	protected function tearDown(): void
 	{
 		// Restore the real component: PHPUnit runs the whole suite in one process against one
