@@ -273,6 +273,9 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   link with a context is `context` `link` (rather)
 - **(fix)** `TbDatePicker` registers its locale file at `POS_END`. In the head it ran before jQuery and
   the plugin it extends had loaded ("jQuery is not defined"), so the picker stayed English (rather)
+- **(fix)** `TbActiveForm` also marks invalid controls after validation on submit. Yii then calls only
+  `afterValidate`, not `afterValidateAttribute`, so a rejected form showed its messages without
+  `is-invalid`. An own `afterValidate` is wrapped and still decides about the submit (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead

@@ -172,6 +172,42 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$this->assertArrayHasKey('inputContainer', $form->clientOptions);
 	}
 
+	/**
+	 * On submit Yii calls only afterValidate, so the invalid state is mirrored there too; an own
+	 * afterValidate keeps deciding about the submit.
+	 */
+	public function testInitAfterValidateMarksControls() {
+
+		$form = $this->makeWidget();
+		ob_start();
+		$form->init();
+		ob_end_clean();
+		$this->assertStringContainsString('Booster.markFormValidationState(form, data); return true;', $form->clientOptions['afterValidate']);
+
+		$form = $this->makeWidget();
+		$form->clientOptions['afterValidate'] = 'js:function (form, data, hasError) { return !hasError; }';
+		ob_start();
+		$form->init();
+		ob_end_clean();
+		$this->assertStringStartsWith('js:function (form, data, hasError) { Booster.markFormValidationState(form, data);', $form->clientOptions['afterValidate']);
+		$this->assertStringContainsString('return (function (form, data, hasError) { return !hasError; })(form, data, hasError);', $form->clientOptions['afterValidate']);
+
+		$form = $this->makeWidget();
+		$form->clientOptions['afterValidate'] = new CJavaScriptExpression('myCheck');
+		ob_start();
+		$form->init();
+		ob_end_clean();
+		$this->assertStringContainsString('return (myCheck)(form, data, hasError);', $form->clientOptions['afterValidate']);
+
+		// 'js:undefined' switched afterValidate off; it must not become a call of undefined
+		$form = $this->makeWidget();
+		$form->clientOptions['afterValidate'] = 'js:undefined';
+		ob_start();
+		$form->init();
+		ob_end_clean();
+		$this->assertStringContainsString('Booster.markFormValidationState(form, data); return true;', $form->clientOptions['afterValidate']);
+	}
+
 	public function testInitOptions() {
 		
 		$form = $this->makeWidget();

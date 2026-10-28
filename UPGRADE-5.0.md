@@ -249,6 +249,8 @@ validation toggles a class on the container. YiiBooster bridges the two: Yii kee
 container with a neutral marker class, and an `afterValidateAttribute` hook mirrors the real state
 onto the input. If you set `clientOptions['afterValidateAttribute']` yourself you will replace that
 bridge — call `Booster.markValidationState(attribute, hasError)` from your handler to keep it.
+On submit Yii calls only `afterValidate`; YiiBooster wraps it (yours, given as `js:` or
+`CJavaScriptExpression`, is still called and decides about the submit) and marks every control.
 
 If your own CSS targets `.has-error`, update it to `.is-invalid`.
 

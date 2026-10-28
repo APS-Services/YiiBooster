@@ -175,6 +175,28 @@
 	};
 
 	/**
+	 * Mirrors the result of a whole-form validation (on submit) onto every control.
+	 *
+	 * On submit Yii updates all inputs but never calls afterValidateAttribute, only afterValidate,
+	 * so without this the fields of a rejected form showed their messages but no invalid state.
+	 *
+	 * @param {jQuery} form the form, as Yii passes it to afterValidate
+	 * @param {Object} data error messages by attribute id
+	 */
+	Booster.markFormValidationState = function (form, data) {
+		var settings = form && form.data ? form.data('settings') : null;
+		if (!settings || !settings.attributes) {
+			return;
+		}
+
+		for (var i = 0; i < settings.attributes.length; i++) {
+			var attribute = settings.attributes[i];
+			var messages = data ? data[attribute.id] : null;
+			Booster.markValidationState(attribute, !!(messages && messages.length));
+		}
+	};
+
+	/**
 	 * Creates - or returns the existing - Bootstrap component instance for an element id.
 	 *
 	 * Replaces the Bootstrap 3 jQuery plugin calls (`jQuery('#id').modal(opts)` and friends),

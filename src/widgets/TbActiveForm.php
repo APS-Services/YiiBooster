@@ -225,6 +225,26 @@ class TbActiveForm extends CActiveForm {
 				'js:function (form, attribute, data, hasError) {'
 				. ' Booster.markValidationState(attribute, hasError); }';
 		}
+		// on submit Yii validates the whole form and calls only afterValidate, so the controls are
+		// marked there as well; an application's own afterValidate still decides about the submit
+		$afterValidate = isset($this->clientOptions['afterValidate']) ? $this->clientOptions['afterValidate'] : null;
+		$isScript = $afterValidate === null;
+		if ($afterValidate instanceof CJavaScriptExpression) {
+			$afterValidate = $afterValidate->code;
+			$isScript = true;
+		} elseif (is_string($afterValidate) && strncmp($afterValidate, 'js:', 3) === 0) {
+			$afterValidate = substr($afterValidate, 3);
+			$isScript = true;
+		}
+		if ($isScript) {
+			Booster::getBooster()->registerPackage('booster');
+			$ownAfterValidate = ($afterValidate === null || trim($afterValidate) === 'undefined')
+				? 'return true;'
+				: 'return (' . $afterValidate . ')(form, data, hasError);';
+			$this->clientOptions['afterValidate'] =
+				'js:function (form, data, hasError) {'
+				. ' Booster.markFormValidationState(form, data); ' . $ownAfterValidate . ' }';
+		}
 
 		parent::init();
 	}
