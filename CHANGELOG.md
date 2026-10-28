@@ -267,6 +267,9 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   as soon as it loads. Bootstrap installs them at `DOMContentLoaded`, after jQuery has already run
   its ready handlers whenever one was queued before the bundle (jQuery UI queues one on load), so
   `CClientScript::POS_READY` code calling `$(el).popover()` failed with "not a function" (rather)
+- **(fix)** `TbButton` with `buttonType` `link` no longer adds `btn-link` next to its context class. In
+  Bootstrap 5 `btn-link` overrides the context's colours, so a `success` link button showed
+  link-coloured text on a green background. A text-style link is `context` `link` (rather)
 - **(fix)** `TbDatePicker` registers its locale file at `POS_END`. In the head it ran before jQuery and
   the plugin it extends had loaded ("jQuery is not defined"), so the picker stayed English (rather)
 

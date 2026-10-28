@@ -189,6 +189,10 @@ plugin's toggle and checkbox/radio behaviour outright — there is no attribute 
 emitting the old one would look migrated while doing nothing. Use inputs with the `btn-check` class
 inside the button group.
 
+`TbButton` with `'buttonType' => 'link'` renders an `<a>` in the colours of its context and no longer
+adds `btn-link`, which in Bootstrap 5 overrides those colours. For a button that looks like a plain
+text link, set `'context' => 'link'`.
+
 ### 2.3 Icons
 
 Glyphicons no longer exist. YiiBooster bundles **Bootstrap Icons 1.11.3** and renders every icon
