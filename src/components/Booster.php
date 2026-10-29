@@ -518,7 +518,9 @@ class Booster extends CApplicationComponent {
 
         
 	/**
-	 * Make select2 package definition
+	 * Make select2 package definitions: Select2 itself, and select2-bootstrap-5-theme as a package of
+	 * its own, registered only by the controls that use that theme (an application styling Select2's
+	 * 'default' theme itself does not load it)
 	 *
 	 * @return array
 	 */
@@ -534,16 +536,30 @@ class Booster extends CApplicationComponent {
 			$jsFiles[] = 'js/i18n/' . $locale . '.js';
 		}
 
-		return array('select2' => array(
-			'baseUrl' => $this->getAssetsUrl() . '/select2/',
-			'js' => $jsFiles,
-			'css' => array(
-				$this->minify ? 'css/select2.min.css' : 'css/select2.css',
-				// Select2's own Bootstrap theme only ever targeted Bootstrap 3.
-				$this->minify ? 'css/select2-bootstrap-5-theme.min.css' : 'css/select2-bootstrap-5-theme.css',
+		return array(
+			'select2' => array(
+				'baseUrl' => $this->getAssetsUrl() . '/select2/',
+				'js' => $jsFiles,
+				'css' => array($this->minify ? 'css/select2.min.css' : 'css/select2.css'),
+				'depends' => array('jquery'),
 			),
-			'depends' => array('jquery'),
-		));
+			// Select2's own Bootstrap theme only ever targeted Bootstrap 3.
+			'select2-bootstrap-5-theme' => array(
+				'baseUrl' => $this->getAssetsUrl() . '/select2/',
+				'css' => array($this->minify ? 'css/select2-bootstrap-5-theme.min.css' : 'css/select2-bootstrap-5-theme.css'),
+				'depends' => array('select2'),
+			),
+		);
+	}
+
+	/**
+	 * Registers Select2, plus select2-bootstrap-5-theme when the control uses that theme.
+	 *
+	 * @param array $options the options the control is started with
+	 */
+	public function registerSelect2Package($options) {
+
+		$this->registerPackage(isset($options['theme']) && $options['theme'] === 'bootstrap-5' ? 'select2-bootstrap-5-theme' : 'select2');
 	}
 
 	/**

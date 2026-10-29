@@ -245,8 +245,6 @@ class TbTags extends CInputWidget {
 	 */
 	public function registerClientScript($id) {
 
-		Booster::getBooster()->registerPackage('select2');
-
 		// bootstrap-tags has been untouched since 2017. Select2 is already bundled and already on
 		// 4.x, and its `tags` mode is the same feature - so this drops a dependency rather than
 		// swapping one.
@@ -254,6 +252,8 @@ class TbTags extends CInputWidget {
 			array('tags' => true, 'tokenSeparators' => array(',', ' '), 'theme' => 'bootstrap-5', 'width' => '100%'),
 			(array) $this->options
 		);
+
+		Booster::getBooster()->registerSelect2Package($options);
 
 		Yii::app()->getClientScript()->registerScript(
 			__CLASS__ . '#' . $this->getId(),

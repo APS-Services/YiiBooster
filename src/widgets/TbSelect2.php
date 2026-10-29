@@ -131,7 +131,7 @@ class TbSelect2 extends CInputWidget {
 	 */
 	public function registerClientScript($id, $name = null) {
 
-		Booster::getBooster()->registerPackage('select2');
+		Booster::getBooster()->registerSelect2Package($this->options);
 
 		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
 

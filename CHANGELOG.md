@@ -298,6 +298,10 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   Awesome it includes Tabler Icons (`ti ti-trash`), which were mapped onto Bootstrap Icons names
   (`bi bi-ti bi-ti-trash`). A name of the configured `$family` is now completed with its base class
   also when that family is in the list (rather)
+- **(enh)** `select2-bootstrap-5-theme` is a package of its own, registered by `TbSelect2`, `TbTags`
+  and `TbEditable` (type `select2`) only when the control uses the `bootstrap-5` theme
+  (`Booster::registerSelect2Package()`). An application styling Select2's `default` theme itself
+  loaded the unused stylesheet on every page (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead

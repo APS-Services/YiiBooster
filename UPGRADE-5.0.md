@@ -343,8 +343,10 @@ grep -rn "'type'\s*=>\s*'\(primary\|info\|success\|warning\|danger\|inverse\)'" 
 ## Bundled plugin changes
 
 **select2 3.5.1 → 4.1.0-rc.0**, with `select2-bootstrap-5-theme`. `TbSelect2` sets
-`theme: 'bootstrap-5'` for you. If your own JavaScript drives a Select2 control, the 3.x
-programmatic API is gone:
+`theme: 'bootstrap-5'` for you. If your admin template styles Select2 itself, set
+`TbSelect2::$theme` once through the widget factory (e.g. `'TbSelect2' => array('theme' => 'default')`);
+the bundled theme's stylesheet is then not loaded at all. If your own JavaScript drives a Select2
+control, the 3.x programmatic API is gone:
 
 ```js
 $el.select2('val', v);        // 3.x

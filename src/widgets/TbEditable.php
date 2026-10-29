@@ -574,7 +574,7 @@ class TbEditable extends CWidget
         if ($this->type == 'combodate') { // include moment.js if needed
             $booster->registerPackage('moment');
         } elseif ($this->type == 'select2') { //include select2 if needed
-            $booster->registerPackage('select2');
+            $booster->registerSelect2Package((array) $this->select2);
         }
         
         $booster->registerPackage('x-editable');

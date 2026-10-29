@@ -539,6 +539,31 @@ class PluginReplacementTest extends WidgetTestCase
 		$this->assertStringContainsString("'theme':'classic'", $this->registeredScripts());
 	}
 
+	/**
+	 * select2-bootstrap-5-theme is loaded only where a control uses it: an application styling the
+	 * 'default' theme itself (myAPS with its admin template) loaded it on every page for nothing.
+	 *
+	 * @test
+	 */
+	public function select2LoadsTheBootstrap5ThemeOnlyWhenUsed()
+	{
+		$booster = Booster::getBooster();
+		$coreScripts = new ReflectionProperty('CClientScript', 'coreScripts');
+		$coreScripts->setAccessible(true);
+
+		$booster->cs->reset();
+		$this->render('TbSelect2', array('name' => 'Post[a]'));
+		$packages = array_keys((array) $coreScripts->getValue($booster->cs));
+		$this->assertContains('select2', $packages);
+		$this->assertContains('select2-bootstrap-5-theme', $packages);
+
+		$booster->cs->reset();
+		$this->render('TbSelect2', array('name' => 'Post[b]', 'theme' => 'default'));
+		$packages = array_keys((array) $coreScripts->getValue($booster->cs));
+		$this->assertContains('select2', $packages);
+		$this->assertNotContains('select2-bootstrap-5-theme', $packages);
+	}
+
 	protected function tearDown(): void
 	{
 		// Restore the real component: PHPUnit runs the whole suite in one process against one
