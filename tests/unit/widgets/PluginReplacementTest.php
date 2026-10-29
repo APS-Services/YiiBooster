@@ -316,10 +316,10 @@ class PluginReplacementTest extends WidgetTestCase
 		TbIcon::$family = 'bi';
 		$this->assertStringContainsString('class="bi bi-caret-down-fill"', TbIcon::renderNamed('caret-down-fill'));
 
-		// Guards the reason renderNamed() exists: resolveCssClass() treats a non-bi family prefix
-		// as a foreign family and hands it back untouched, losing the base class.
+		// a name of the configured family is completed with its base class, also when that family
+		// is one of the foreign ones (it used to be handed back without it)
 		TbIcon::$family = 'fa';
-		$this->assertEquals('fa-caret-down-fill', TbIcon::resolveCssClass('fa-caret-down-fill'));
+		$this->assertEquals('fa fa-caret-down-fill', TbIcon::resolveCssClass('fa-caret-down-fill'));
 	}
 
 	/**

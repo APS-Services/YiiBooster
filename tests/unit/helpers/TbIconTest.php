@@ -91,6 +91,9 @@ class TbIconTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('fa fa-trash', TbIcon::resolveCssClass('fa fa-trash'));
 		$this->assertEquals('fas fa-trash', TbIcon::resolveCssClass('fas fa-trash'));
 		$this->assertEquals('fab fa-github', TbIcon::resolveCssClass('fab fa-github'));
+		// Tabler Icons, e.g. of an admin template
+		$this->assertEquals('ti ti-trash', TbIcon::resolveCssClass('ti ti-trash'));
+		$this->assertEquals('ti ti-device-floppy fs-lg', TbIcon::resolveCssClass('ti ti-device-floppy fs-lg'));
 	}
 
 	/**

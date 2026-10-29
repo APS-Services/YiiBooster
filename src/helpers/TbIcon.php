@@ -23,8 +23,9 @@
  *     'icon-trash'                   Bootstrap 2 style
  *     'bi bi-trash'                  already a Bootstrap Icons class
  *
- * Font Awesome - or any other family an application supplies fully qualified, e.g. `fa fa-trash`
- * or `fas fa-trash` - is passed through untouched, so applications already using it keep working.
+ * Font Awesome or Tabler Icons supplied fully qualified, e.g. `fa fa-trash`, `fas fa-trash` or
+ * `ti ti-trash` - any family in $foreignFamilies - is passed through untouched, so applications
+ * using them keep working.
  *
  * @package booster.helpers
  */
@@ -35,6 +36,13 @@ class TbIcon
 	 * Defaults to Bootstrap Icons, the set maintained alongside Bootstrap itself.
 	 */
 	public static $family = 'bi';
+
+	/**
+	 * @var array class prefixes of other icon families (Font Awesome, Tabler Icons): an icon with
+	 * a class of one of them, e.g. `ti ti-trash`, is used as it is instead of being mapped onto
+	 * $family.
+	 */
+	public static $foreignFamilies = array('fa', 'fas', 'far', 'fal', 'fab', 'fad', 'ti');
 
 	/**
 	 * Bootstrap 2/3 icon names that Bootstrap Icons spells differently.
@@ -196,10 +204,12 @@ class TbIcon
 				continue;
 			}
 
-			// Font Awesome and friends, fully qualified by the caller: hands off.
-			if (preg_match('/^fa[srlbd]?$/', $token) || strpos($token, 'fa-') === 0) {
-				$foreignFamily = true;
-				continue;
+			// Font Awesome, Tabler and friends, fully qualified by the caller: hands off.
+			foreach (self::$foreignFamilies as $foreign) {
+				if ($foreign !== self::$family && ($token === $foreign || strpos($token, $foreign . '-') === 0)) {
+					$foreignFamily = true;
+					continue 2;
+				}
 			}
 
 			if (strpos($token, self::$family . '-') === 0) {

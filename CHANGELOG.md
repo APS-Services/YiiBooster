@@ -294,6 +294,10 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   filters filtered by a date nobody chose. Set `autoUpdateInput` in the options for the old behaviour (rather)
 - **(fix)** `TbTimePicker` starts the picker on its input when `htmlOptions` set the input's id. The
   script used the widget id, so the picker was attached to no element (rather)
+- **(enh)** `TbIcon::$foreignFamilies` lists the icon families passed through unchanged; besides Font
+  Awesome it includes Tabler Icons (`ti ti-trash`), which were mapped onto Bootstrap Icons names
+  (`bi bi-ti bi-ti-trash`). A name of the configured `$family` is now completed with its base class
+  also when that family is in the list (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
