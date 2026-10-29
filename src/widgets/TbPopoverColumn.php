@@ -59,7 +59,7 @@ class TbPopoverColumn extends TbDataColumn {
 		
 		$class = preg_replace('/\s+/', '.', $this->class);
 		$value = !isset($value) ? $this->grid->nullDisplay : $this->grid->getFormatter()->format($value, $this->type);
-		$value = CHtml::link($value, '#', array('class' => $class, 'data-trigger' => 'manual'));
+		$value = CHtml::link($value, '#', array('class' => $class, 'data-bs-trigger' => 'manual', 'data-booster-popover' => ''));
 		
 		echo $value;
 	}

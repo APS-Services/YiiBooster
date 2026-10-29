@@ -80,8 +80,10 @@
 			}
 
 			// Bootstrap keys instances by element, so ask about every element that could hold one
-			// rather than guessing from the configured selector, which may have changed.
-			find(root, '[data-bs-toggle], [data-bs-original-title], [title]').forEach(function (el) {
+			// rather than guessing from the configured selector, which may have changed. The links
+			// of TbPopoverColumn and TbJsonPickerColumn get their options from script, so they carry
+			// data-booster-popover instead of any data-bs-* attribute.
+			find(root, '[data-bs-toggle], [data-bs-original-title], [title], [data-booster-popover]').forEach(function (el) {
 				var instance = Component.getInstance(el);
 				if (instance) {
 					instance.dispose();
@@ -129,6 +131,32 @@
 	Booster.refreshIn = function (root, tooltipSelector, popoverSelector) {
 		Booster.disposeIn(root);
 		Booster.initIn(root, tooltipSelector, popoverSelector);
+	};
+
+	/**
+	 * A grid is about to be updated (its beforeAjaxUpdate): disposes the tooltips and popovers of
+	 * the rows that will be replaced. The grid calls afterAjaxUpdate only on success, so a failed
+	 * request (a delete refused by the database, a timeout) would leave the old rows without them:
+	 * the request's error handler builds them again.
+	 *
+	 * @param {string} id the grid's id
+	 * @param {Object} [options] the $.ajax options of the update, as the grid passes them
+	 * @param {string} tooltipSelector
+	 * @param {string} popoverSelector
+	 */
+	Booster.beforeGridUpdate = function (id, options, tooltipSelector, popoverSelector) {
+		var root = Booster.container(id);
+		Booster.disposeIn(root);
+
+		if (options) {
+			var error = options.error;
+			options.error = function () {
+				Booster.initIn(root, tooltipSelector, popoverSelector);
+				if (typeof error === 'function') {
+					return error.apply(this, arguments);
+				}
+			};
+		}
 	};
 
 	/**
@@ -368,10 +396,17 @@
 			return;
 		}
 
+		// the column toggles its popovers itself (below): never by Bootstrap's own click trigger
+		var settings = {};
+		for (var key in (options || {})) {
+			settings[key] = options[key];
+		}
+		settings.trigger = 'manual';
+
 		var selector = '#' + gridId + ' a.' + linkClass;
 
 		toArray(document.querySelectorAll(selector)).forEach(function (el) {
-			bs.Popover.getOrCreateInstance(el, options || {});
+			bs.Popover.getOrCreateInstance(el, settings);
 		});
 
 		Booster._popoverColumns = Booster._popoverColumns || {};
@@ -399,7 +434,7 @@
 				}
 			});
 
-			bs.Popover.getOrCreateInstance(link, options || {}).toggle();
+			bs.Popover.getOrCreateInstance(link, settings).toggle();
 		});
 	};
 

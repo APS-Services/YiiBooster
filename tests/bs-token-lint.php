@@ -24,7 +24,8 @@ class BsTokenLint
 		return array(
 			'glyphicon'            => '/glyphicon/',
 			'bs2-icon-class'       => '/(?<![-\w])icon-(?!bar\b)[a-z]/',
-			'data-api-attribute'   => '/data-(toggle|target|dismiss|slide|slide-to|spy|parent|ride)\b/',
+			// the component options too: Bootstrap 5 reads them only from data-bs-*
+			'data-api-attribute'   => '/data-(toggle|target|dismiss|slide|slide-to|spy|parent|ride|placement|trigger|content|html|delay|container|animation|offset|original-title)\b/',
 			'panel'                => '/panel-(default|primary|success|info|warning|danger|heading|body|footer|title)/',
 			'help-block'           => '/help-block/',
 			'validation-state'     => '/has-(error|success|warning)/',

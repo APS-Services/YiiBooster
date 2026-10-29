@@ -70,4 +70,26 @@ class TbButtonTest extends WidgetTestCase
 		$classes = explode(' ', $this->firstNode($xpath, '//a')->getAttribute('class'));
 		$this->assertContains('btn-link', $classes);
 	}
+
+	/**
+	 * Bootstrap 5 reads tooltip options only from data-bs-* attributes; data-placement and friends
+	 * were silently ignored.
+	 *
+	 * @test
+	 */
+	public function tooltipOptionsUseBootstrap5Attributes()
+	{
+		$xpath = $this->renderXPath('TbButton', array(
+			'label' => 'Save',
+			'tooltip' => true,
+			'tooltipOptions' => array('placement' => 'bottom', 'delay' => array('show' => 500)),
+			'htmlOptions' => array('title' => 'Save it'),
+		));
+
+		$button = $this->firstNode($xpath, '//button');
+		$this->assertEquals('tooltip', $button->getAttribute('data-bs-toggle'));
+		$this->assertEquals('bottom', $button->getAttribute('data-bs-placement'));
+		$this->assertEquals('{"show":500}', $button->getAttribute('data-bs-delay'));
+		$this->assertFalse($button->hasAttribute('data-placement'));
+	}
 }

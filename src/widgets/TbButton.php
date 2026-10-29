@@ -283,17 +283,18 @@ class TbButton extends TbWidget {
                 $this->tooltipOptions = array();
             }
 
+            // Bootstrap 5 reads a tooltip's options only from data-bs-* attributes
             $this->htmlOptions['data-bs-toggle'] = 'tooltip';
             foreach ($this->tooltipOptions as $key => $value) {
-                $this->htmlOptions['data-' . $key] = $value;
+                $this->htmlOptions['data-bs-' . $key] = $value;
             }
 
             /**
-             * Encode delay option
-             * @link http://getbootstrap.com/2.3.2/javascript.html#tooltips
+             * Encode delay option ({"show": 500, "hide": 100})
+             * @link https://getbootstrap.com/docs/5.3/components/tooltips/#options
              */
-            if (isset($this->htmlOptions['data-delay']) && is_array($this->htmlOptions['data-delay'])) {
-                $this->htmlOptions['data-delay'] = CJSON::encode($this->htmlOptions['data-delay']);
+            if (isset($this->htmlOptions['data-bs-delay']) && is_array($this->htmlOptions['data-bs-delay'])) {
+                $this->htmlOptions['data-bs-delay'] = CJSON::encode($this->htmlOptions['data-bs-delay']);
             }
         }
 	}

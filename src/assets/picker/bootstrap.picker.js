@@ -87,17 +87,19 @@
 				$this.data(DATA_KEY, instance);
 			}
 
-			if (typeof option === 'string' && typeof instance[option] === 'function') {
-				instance[option]();
+			// Bootstrap 5 renamed destroy() to dispose(); the old name keeps working for callers
+			var command = option === 'destroy' ? 'dispose' : option;
 
-				if (option === 'dispose' || option === 'destroy') {
+			if (typeof command === 'string' && typeof instance[command] === 'function') {
+				instance[command]();
+
+				if (command === 'dispose') {
 					$this.removeData(DATA_KEY);
 				}
 			}
 		});
 	};
 
-	// Bootstrap 5 renamed destroy() to dispose(); keep the old name working for callers.
 	$.fn.picker.Constructor = null;
 
 	$.fn.picker.defaults = {
@@ -105,6 +107,9 @@
 		trigger: 'manual',
 		content: '',
 		html: true,
+		// the content is the application's own markup (tables, forms), which Bootstrap 5's
+		// sanitizer would strip; Bootstrap 3 had no sanitizer
+		sanitize: false,
 		template: TEMPLATE
 	};
 

@@ -682,7 +682,7 @@ class Booster extends CApplicationComponent {
 		$popover = CJavaScript::encode($this->popoverSelector);
 
 		return array(
-			'beforeAjaxUpdate' => 'js:function(id) { Booster.disposeIn(Booster.container(id)); }',
+			'beforeAjaxUpdate' => "js:function(id, options) { Booster.beforeGridUpdate(id, options, {$tooltip}, {$popover}); }",
 			'afterAjaxUpdate' => "js:function(id) { Booster.initIn(Booster.container(id), {$tooltip}, {$popover}); }",
 		);
 	}
