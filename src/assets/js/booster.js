@@ -152,7 +152,7 @@
 	 *
 	 * Only the invalid state is applied. Marking every field green the moment it validates is
 	 * noisier than most forms want, and `is-valid` can always be added by an application's own
-	 * afterValidateAttribute.
+	 * afterValidateAttribute. Called for every validated attribute by hookValidationState.
 	 *
 	 * @param {Object} attribute Yii's attribute descriptor; carries inputID.
 	 * @param {boolean} hasError
@@ -175,25 +175,28 @@
 	};
 
 	/**
-	 * Mirrors the result of a whole-form validation (on submit) onto every control.
+	 * Mirrors every validation result onto its control, by wrapping Yii's single update point.
 	 *
-	 * On submit Yii updates all inputs but never calls afterValidateAttribute, only afterValidate,
-	 * so without this the fields of a rejected form showed their messages but no invalid state.
+	 * jquery.yiiactiveform.js runs each validated attribute through `updateInput` - on change,
+	 * while typing and for the whole form on submit (where afterValidateAttribute is never
+	 * called). Wrapping it once covers all three and leaves the application's own callbacks alone.
+	 * Safe to call repeatedly (every TbActiveForm registers it, also in AJAX-loaded content).
 	 *
-	 * @param {jQuery} form the form, as Yii passes it to afterValidate
-	 * @param {Object} data error messages by attribute id
+	 * @param {jQuery} $ the jQuery that jquery.yiiactiveform.js extended
 	 */
-	Booster.markFormValidationState = function (form, data) {
-		var settings = form && form.data ? form.data('settings') : null;
-		if (!settings || !settings.attributes) {
+	Booster.hookValidationState = function ($) {
+		var yiiactiveform = $ && $.fn ? $.fn.yiiactiveform : null;
+		if (!yiiactiveform || !yiiactiveform.updateInput || yiiactiveform.updateInput.boosterHooked) {
 			return;
 		}
 
-		for (var i = 0; i < settings.attributes.length; i++) {
-			var attribute = settings.attributes[i];
-			var messages = data ? data[attribute.id] : null;
-			Booster.markValidationState(attribute, !!(messages && messages.length));
-		}
+		var updateInput = yiiactiveform.updateInput;
+		yiiactiveform.updateInput = function (attribute) {
+			var hasError = updateInput.apply(this, arguments);
+			Booster.markValidationState(attribute, hasError);
+			return hasError;
+		};
+		yiiactiveform.updateInput.boosterHooked = true;
 	};
 
 	/**

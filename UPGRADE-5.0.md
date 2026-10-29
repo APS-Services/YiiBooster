@@ -246,11 +246,9 @@ The hardcoded `col-sm-3` / `col-sm-9` horizontal grid is now `$labelCssClass` / 
 
 **Validation state.** Bootstrap 5 styles the invalid state on the control, while Yii's client
 validation toggles a class on the container. YiiBooster bridges the two: Yii keeps flagging the
-container with a neutral marker class, and an `afterValidateAttribute` hook mirrors the real state
-onto the input. If you set `clientOptions['afterValidateAttribute']` yourself you will replace that
-bridge — call `Booster.markValidationState(attribute, hasError)` from your handler to keep it.
-On submit Yii calls only `afterValidate`; YiiBooster wraps it (yours, given as `js:` or
-`CJavaScriptExpression`, is still called and decides about the submit) and marks every control.
+container with a neutral marker class, and `booster.js` wraps Yii's `$.fn.yiiactiveform.updateInput`
+(used on change, while typing and on submit) to mirror the real state onto the input. Your own
+`afterValidate` / `afterValidateAttribute` stay untouched.
 
 If your own CSS targets `.has-error`, update it to `.is-invalid`.
 

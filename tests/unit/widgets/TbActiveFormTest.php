@@ -173,39 +173,19 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 	}
 
 	/**
-	 * On submit Yii calls only afterValidate, so the invalid state is mirrored there too; an own
-	 * afterValidate keeps deciding about the submit.
+	 * The invalid state is mirrored by hooking Yii's updateInput (also used on submit, where
+	 * afterValidateAttribute is never called); the application's own callbacks stay untouched.
 	 */
-	public function testInitAfterValidateMarksControls() {
+	public function testInitHooksValidationState() {
 
 		$form = $this->makeWidget();
+		$form->clientOptions['afterValidate'] = 'js:App.check;';
 		ob_start();
 		$form->init();
 		ob_end_clean();
-		$this->assertStringContainsString('Booster.markFormValidationState(form, data); return true;', $form->clientOptions['afterValidate']);
-
-		$form = $this->makeWidget();
-		$form->clientOptions['afterValidate'] = 'js:function (form, data, hasError) { return !hasError; }';
-		ob_start();
-		$form->init();
-		ob_end_clean();
-		$this->assertStringStartsWith('js:function (form, data, hasError) { Booster.markFormValidationState(form, data);', $form->clientOptions['afterValidate']);
-		$this->assertStringContainsString('return (function (form, data, hasError) { return !hasError; })(form, data, hasError);', $form->clientOptions['afterValidate']);
-
-		$form = $this->makeWidget();
-		$form->clientOptions['afterValidate'] = new CJavaScriptExpression('myCheck');
-		ob_start();
-		$form->init();
-		ob_end_clean();
-		$this->assertStringContainsString('return (myCheck)(form, data, hasError);', $form->clientOptions['afterValidate']);
-
-		// 'js:undefined' switched afterValidate off; it must not become a call of undefined
-		$form = $this->makeWidget();
-		$form->clientOptions['afterValidate'] = 'js:undefined';
-		ob_start();
-		$form->init();
-		ob_end_clean();
-		$this->assertStringContainsString('Booster.markFormValidationState(form, data); return true;', $form->clientOptions['afterValidate']);
+		$this->assertTrue(Yii::app()->clientScript->isScriptRegistered('Booster.hookValidationState', CClientScript::POS_READY));
+		$this->assertSame('js:App.check;', $form->clientOptions['afterValidate']);
+		$this->assertArrayNotHasKey('afterValidateAttribute', $form->clientOptions);
 	}
 
 	public function testInitOptions() {

@@ -132,8 +132,8 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   `$labelCssClass` and `$controlCssClass`.
 - **(fix)** validation state reaches the control. Bootstrap 5 styles `is-invalid` on the input,
   while Yii's client validation toggles a class on the *container* - the Bootstrap 3 `has-error`
-  model. Yii keeps flagging the container (with a neutral marker class), and an
-  `afterValidateAttribute` hook mirrors the state onto the input. Server-rendered errors are
+  model. Yii keeps flagging the container (with a neutral marker class), and `booster.js` wraps
+  Yii's `updateInput` to mirror the state onto the input. Server-rendered errors are
   covered separately: every control group adds `is-invalid` when the model already has an error,
   which is the common path in a classic Yii POST-and-re-render cycle.
 
@@ -273,9 +273,10 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   link with a context is `context` `link` (rather)
 - **(fix)** `TbDatePicker` registers its locale file at `POS_END`. In the head it ran before jQuery and
   the plugin it extends had loaded ("jQuery is not defined"), so the picker stayed English (rather)
-- **(fix)** `TbActiveForm` also marks invalid controls after validation on submit. Yii then calls only
-  `afterValidate`, not `afterValidateAttribute`, so a rejected form showed its messages without
-  `is-invalid`. An own `afterValidate` is wrapped and still decides about the submit (rather)
+- **(fix)** `TbActiveForm` also marks invalid controls after validation on submit. The state was
+  mirrored in `afterValidateAttribute`, which Yii does not call on submit, so a rejected form showed
+  its messages without `is-invalid`. `booster.js` now wraps Yii's `updateInput`, used for change,
+  typing and submit; the application's own validation callbacks stay untouched (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead

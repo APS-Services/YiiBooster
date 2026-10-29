@@ -209,7 +209,7 @@ class TbActiveForm extends CActiveForm {
 
 		// Yii's client validation toggles these on the *container*; Bootstrap 5 wants the state
 		// on the control itself. These stay as neutral markers so Yii's own bookkeeping keeps
-		// working, and afterValidateAttribute below mirrors the real state onto the input.
+		// working, and the hook below mirrors the real state onto the input.
 		if(!isset($this->clientOptions['errorCssClass'])){
 			$this->clientOptions['errorCssClass'] = 'has-validation-error';
 		}
@@ -219,32 +219,15 @@ class TbActiveForm extends CActiveForm {
 		if(!isset($this->clientOptions['inputContainer'])){
 			$this->clientOptions['inputContainer'] = 'div.mb-3';
 		}
-		if(!isset($this->clientOptions['afterValidateAttribute'])){
-			Booster::getBooster()->registerPackage('booster');
-			$this->clientOptions['afterValidateAttribute'] =
-				'js:function (form, attribute, data, hasError) {'
-				. ' Booster.markValidationState(attribute, hasError); }';
-		}
-		// on submit Yii validates the whole form and calls only afterValidate, so the controls are
-		// marked there as well; an application's own afterValidate still decides about the submit
-		$afterValidate = isset($this->clientOptions['afterValidate']) ? $this->clientOptions['afterValidate'] : null;
-		$isScript = $afterValidate === null;
-		if ($afterValidate instanceof CJavaScriptExpression) {
-			$afterValidate = $afterValidate->code;
-			$isScript = true;
-		} elseif (is_string($afterValidate) && strncmp($afterValidate, 'js:', 3) === 0) {
-			$afterValidate = substr($afterValidate, 3);
-			$isScript = true;
-		}
-		if ($isScript) {
-			Booster::getBooster()->registerPackage('booster');
-			$ownAfterValidate = ($afterValidate === null || trim($afterValidate) === 'undefined')
-				? 'return true;'
-				: 'return (' . $afterValidate . ')(form, data, hasError);';
-			$this->clientOptions['afterValidate'] =
-				'js:function (form, data, hasError) {'
-				. ' Booster.markFormValidationState(form, data); ' . $ownAfterValidate . ' }';
-		}
+		// hooks Yii's single update point for every validation (change, type and submit), so the
+		// application's own afterValidate/afterValidateAttribute stay untouched; registered before
+		// the form's own init script, which CActiveForm::run() adds later
+		Booster::getBooster()->registerPackage('booster');
+		Yii::app()->getClientScript()->registerScript(
+			'Booster.hookValidationState',
+			'Booster.hookValidationState(jQuery);',
+			CClientScript::POS_READY
+		);
 
 		parent::init();
 	}
