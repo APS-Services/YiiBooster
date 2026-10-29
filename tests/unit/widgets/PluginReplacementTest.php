@@ -94,8 +94,11 @@ class PluginReplacementTest extends WidgetTestCase
 		$this->assertNotEquals('', $select->getAttribute('multiple'), 'Select2 tags mode needs a multiple select.');
 		$this->assertStringStartsWith('tags_', $select->getAttribute('id'));
 
-		// The select must be the submitting control, not a decorative sibling of a hidden field.
-		$this->assertNodeCount($xpath, '//input[@type="hidden"]', 0);
+		// The value is posted as bootstrap-tags posted it - one comma-separated string - by a
+		// hidden field the script keeps in sync; the select has no name (an array broke string
+		// columns).
+		$this->assertNodeCount($xpath, '//input[@type="hidden"][@name="Post[tags]"]', 1);
+		$this->assertEquals('', $select->getAttribute('name'));
 		$this->assertNodeCount($xpath, '//div[contains(@class, "tags")]', 0);
 	}
 
@@ -125,6 +128,25 @@ class PluginReplacementTest extends WidgetTestCase
 		$this->assertNodeCount($xpath, '//select/option[@selected]', 2);
 		$this->assertNodeCount($xpath, '//select/option[@value="yii"]', 1);
 		$this->assertNodeCount($xpath, '//select/option[@value="bootstrap"]', 1);
+	}
+
+	/**
+	 * Bound to a model, a comma-separated column has its tags selected: compared against the
+	 * whole string none was, and saving without touching the field cleared the tags.
+	 *
+	 * @test
+	 */
+	public function tagsOfAModelStartSelectedAndPostAString()
+	{
+		$model = new PluginReplacementModel();
+		$model->tags = 'php,yii';
+
+		$xpath = $this->renderXPath('TbTags', array('model' => $model, 'attribute' => 'tags'));
+
+		$this->assertNodeCount($xpath, '//select/option[@selected]', 2);
+		$hidden = $this->firstNode($xpath, '//input[@type="hidden"]');
+		$this->assertEquals('PluginReplacementModel[tags]', $hidden->getAttribute('name'));
+		$this->assertEquals('php,yii', $hidden->getAttribute('value'));
 	}
 
 	/**

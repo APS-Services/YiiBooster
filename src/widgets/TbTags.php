@@ -167,12 +167,13 @@ class TbTags extends CInputWidget {
 	 */
 	public function renderContent($id, $name) {
 
-		// bootstrap-tags decorated an empty <div> and kept the real value in a sibling hidden
-		// field that it synchronised itself. Select2 is select-backed: it reads and writes the
-		// <select>'s options directly, so the select has to be the submitting control. Keeping the
-		// old div would leave Select2 with nothing to bind to and the value never updated.
+		// Select2 binds to a <select multiple>, bootstrap-tags decorated a <div>. The value is
+		// still posted as bootstrap-tags posted it: one comma-separated string in a hidden field
+		// with the attribute's name (and the input's id, which labels and client validation use),
+		// kept in sync by registerClientScript(). An array (Model[tags][]) broke string columns.
 		$this->htmlOptions['id'] = 'tags_' . $id;
-		$this->htmlOptions['multiple'] = true;
+		$this->htmlOptions['multiple'] = 'multiple';
+		unset($this->htmlOptions['name']);
 		self::addCssClass($this->htmlOptions, 'tag-list');
 
 		$selected = $this->resolveTags();
@@ -182,15 +183,14 @@ class TbTags extends CInputWidget {
 		// and src/ targets 5.3 - the empty case is the normal one for a new record.
 		$data = empty($selected) ? array() : array_combine($selected, $selected);
 
-		if ($this->hasModel()) {
-			if ($this->form) {
-				echo $this->form->listBox($this->model, $this->attribute, $data, $this->htmlOptions);
-			} else {
-				echo CHtml::activeListBox($this->model, $this->attribute, $data, $this->htmlOptions);
-			}
-		} else {
-			echo CHtml::listBox($name, $selected, $data, $this->htmlOptions);
-		}
+		// the current tags selected in every case: compared against the whole stored value (a
+		// comma string), none of them was, and saving untouched cleared the tags
+		$selectOptions = $this->htmlOptions;
+		$options = CHtml::listOptions($selected, $data, $selectOptions);
+
+		$hiddenName = $this->hasModel() ? CHtml::activeName($this->model, $this->attribute) : $name;
+		echo CHtml::hiddenField($hiddenName, implode(',', $selected), array('id' => $id));
+		echo CHtml::tag('select', $selectOptions, $options);
 	}
 
 	/**
@@ -255,9 +255,11 @@ class TbTags extends CInputWidget {
 
 		Booster::getBooster()->registerSelect2Package($options);
 
+		// the hidden field posts the tags joined by commas (see renderContent())
 		Yii::app()->getClientScript()->registerScript(
 			__CLASS__ . '#' . $this->getId(),
-			"jQuery('#tags_{$id}').select2(" . CJavaScript::encode($options) . ");"
+			"jQuery('#tags_{$id}').select2(" . CJavaScript::encode($options) . ")"
+			. ".on('change', function () { jQuery('#{$id}').val((jQuery(this).val() || []).join(',')); });"
 		);
 	}
 }
