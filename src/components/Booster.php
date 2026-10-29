@@ -560,6 +560,18 @@ class Booster extends CApplicationComponent {
 	public function registerSelect2Package($options) {
 
 		$this->registerPackage(isset($options['theme']) && $options['theme'] === 'bootstrap-5' ? 'select2-bootstrap-5-theme' : 'select2');
+
+		// Select2 4's translations only register themselves; they apply where the control is given
+		// the language (or a parent has lang): the bundled one becomes the default, once per page,
+		// before the controls start (their scripts come later)
+		$locale = $this->resolveSelect2Locale();
+		if ($locale !== null) {
+			$this->cs->registerScript(
+				'booster.select2.language',
+				"jQuery.fn.select2.defaults.set('language', " . CJavaScript::encode($locale) . ');',
+				CClientScript::POS_READY
+			);
+		}
 	}
 
 	/**
@@ -574,7 +586,19 @@ class Booster extends CApplicationComponent {
 	 */
 	protected function resolveSelect2Locale() {
 
-		$language = str_replace('_', '-', Yii::app()->language);
+		// Yii ids are usually lowercase (pt_br, zh_cn), Select2's files lang-REGION (pt-BR, zh-CN)
+		// with scripts in title case (sr-Cyrl); on a case-sensitive filesystem only that matches
+		$parts = explode('-', str_replace('_', '-', Yii::app()->language));
+		foreach ($parts as $i => $part) {
+			if ($i === 0) {
+				$parts[$i] = strtolower($part);
+			} elseif (strlen($part) === 4) {
+				$parts[$i] = ucfirst(strtolower($part));
+			} else {
+				$parts[$i] = strtoupper($part);
+			}
+		}
+		$language = implode('-', $parts);
 
 		if (strpos($language, 'en') === 0) {
 			return null; // English is built in.

@@ -540,6 +540,38 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
+	 * Yii's lowercase ids find Select2's lang-REGION files (pt_br used to fall back to pt, zh_cn
+	 * found nothing), and the translation becomes Select2's default language - Select2 4's files
+	 * only register themselves.
+	 *
+	 * @test
+	 */
+	public function select2FindsAndUsesTheTranslationOfYiisLanguage()
+	{
+		$booster = Booster::getBooster();
+		$resolve = new ReflectionMethod($booster, 'resolveSelect2Locale');
+		$resolve->setAccessible(true);
+		$language = Yii::app()->language;
+
+		try {
+			$expected = array('pt_br' => 'pt-BR', 'zh_cn' => 'zh-CN', 'sr_cyrl' => 'sr-Cyrl', 'de_de' => 'de', 'en_us' => null);
+			foreach ($expected as $yiiLanguage => $locale) {
+				Yii::app()->language = $yiiLanguage;
+				$this->assertSame($locale, $resolve->invoke($booster), $yiiLanguage);
+			}
+
+			Yii::app()->language = 'de';
+			$booster->cs->reset();
+			$booster->registerSelect2Package(array());
+			$scripts = new ReflectionProperty('CClientScript', 'scripts');
+			$scripts->setAccessible(true);
+			$this->assertStringContainsString("jQuery.fn.select2.defaults.set('language', 'de');", implode("\n", (array) current((array) $scripts->getValue($booster->cs))));
+		} finally {
+			Yii::app()->language = $language;
+		}
+	}
+
+	/**
 	 * select2-bootstrap-5-theme is loaded only where a control uses it: an application styling the
 	 * 'default' theme itself (myAPS with its admin template) loaded it on every page for nothing.
 	 *
