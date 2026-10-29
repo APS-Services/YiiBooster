@@ -24,7 +24,7 @@ class TbModalManager extends CWidget {
 	public function init() {
 
 		throw new CException('TbModalManager was removed in YiiBooster 5.0: Bootstrap 5 stacks modals natively, so the '
-			. 'bundled Bootstrap 2 modal manager is redundant. Open modals normally with TbModal. '
+			. 'bundled Bootstrap 2 modal manager is redundant. Use TbModal and open the modals normally. '
 			. 'See UPGRADE-5.0.md.');
 	}
 }

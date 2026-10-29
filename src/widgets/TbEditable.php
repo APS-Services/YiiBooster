@@ -316,7 +316,13 @@ class TbEditable extends CWidget
         if (!$this->name) {
             throw new CException('Parameter "name" should be provided for TbEditable widget');
         }
-                
+
+        // x-editable's datetime input is built on the smalot bootstrap-datetimepicker, which 5.0
+        // removed with the archived plugin: it failed in the browser as the editable started
+        if ($this->type == 'datetime') {
+            throw new CException('TbEditable type "datetime" was removed in YiiBooster 5.0: x-editable builds it on the archived smalot bootstrap-datetimepicker. Use "combodate" (date and time from selects) or "date" instead. See UPGRADE-5.0.md.');
+        }
+
         /*
         If set this flag to true --> element content will stay empty 
         and value will be rendered to data-value attribute to apply autotext afterwards.
@@ -554,19 +560,6 @@ class TbEditable extends CWidget
                 $this->getOwner(),
                 'booster.widgets.TbDatePicker',
                 array('options' => isset($this->options['datepicker']) ? $this->options['datepicker'] : array())
-            );
-            $widget->registerLanguageScript();
-        } elseif ($this->type == 'datetime') {
-            // The smalot `datetimepicker` package was removed in 5.0 along with the archived
-            // plugin; TbDateTimePicker now drives daterangepicker. Registering the old name
-            // throws "There is no CClientScript package" under YII_DEBUG.
-            $booster->registerPackage('daterangepicker');
-
-            /** @var $widget TbDateTimePicker */
-            $widget = Yii::app()->widgetFactory->createWidget(
-                $this->getOwner(),
-                'booster.widgets.TbDateTimePicker',
-                array('options' => isset($this->options['datetimepicker']) ? $this->options['datetimepicker'] : array())
             );
             $widget->registerLanguageScript();
         }

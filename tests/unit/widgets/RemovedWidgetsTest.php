@@ -6,11 +6,14 @@
 
 require_once(__DIR__ . '/../../fakes/WidgetTestCase.php');
 
-foreach (array('TbHeroUnit', 'TbJumbotron') as $removedWidget) {
+foreach (array('TbHeroUnit', 'TbJumbotron', 'TbBox', 'TbToggleButton', 'TbPickerColumn', 'TbMarkdownEditorJs', 'TbChosen', 'TbPassfield', 'TbFileUpload', 'TbImageGallery', 'TbModalManager') as $removedWidget) {
 	require_once(__DIR__ . '/../../../src/widgets/' . $removedWidget . '.php');
 }
 foreach (array('TbInput', 'TbInputHorizontal', 'TbInputVertical', 'TbInputInline', 'TbInputSearch') as $removedInput) {
 	require_once(__DIR__ . '/../../../src/widgets/input/' . $removedInput . '.php');
+}
+foreach (array('TbHtml', 'TbArray') as $removedHelper) {
+	require_once(__DIR__ . '/../../../src/helpers/' . $removedHelper . '.php');
 }
 
 /**
@@ -37,7 +40,28 @@ class RemovedWidgetsTest extends WidgetTestCase
 			array('TbInputVertical'),
 			array('TbInputInline'),
 			array('TbInputSearch'),
+			array('TbBox'),
+			array('TbToggleButton'),
+			array('TbPickerColumn'),
+			array('TbMarkdownEditorJs'),
+			array('TbChosen'),
+			array('TbPassfield'),
+			array('TbFileUpload'),
+			array('TbImageGallery'),
+			array('TbModalManager'),
 		);
+	}
+
+	/**
+	 * Grid columns are built with their grid, widgets with their owner.
+	 *
+	 * @param string $class
+	 * @return CComponent
+	 */
+	protected function makeRemoved($class)
+	{
+		$owner = Yii::app()->getController();
+		return is_subclass_of($class, 'CGridColumn') ? new $class(new CGridView($owner)) : new $class($owner);
 	}
 
 	/**
@@ -48,7 +72,7 @@ class RemovedWidgetsTest extends WidgetTestCase
 	 */
 	public function removedWidgetThrowsInsteadOfRendering($class)
 	{
-		$widget = new $class(Yii::app()->getController());
+		$widget = $this->makeRemoved($class);
 
 		try {
 			$widget->init();
@@ -63,8 +87,9 @@ class RemovedWidgetsTest extends WidgetTestCase
 				$e->getMessage(),
 				'The exception should point at the upgrade guide.'
 			);
-			$this->assertStringContainsString(
-				'removed in YiiBooster 5.0',
+			// removed in 5.0, or (for applications coming from 3.x) renamed in 4.0
+			$this->assertRegExp(
+				'/(removed in YiiBooster 5\.0|renamed to \w+ in YiiBooster 4\.0)/',
 				$e->getMessage()
 			);
 
@@ -84,7 +109,7 @@ class RemovedWidgetsTest extends WidgetTestCase
 	 */
 	public function removedWidgetNamesItsReplacement($class)
 	{
-		$widget = new $class(Yii::app()->getController());
+		$widget = $this->makeRemoved($class);
 
 		try {
 			$widget->init();
@@ -96,6 +121,26 @@ class RemovedWidgetsTest extends WidgetTestCase
 				$e->getMessage(),
 				"{$class}'s removal message does not suggest a replacement."
 			);
+		}
+	}
+
+	/**
+	 * TbHtml and TbArray were deleted outright, so their callers got the failed-include fatal the
+	 * stubs exist to prevent.
+	 *
+	 * @test
+	 */
+	public function removedHelpersThrowOnEveryCall()
+	{
+		foreach (array('TbHtml' => 'button', 'TbArray' => 'getValue') as $class => $method) {
+			try {
+				call_user_func(array($class, $method), 'x');
+				$this->fail("{$class}::{$method}() did not throw.");
+			} catch (CException $e) {
+				$this->assertStringContainsString('removed in YiiBooster 5.0', $e->getMessage());
+				$this->assertStringContainsString('UPGRADE-5.0.md', $e->getMessage());
+				$this->assertRegExp('/Use [^.]+/', $e->getMessage());
+			}
 		}
 	}
 }

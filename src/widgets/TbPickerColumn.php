@@ -16,6 +16,8 @@
  * @deprecated 5.0.0
  * @package booster.widgets.grids.columns
  */
+Yii::import('zii.widgets.grid.CGridColumn');
+
 class TbPickerColumn extends CGridColumn {
 
 	public function init() {
