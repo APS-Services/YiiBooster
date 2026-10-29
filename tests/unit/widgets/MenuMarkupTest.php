@@ -149,4 +149,33 @@ class MenuMarkupTest extends WidgetTestCase
 		$this->assertStringContainsString('flex-column', $html);
 		$this->assertStringNotContainsString('nav-stacked', $html);
 	}
+
+	/**
+	 * nav-list was Bootstrap 2: a list menu is a column of its own now (.nav is a flex row).
+	 *
+	 * @test
+	 */
+	public function listMenuIsAColumn()
+	{
+		$xpath = $this->renderXPath('TbMenu', array('type' => 'list', 'items' => $this->items()));
+
+		$classes = explode(' ', $this->firstNode($xpath, '//ul')->getAttribute('class'));
+		$this->assertContains('flex-column', $classes);
+		$this->assertNotContains('nav-list', $classes);
+	}
+
+	/**
+	 * Bootstrap 5 reads dropup from the toggle's parent only, so it belongs on each dropdown's <li>.
+	 *
+	 * @test
+	 */
+	public function dropupSitsOnTheDropdownItems()
+	{
+		$xpath = $this->renderXPath('TbMenu', array('dropup' => true, 'items' => array(
+			array('label' => 'More', 'items' => array(array('label' => 'Child', 'url' => '#'))),
+		)));
+
+		$this->assertNotContains('dropup', explode(' ', $this->firstNode($xpath, '//ul')->getAttribute('class')));
+		$this->assertContains('dropup', explode(' ', $this->firstNode($xpath, '//ul/li')->getAttribute('class')));
+	}
 }

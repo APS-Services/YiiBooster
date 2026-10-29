@@ -139,7 +139,7 @@ class TbCarousel extends CWidget {
 		for ($i = 0; $i < $count; $i++) {
 			echo CHtml::tag('button', array(
 				'type' => 'button',
-				'data-bs-target' => '#' . $this->id,
+				'data-bs-target' => '#' . $this->htmlOptions['id'],
 				'data-bs-slide-to' => $i,
 				'class' => $i === 0 ? 'active' : '',
 				'aria-current' => $i === 0 ? 'true' : null,
