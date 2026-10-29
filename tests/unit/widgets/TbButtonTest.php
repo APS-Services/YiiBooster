@@ -92,4 +92,23 @@ class TbButtonTest extends WidgetTestCase
 		$this->assertEquals('{"show":500}', $button->getAttribute('data-bs-delay'));
 		$this->assertFalse($button->hasAttribute('data-placement'));
 	}
+
+	/**
+	 * Without setting a context (the default one) a link button is a text link as up to 4.x, not a
+	 * grey filled btn-secondary - that turned every Cancel/Back link into a button.
+	 *
+	 * @test
+	 */
+	public function linkButtonWithTheDefaultContextIsTextLink()
+	{
+		$xpath = $this->renderXPath('TbButton', array(
+			'buttonType' => TbButton::BUTTON_LINK,
+			'label' => 'Cancel',
+			'url' => '#',
+		));
+
+		$classes = explode(' ', $this->firstNode($xpath, '//a')->getAttribute('class'));
+		$this->assertContains('btn-link', $classes);
+		$this->assertNotContains('btn-secondary', $classes);
+	}
 }

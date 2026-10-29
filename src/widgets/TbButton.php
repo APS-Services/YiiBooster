@@ -171,13 +171,14 @@ class TbButton extends TbWidget {
 
 		$classes = array('btn');
 
-		// buttonType link adds btn-link only without a context: in Bootstrap 5 btn-link overrides the
-		// context's colours, so a "success" link button rendered as link-coloured text on a green
-		// background. A text-style link with a context is context "link".
-		if ($this->isValidContext()) {
-			$classes[] = 'btn-' . $this->getContextClass();
-		} elseif ($this->buttonType === self::BUTTON_LINK) {
+		// buttonType link without a context of its own (none, or the untouched default) stays a text
+		// link (btn-link), as it was up to 4.x - otherwise every Cancel/Back link became a grey
+		// filled button. A context set on purpose colours the button: in Bootstrap 5 btn-link
+		// would override those colours, so it is not added then.
+		if ($this->buttonType === self::BUTTON_LINK && (!$this->isValidContext() || $this->context === self::CTX_DEFAULT)) {
 			$classes[] = 'btn-link';
+		} elseif ($this->isValidContext()) {
+			$classes[] = 'btn-' . $this->getContextClass();
 		}
 
 		$validSizes = array(

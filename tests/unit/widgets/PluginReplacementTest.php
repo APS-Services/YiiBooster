@@ -484,23 +484,35 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
-	 * The Moment locale of TbDateTimePicker is set after the script files: at POS_BEGIN Moment was
-	 * not loaded yet, so the picker stayed English with US dates (found in myAPS).
+	 * The language of TbDateTimePicker applies to that picker alone (Booster.dateTimePickerOptions
+	 * reads its Moment locale data): moment.locale() set it for the whole page, changing the default
+	 * format of every TbDateRangePicker there.
 	 *
 	 * @test
 	 */
-	public function dateTimePickerLocaleIsSetAfterMomentLoaded()
+	public function dateTimePickerLanguageAppliesToThatPickerOnly()
 	{
-		$widget = new TbDateTimePicker();
-		$widget->options = array('language' => 'de');
-		$widget->registerLanguageScript();
+		$this->render('TbDateTimePicker', array('name' => 'Event[start]', 'options' => array('language' => 'de')));
+		$script = $this->registeredScripts();
 
-		$scripts = new ReflectionProperty('CClientScript', 'scripts');
-		$scripts->setAccessible(true);
-		$registered = $scripts->getValue($this->clientScript);
+		$this->assertStringContainsString("'momentLocale':'de'", $script);
+		$this->assertStringNotContainsString('moment.locale(', $script);
+		$this->assertStringNotContainsString("'language'", $script);
+	}
 
-		$this->assertArrayHasKey('TbDateTimePicker#locale#de', $registered[CClientScript::POS_END]);
-		$this->assertArrayNotHasKey('language', $widget->options);
+	/**
+	 * daterangepicker 3.1 reads format and separator only inside `locale`; at the top level (as up
+	 * to 4.x) they were ignored and the input posted MM/DD/YYYY - MM/DD/YYYY.
+	 *
+	 * @test
+	 */
+	public function dateRangePickerMovesTopLevelFormatIntoLocale()
+	{
+		$this->render('TbDateRangePicker', array('name' => 'Filter[range]', 'options' => array('format' => 'DD.MM.YYYY', 'separator' => '~')));
+		$script = $this->registeredScripts();
+
+		$this->assertRegExp("/'locale':\{[^}]*'format':'DD\.MM\.YYYY'/", $script);
+		$this->assertRegExp("/'locale':\{[^}]*'separator':" . preg_quote(CJavaScript::encode('~'), '/') . '/', $script);
 	}
 
 	/**

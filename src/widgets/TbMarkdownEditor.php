@@ -70,9 +70,13 @@ class TbMarkdownEditor extends CInputWidget {
 
 		// EasyMDE replaces bootstrap-markdown, which was abandoned and Bootstrap 3-only. It takes
 		// the textarea as `element` rather than being applied to a jQuery selection.
+		// forceSync (unless the options say otherwise): EasyMDE writes back to the textarea only on
+		// the form's submit event, so a form sent by AJAX (CHtml::ajaxSubmitButton, serialize())
+		// posted the original text.
 		Yii::app()->clientScript->registerScript(
 			__CLASS__ . '#' . $id,
 			"(function () { var o = {$options}; o.element = document.getElementById('{$id}');"
+			. " if (o.forceSync === undefined) { o.forceSync = true; }"
 			. " new EasyMDE(o); })();",
 			CClientScript::POS_END
 		);

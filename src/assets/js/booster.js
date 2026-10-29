@@ -206,23 +206,37 @@
 	};
 
 	/**
-	 * Defaults of a date with time (TbDateTimePicker) from the current Moment locale, under the
-	 * given options: the format is the locale's date plus time (daterangepicker's own default is the
-	 * date only, so the time was lost), and the clock is 24-hour unless the locale uses AM/PM.
+	 * Defaults of a date with time (TbDateTimePicker) from a Moment locale, under the given
+	 * options: the format is the locale's date plus time (daterangepicker's own default is the date
+	 * only, so the time was lost), and the clock is 24-hour unless the locale uses AM/PM.
+	 *
+	 * `options.momentLocale` (the widget's `language`) names the locale for this picker alone, with
+	 * its day and month names and first weekday; without it the current Moment locale applies.
+	 * Setting it globally (moment.locale) changed every other picker on the page.
 	 *
 	 * @param {Object} options daterangepicker options
 	 * @return {Object}
 	 */
 	Booster.dateTimePickerOptions = function (options) {
-		var data = window.moment ? window.moment.localeData() : null;
+		options = window.jQuery.extend(true, {}, options);
+		var language = options.momentLocale;
+		delete options.momentLocale;
+
+		var data = window.moment ? window.moment.localeData(language) : null;
 		if (!data) {
 			return options;
 		}
 		var time = data.longDateFormat('LT');
+		var locale = {format: data.longDateFormat('L') + ' ' + time};
+		if (language) {
+			locale.daysOfWeek = data.weekdaysMin();
+			locale.monthNames = data.monthsShort();
+			locale.firstDay = data.firstDayOfWeek();
+		}
 
 		return window.jQuery.extend(true, {
 			timePicker24Hour: !/a/i.test(time),
-			locale: {format: data.longDateFormat('L') + ' ' + time}
+			locale: locale
 		}, options);
 	};
 

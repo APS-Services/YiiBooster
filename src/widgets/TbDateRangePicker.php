@@ -95,6 +95,17 @@ class TbDateRangePicker extends TbBaseInputWidget {
 	 */
 	public function registerScript($selector, $options = array(), $callback = null) {
 
+		// daterangepicker 3.1 reads these only inside `locale`; given at the top level, as up to
+		// 4.x, they were ignored and the input posted MM/DD/YYYY - MM/DD/YYYY
+		foreach (array('format', 'separator', 'applyLabel', 'cancelLabel', 'fromLabel', 'toLabel', 'customRangeLabel', 'weekLabel', 'firstDay') as $key) {
+			if (array_key_exists($key, $options)) {
+				if (!isset($options['locale'][$key])) {
+					$options['locale'][$key] = $options[$key];
+				}
+				unset($options[$key]);
+			}
+		}
+
 		// Booster.dateRangePicker keeps an empty input empty until a range is applied
 		Booster::getBooster()->registerPackage('booster');
 		Yii::app()->clientScript->registerScript(

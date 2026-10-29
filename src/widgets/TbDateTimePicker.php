@@ -108,19 +108,14 @@ class TbDateTimePicker extends TbBaseInputWidget {
 
 		// daterangepicker has no locale files of its own: it takes its strings through the
 		// `locale` option and formats dates with Moment. A `language` option carried over from the
-		// old smalot plugin is mapped onto Moment's locale. That requires the locale data to be
-		// present, which is what Booster::$momentLocales controls - it defaults to true precisely
-		// so a widget-level language works regardless of the application language.
+		// old smalot plugin is mapped onto Moment's locale data for this picker only
+		// (Booster.dateTimePickerOptions): moment.locale() changed the default format of every
+		// TbDateRangePicker on the page. The locale data has to be present, which is what
+		// Booster::$momentLocales controls - it defaults to true precisely so a widget-level
+		// language works regardless of the application language.
 		if (isset($this->options['language']) && $this->options['language'] !== 'en') {
-			$language = $this->options['language'];
-			unset($this->options['language']);
-			// POS_END: after the script files (Moment with its locales). At POS_BEGIN Moment was not
-			// loaded yet, so the locale was never set and the picker stayed English with US dates.
-			Yii::app()->getClientScript()->registerScript(
-				__CLASS__ . '#locale#' . $language,
-				"if (window.moment) { moment.locale(" . CJavaScript::encode($language) . "); }",
-				CClientScript::POS_END
-			);
+			$this->options['momentLocale'] = $this->options['language'];
 		}
+		unset($this->options['language']);
 	}
 }
