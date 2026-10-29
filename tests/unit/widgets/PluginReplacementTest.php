@@ -442,6 +442,24 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
+	 * x-editable's form buttons were Glyphicons on Bootstrap 3's btn-default: empty buttons under
+	 * Bootstrap 5.
+	 *
+	 * @test
+	 */
+	public function editableFormButtonsUseBootstrapIcons()
+	{
+		$js = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/assets/bootstrap-editable/js/bootstrap-editable.js');
+
+		$this->assertStringNotContainsString('class="glyphicon', $js);
+		$this->assertStringNotContainsString('btn-default', preg_replace('/^\s*\/\/.*$/m', '', $js));
+		$this->assertStringContainsString('bi bi-check-lg', $js);
+
+		$packages = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/components/packages.php');
+		$this->assertRegExp("/'x-editable' => array\\((?:(?!\\n\\t'\\w).)*'depends' => array\\([^)]*'bootstrap-icons'/s", $packages);
+	}
+
+	/**
 	 * The theme comes from the widget's $theme (settable once through the widget factory), unless
 	 * the options name one.
 	 *

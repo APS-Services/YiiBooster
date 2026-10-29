@@ -360,7 +360,7 @@ $el.prop('disabled', true).trigger('change');  // 4.x
 **bootstrap-datepicker 1.3.1 → 1.10.0.** No API change.
 
 **x-editable** is archived upstream, so its popover container and select2 adapter are patched in
-place here for Bootstrap 5. `TbEditable`, `TbEditableField`, `TbEditableColumn` and
+place here for Bootstrap 5 (also its form buttons: Bootstrap Icons instead of Glyphicons). `TbEditable`, `TbEditableField`, `TbEditableColumn` and
 `TbEditableDetailView` keep their APIs. Note that only the unminified build ships - the vendored
 minified copy could not be regenerated from patched source, and shipping a stale one would have
 quietly reintroduced the Bootstrap 3 container wherever `minify` is on, which is the default.

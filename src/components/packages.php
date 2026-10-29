@@ -97,7 +97,8 @@ return array(
 		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-editable/',
 		'css' => array('css/bootstrap-editable.css'),
 		'js' => array('js/bootstrap-editable.js'),
-		'depends' => array('jquery', 'bootstrap.js', 'datepicker') /* datepicker must come before editable */
+		// bootstrap-icons: the form's buttons (patched from Glyphicons)
+		'depends' => array('jquery', 'bootstrap.js', 'datepicker', 'bootstrap-icons') /* datepicker must come before editable */
 	),
 	'moment' => array(
 		// daterangepicker formats and parses through Moment, and Moment's locale data lives in

@@ -4695,13 +4695,15 @@ Editableform based on Twitter Bootstrap 3
     });    
     
     //buttons
-    $.fn.editableform.buttons = 
-      '<button type="submit" class="btn btn-primary btn-sm editable-submit">'+
-        '<i class="glyphicon glyphicon-ok"></i>'+
+    // YiiBooster: Bootstrap Icons instead of Glyphicons (gone in Bootstrap 5, the buttons were
+    // empty), btn-secondary instead of Bootstrap 3's btn-default
+    $.fn.editableform.buttons =
+      '<button type="submit" class="btn btn-primary btn-sm editable-submit" aria-label="OK">'+
+        '<i class="bi bi-check-lg"></i>'+
       '</button>'+
-      '<button type="button" class="btn btn-default btn-sm editable-cancel">'+
-        '<i class="glyphicon glyphicon-remove"></i>'+
-      '</button>';         
+      '<button type="button" class="btn btn-secondary btn-sm editable-cancel" aria-label="Cancel">'+
+        '<i class="bi bi-x-lg"></i>'+
+      '</button>';
     
     //error classes
     $.fn.editableform.errorGroupClass = 'has-error';

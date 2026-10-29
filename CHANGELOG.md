@@ -284,6 +284,8 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   Bootstrap Icons chevrons, so the package depends on `bootstrap-icons`), the add-on click looked
   for `.input-group-addon` and the modal template used Bootstrap 3 markup. As for x-editable, only
   the unminified build ships (rather)
+- **(fix)** x-editable form buttons: Bootstrap Icons check/x instead of Glyphicons (the buttons were
+  empty) and `btn-secondary` instead of `btn-default`; the package depends on `bootstrap-icons` (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
