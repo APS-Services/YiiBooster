@@ -280,6 +280,10 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
 - **(enh)** `TbSelect2::$theme` sets the Select2 theme used when the options name none (default
   `bootstrap-5`), e.g. once through the widget factory for an admin template styling Select2's
   `default` theme (rather)
+- **(fix)** bootstrap-timepicker patched for Bootstrap 5: the widget's arrows were Glyphicons (now
+  Bootstrap Icons chevrons, so the package depends on `bootstrap-icons`), the add-on click looked
+  for `.input-group-addon` and the modal template used Bootstrap 3 markup. As for x-editable, only
+  the unminified build ships (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead

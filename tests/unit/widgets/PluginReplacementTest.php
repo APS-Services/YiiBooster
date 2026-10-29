@@ -421,6 +421,27 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
+	 * bootstrap-timepicker is patched in place: its widget drew Glyphicons (gone in Bootstrap 5, so
+	 * the arrows were invisible), opened from .input-group-addon and used Bootstrap 3 modal markup.
+	 *
+	 * @test
+	 */
+	public function timepickerIsPatchedForBootstrap5()
+	{
+		$js = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/assets/bootstrap-timepicker/js/bootstrap-timepicker.js');
+
+		$this->assertStringNotContainsString('glyphicon', $js);
+		$this->assertStringContainsString('bi bi-chevron-up', $js);
+		$this->assertStringNotContainsString('input-group-addon', $js);
+		$this->assertStringNotContainsString('data-dismiss=', $js);
+
+		// the package needs the icon font (packages.php is evaluated by the Booster component)
+		$packages = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/components/packages.php');
+		// within the timepicker entry: up to the next package key at the start of a line
+		$this->assertRegExp("/'timepicker' => array\\((?:(?!\\n\\t'\\w).)*'depends' => array\\([^)]*'bootstrap-icons'/s", $packages);
+	}
+
+	/**
 	 * The theme comes from the widget's $theme (settable once through the widget factory), unless
 	 * the options name one.
 	 *

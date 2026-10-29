@@ -145,10 +145,12 @@ return array(
 		'depends' => array('jquery')
 	),
 	'timepicker' => array(
+		// Patched in place for Bootstrap 5 (Bootstrap Icons chevrons instead of Glyphicons, add-on
+		// and modal markup), so only the unminified build ships - as for x-editable.
 		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-timepicker',
 		'js' => array('js/bootstrap-timepicker.js'),
 		'css' => array($this->minify ? 'css/bootstrap-timepicker.min.css' : 'css/bootstrap-timepicker.css'),
-		'depends' => array('bootstrap.js')
+		'depends' => array('bootstrap.js', 'bootstrap-icons')
 	),
 	'easymde' => array(
 		// Replaces bootstrap-markdown and the PageDown editor, both abandoned. EasyMDE is the

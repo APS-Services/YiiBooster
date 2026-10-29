@@ -365,6 +365,10 @@ place here for Bootstrap 5. `TbEditable`, `TbEditableField`, `TbEditableColumn` 
 minified copy could not be regenerated from patched source, and shipping a stale one would have
 quietly reintroduced the Bootstrap 3 container wherever `minify` is on, which is the default.
 
+**bootstrap-timepicker** (`TbTimePicker`) is patched in place the same way: its arrows are Bootstrap
+Icons chevrons instead of Glyphicons, a click on the input group's `.input-group-text` opens it, and
+the `modal` template is Bootstrap 5 markup. Its options are unchanged; only the unminified build ships.
+
 ### Replaced plugins
 
 Every remaining Bootstrap 3-era plugin has been swapped for a maintained, framework-neutral

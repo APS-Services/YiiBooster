@@ -7,6 +7,9 @@
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
+ *
+ * YiiBooster: patched for Bootstrap 5 (marked "YiiBooster:"), Bootstrap Icons chevrons instead of
+ * Glyphicons.
  */
 (function($, window, document, undefined) {
   'use strict';
@@ -40,7 +43,8 @@
       var self = this;
 
       if (this.showWidgetOnAddonClick && (this.$element.parent().hasClass('input-group') || this.$element.parent().hasClass('input-prepend'))) {
-        this.$element.parent('.input-group').find('.input-group-addon').on({
+        // YiiBooster: input-group-text is the Bootstrap 5 name of the add-on
+        this.$element.parent('.input-group').find('.input-group-text').on({
           'click.timepicker': $.proxy(this.showWidget, this)
         });
         this.$element.on({
@@ -255,16 +259,16 @@
 
       templateContent = '<table>'+
          '<tr>'+
-           '<td><a href="#" data-action="incrementHour"><i class="glyphicon glyphicon-chevron-up"></i></a></td>'+
+           '<td><a href="#" data-action="incrementHour"><i class="bi bi-chevron-up"></i></a></td>'+
            '<td class="separator">&nbsp;</td>'+
-           '<td><a href="#" data-action="incrementMinute"><i class="glyphicon glyphicon-chevron-up"></i></a></td>'+
+           '<td><a href="#" data-action="incrementMinute"><i class="bi bi-chevron-up"></i></a></td>'+
            (this.showSeconds ?
              '<td class="separator">&nbsp;</td>'+
-             '<td><a href="#" data-action="incrementSecond"><i class="glyphicon glyphicon-chevron-up"></i></a></td>'
+             '<td><a href="#" data-action="incrementSecond"><i class="bi bi-chevron-up"></i></a></td>'
            : '') +
            (this.showMeridian ?
              '<td class="separator">&nbsp;</td>'+
-             '<td class="meridian-column"><a href="#" data-action="toggleMeridian"><i class="glyphicon glyphicon-chevron-up"></i></a></td>'
+             '<td class="meridian-column"><a href="#" data-action="toggleMeridian"><i class="bi bi-chevron-up"></i></a></td>'
            : '') +
          '</tr>'+
          '<tr>'+
@@ -281,32 +285,37 @@
            : '') +
          '</tr>'+
          '<tr>'+
-           '<td><a href="#" data-action="decrementHour"><i class="glyphicon glyphicon-chevron-down"></i></a></td>'+
+           '<td><a href="#" data-action="decrementHour"><i class="bi bi-chevron-down"></i></a></td>'+
            '<td class="separator"></td>'+
-           '<td><a href="#" data-action="decrementMinute"><i class="glyphicon glyphicon-chevron-down"></i></a></td>'+
+           '<td><a href="#" data-action="decrementMinute"><i class="bi bi-chevron-down"></i></a></td>'+
            (this.showSeconds ?
             '<td class="separator">&nbsp;</td>'+
-            '<td><a href="#" data-action="decrementSecond"><i class="glyphicon glyphicon-chevron-down"></i></a></td>'
+            '<td><a href="#" data-action="decrementSecond"><i class="bi bi-chevron-down"></i></a></td>'
            : '') +
            (this.showMeridian ?
             '<td class="separator">&nbsp;</td>'+
-            '<td><a href="#" data-action="toggleMeridian"><i class="glyphicon glyphicon-chevron-down"></i></a></td>'
+            '<td><a href="#" data-action="toggleMeridian"><i class="bi bi-chevron-down"></i></a></td>'
            : '') +
          '</tr>'+
        '</table>';
 
       switch(this.template) {
       case 'modal':
-        template = '<div class="bootstrap-timepicker-widget modal hide fade in" data-backdrop="'+ (this.modalBackdrop ? 'true' : 'false') +'">'+
-          '<div class="modal-header">'+
-            '<a href="#" class="close" data-dismiss="modal">×</a>'+
-            '<h3>Pick a Time</h3>'+
-          '</div>'+
+        // YiiBooster: Bootstrap 5 modal markup (modal-dialog/modal-content, btn-close, data-bs-*)
+        template = '<div class="bootstrap-timepicker-widget modal fade" data-bs-backdrop="'+ (this.modalBackdrop ? 'true' : 'false') +'">'+
+          '<div class="modal-dialog modal-sm">'+
           '<div class="modal-content">'+
+          '<div class="modal-header">'+
+            '<h5 class="modal-title">Pick a Time</h5>'+
+            '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'+
+          '</div>'+
+          '<div class="modal-body">'+
             templateContent +
           '</div>'+
           '<div class="modal-footer">'+
-            '<a href="#" class="btn btn-primary" data-dismiss="modal">OK</a>'+
+            '<a href="#" class="btn btn-primary" data-bs-dismiss="modal">OK</a>'+
+          '</div>'+
+          '</div>'+
           '</div>'+
         '</div>';
         break;
@@ -892,7 +901,7 @@
       }
 
       if (this.template === 'modal' && this.$widget.modal) {
-        this.$widget.modal('show').on('hidden', $.proxy(this.hideWidget, this));
+        this.$widget.modal('show').on('hidden.bs.modal', $.proxy(this.hideWidget, this)); // YiiBooster: Bootstrap 5 event name
       } else {
         if (this.isOpen === false) {
           this.$widget.addClass('open');
