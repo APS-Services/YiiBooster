@@ -292,6 +292,8 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
 - **(fix)** `TbDateRangePicker` and `TbDateTimePicker` keep an empty input empty until a date is
   applied: daterangepicker's `autoUpdateInput` wrote today into it on load, so forms saved and
   filters filtered by a date nobody chose. Set `autoUpdateInput` in the options for the old behaviour (rather)
+- **(fix)** `TbTimePicker` starts the picker on its input when `htmlOptions` set the input's id. The
+  script used the widget id, so the picker was attached to no element (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead

@@ -109,7 +109,8 @@ class TbTimePicker extends TbBaseInputWidget {
 			$this->echoAppend();
 		echo CHtml::closeTag('div');
 
-		$this->registerClientScript($this->id);
+		// the input's id: htmlOptions may set one other than the widget id
+		$this->registerClientScript($this->htmlOptions['id']);
 	}
 
 	/**

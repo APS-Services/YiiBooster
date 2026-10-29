@@ -14,6 +14,7 @@ require_once(__DIR__ . '/../../../src/widgets/TbTabs.php');
 require_once(__DIR__ . '/../../../src/widgets/TbSelect2.php');
 require_once(__DIR__ . '/../../../src/widgets/TbDateRangePicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbDateTimePicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbTimePicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbActiveForm.php');
 require_once(__DIR__ . '/../../../src/helpers/TbCss.php');
 require_once(__DIR__ . '/../../../src/helpers/TbIcon.php');
@@ -499,6 +500,22 @@ class PluginReplacementTest extends WidgetTestCase
 
 		$packages = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/components/packages.php');
 		$this->assertRegExp("/'x-editable' => array\\((?:(?!\\n\\t'\\w).)*'depends' => array\\([^)]*'bootstrap-icons'/s", $packages);
+	}
+
+	/**
+	 * The picker starts on the rendered input, also when htmlOptions give it an id other than the
+	 * widget id.
+	 *
+	 * @test
+	 */
+	public function timePickerStartsOnItsInput()
+	{
+		$this->render('TbTimePicker', array('name' => 'Time[start]', 'htmlOptions' => array('id' => 'Time_start')));
+		$this->assertStringContainsString("jQuery('#Time_start').timepicker(", $this->registeredScripts());
+
+		$this->clientScript->reset();
+		$this->render('TbTimePicker', array('name' => 'Time[end]', 'id' => 'endPicker'));
+		$this->assertStringContainsString("jQuery('#endPicker').timepicker(", $this->registeredScripts());
 	}
 
 	/**
