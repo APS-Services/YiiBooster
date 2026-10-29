@@ -130,14 +130,14 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		ob_start();
 		$form->init();
 		ob_clean();
-		$this->assertAttributeEquals('invalid-feedback d-block', 'errorMessageCssClass', $form);
+		$this->assertAttributeEquals('invalid-feedback', 'errorMessageCssClass', $form);
 
 		$form = $this->makeWidget();
 		// $form->inlineErrors = false;
 		ob_start();
 		$form->init();
 		ob_clean();
-		$this->assertAttributeEquals('invalid-feedback d-block', 'errorMessageCssClass', $form);
+		$this->assertAttributeEquals('invalid-feedback', 'errorMessageCssClass', $form);
 
 		$form = $this->makeWidget();
 		$form->errorMessageCssClass = 'foo bar';
@@ -145,6 +145,71 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$form->init(); // init sets the errorMessageCssClass !
 		ob_clean();
 		$this->assertAttributeEquals('foo bar', 'errorMessageCssClass', $form);
+	}
+
+	/**
+	 * Yii hides a message with an inline display:none once the input is valid; d-block
+	 * (display:block !important) kept it on screen. An error the server found is shown inline,
+	 * since Bootstrap hides .invalid-feedback outside an .is-invalid sibling.
+	 */
+	public function testErrorMessageVisibilityStaysWithYii() {
+
+		$form = $this->makeWidget();
+		$form->enableClientValidation = true;
+		ob_start();
+		$form->init();
+		ob_end_clean();
+
+		$model = new FakeModel();
+		$html = $form->error($model, 'login');
+		$this->assertStringNotContainsString('d-block', $html);
+		$this->assertStringContainsString('display:none', $html);
+
+		$model->addError('login', 'Login cannot be blank.');
+		$html = $form->error($model, 'login');
+		$this->assertStringContainsString('display:block', $html);
+		$this->assertStringContainsString('Login cannot be blank.', $html);
+	}
+
+	/**
+	 * Every item of a checkbox or radio list is a .form-check (bare labels flowed into one line
+	 * without Bootstrap 3's block-level .checkbox), inline on request, invalid with its attribute.
+	 */
+	public function testCheckAndRadioListsUseFormCheckItems() {
+
+		$form = $this->makeWidget();
+		ob_start();
+		$form->init();
+		ob_end_clean();
+		$model = new FakeModel();
+		$data = array('a' => 'Alpha', 'b' => 'Beta');
+
+		$html = $form->checkboxListGroup($model, 'login', array('widgetOptions' => array('data' => $data)));
+		$this->assertSame(2, substr_count($html, '<div class="form-check">'));
+		$this->assertStringContainsString('class="form-check-input"', $html);
+
+		$html = $form->radioButtonListGroup($model, 'login', array('inline' => true, 'widgetOptions' => array('data' => $data)));
+		$this->assertSame(2, substr_count($html, '<div class="form-check form-check-inline">'));
+
+		$model->addError('login', 'Choose one.');
+		$html = $form->checkboxListGroup($model, 'login', array('widgetOptions' => array('data' => $data)));
+		$this->assertSame(2, substr_count($html, 'form-check-input is-invalid'));
+
+		$html = $form->radioButtonGroup(new FakeModel(), 'login');
+		$this->assertStringContainsString('<div class="form-check">', $html);
+	}
+
+	/**
+	 * Yii's client validation finds the group by inputContainer, which follows $groupCssClass.
+	 */
+	public function testInputContainerFollowsTheGroupClass() {
+
+		$form = $this->makeWidget();
+		$form->groupCssClass = 'mb-2 form-group';
+		ob_start();
+		$form->init();
+		ob_end_clean();
+		$this->assertEquals('div.mb-2.form-group', $form->clientOptions['inputContainer']);
 	}
 
 	public function testInitClientOptions() {

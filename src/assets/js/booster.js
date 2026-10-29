@@ -224,11 +224,19 @@
 			return;
 		}
 
-		if (hasError) {
-			el.classList.add('is-invalid');
-		} else {
-			el.classList.remove('is-invalid');
-		}
+		// checkbox and radio lists name their container (a span) as input; the state belongs on
+		// each of its controls
+		var controls = /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)
+			? [el]
+			: Array.prototype.slice.call(el.querySelectorAll('input:not([type=hidden]), select, textarea'));
+
+		controls.forEach(function (control) {
+			if (hasError) {
+				control.classList.add('is-invalid');
+			} else {
+				control.classList.remove('is-invalid');
+			}
+		});
 	};
 
 	/**
@@ -254,6 +262,14 @@
 			return hasError;
 		};
 		yiiactiveform.updateInput.boosterHooked = true;
+
+		// Yii clears its messages on a form reset without going through updateInput, so the
+		// controls would stay marked invalid
+		$(document).on('reset.booster', 'form', function () {
+			Array.prototype.forEach.call(this.querySelectorAll('.is-invalid'), function (control) {
+				control.classList.remove('is-invalid');
+			});
+		});
 	};
 
 	/**

@@ -201,10 +201,10 @@ class TbActiveForm extends CActiveForm {
 		}
 
 		if (!isset($this->errorMessageCssClass)) {
-			// d-block because Bootstrap only reveals .invalid-feedback next to an .is-invalid
-			// sibling, and Yii renders the message as a separate element it shows and hides
-			// itself with an inline style.
-			$this->errorMessageCssClass = 'invalid-feedback d-block';
+			// Yii shows and hides the message itself with an inline style; error() reveals
+			// messages the server found (Bootstrap only reveals .invalid-feedback next to an
+			// .is-invalid sibling).
+			$this->errorMessageCssClass = 'invalid-feedback';
 		}
 
 		// Yii's client validation toggles these on the *container*; Bootstrap 5 wants the state
@@ -216,8 +216,9 @@ class TbActiveForm extends CActiveForm {
 		if(!isset($this->clientOptions['successCssClass'])){
 			$this->clientOptions['successCssClass'] = 'has-validation-success';
 		}
+		// the group wrapper, whichever class $groupCssClass gives it
 		if(!isset($this->clientOptions['inputContainer'])){
-			$this->clientOptions['inputContainer'] = 'div.mb-3';
+			$this->clientOptions['inputContainer'] = 'div.' . implode('.', preg_split('/\s+/', trim($this->groupCssClass)));
 		}
 		// hooks Yii's single update point for every validation (change, type and submit), so the
 		// application's own afterValidate/afterValidateAttribute stay untouched; registered before
@@ -251,6 +252,27 @@ class TbActiveForm extends CActiveForm {
 		}
 
 		return parent::errorSummary($models, $header, $footer, $htmlOptions);
+	}
+
+	/**
+	 * Displays the validation error for a model attribute.
+	 *
+	 * Bootstrap hides `.invalid-feedback` unless it follows an `.is-invalid` control, which it does
+	 * not in input groups. An error the server found is therefore shown with an inline style; Yii
+	 * shows and hides the message itself afterwards, also through the inline style, so the class
+	 * must not force it visible (`d-block` is `!important` and kept fixed messages on screen).
+	 *
+	 * @see CActiveForm::error
+	 */
+	public function error($model, $attribute, $htmlOptions = array(), $enableAjaxValidation = true, $enableClientValidation = true) {
+
+		$name = $attribute;
+		CHtml::resolveName($model, $name);
+		if ($model->hasErrors($name)) {
+			$htmlOptions['style'] = 'display:block;' . (isset($htmlOptions['style']) ? $htmlOptions['style'] : '');
+		}
+
+		return parent::error($model, $attribute, $htmlOptions, $enableAjaxValidation, $enableClientValidation);
 	}
 
 	/**
@@ -599,7 +621,9 @@ class TbActiveForm extends CActiveForm {
 		$realAttribute = $attribute;
 		CHtml::resolveName($model, $realAttribute);
 
+		// in a form-check, as checkboxGroup: the radio's own wrapper that Bootstrap 5 positions it by
 		ob_start();
+		echo '<div class="form-check' . ($this->type == self::TYPE_INLINE ? ' form-check-inline' : '') . '">';
 		if (isset($hiddenField)) echo $hiddenField;
 		echo CHtml::tag('label', $options['labelOptions'], false, false);
 		echo $field;
@@ -607,8 +631,9 @@ class TbActiveForm extends CActiveForm {
 			if ($options['label'])
 				echo $options['label'];
 		} else
-			echo $model->getAttributeLabel($realAttribute);
+			echo ' ' . $model->getAttributeLabel($realAttribute);
 		echo CHtml::closeTag('label');
+		echo '</div>';
 		$fieldData = ob_get_clean();
 
 		// Suppress the group label: the field above already renders it inside the form-check
@@ -724,6 +749,36 @@ class TbActiveForm extends CActiveForm {
 	}
 
 	/**
+	 * Bootstrap 5 markup for the items of checkbox and radio lists: each one a `.form-check`
+	 * (Bootstrap 3's block-level .checkbox/.radio labels are gone, so bare labels flowed into one
+	 * line), `.form-check-inline` for `$options['inline']` or an inline form, and the invalid state
+	 * on every input of an attribute with an error. Settings the caller gave are kept.
+	 *
+	 * @param array $widgetOptions the list's htmlOptions (CHtml::checkBoxList/radioButtonList)
+	 * @param CModel $model
+	 * @param string $attribute
+	 * @param array $options the group options
+	 */
+	protected function initCheckListOptions(&$widgetOptions, $model, $attribute, $options) {
+
+		$inline = (isset($options['inline']) && $options['inline']) || $this->type == self::TYPE_INLINE;
+
+		if (!isset($widgetOptions['labelOptions']['class']))
+			$widgetOptions['labelOptions']['class'] = 'form-check-label';
+
+		// $widgetOptions is already the htmlOptions array - nesting another htmlOptions key
+		// inside it made CHtml render `htmlOptions="Array"` as an attribute (a TypeError on
+		// PHP 8) and the class never reached the inputs.
+		$this->addControlCssClass($widgetOptions, $model, $attribute, 'form-check-input');
+
+		if (!isset($widgetOptions['template']))
+			$widgetOptions['template'] = '<div class="form-check' . ($inline ? ' form-check-inline' : '') . '">{input} {label}</div>';
+
+		if (!isset($widgetOptions['separator']))
+			$widgetOptions['separator'] = '';
+	}
+
+	/**
 	 * Generates a checkbox list group for a model attribute.
 	 *
 	 * This method is a wrapper for {@link CActiveForm::checkboxList} and {@link customFieldGroup}.
@@ -742,27 +797,10 @@ class TbActiveForm extends CActiveForm {
 		$this->initOptions($options, true);
 
 		$widgetOptions = $options['widgetOptions']['htmlOptions'];
-		
-
-		// Bootstrap 4 replaced the .checkbox / .radio label classes with form-check-label; the
-		// inline variant is a class on the wrapper, not on the label.
-		if (!isset($widgetOptions['labelOptions']['class']))
-			$widgetOptions['labelOptions']['class'] = 'form-check-label';
-
-		// $widgetOptions is already the htmlOptions array - nesting another htmlOptions key
-		// inside it made CHtml render `htmlOptions="Array"` as an attribute (a TypeError on
-		// PHP 8) and the class never reached the inputs.
-		if (!isset($widgetOptions['class']))
-			$widgetOptions['class'] = 'form-check-input';
-
-		if (!isset($widgetOptions['template']))
-			$widgetOptions['template'] = '{beginLabel}{input}{labelTitle}{endLabel}';
-
-		if (!isset($widgetOptions['separator']))
-			$widgetOptions['separator'] = "\n";
+		$this->initCheckListOptions($widgetOptions, $model, $attribute, $options);
 
 		$data = $options['widgetOptions']['data'];
-		
+
 		$fieldData = array(array($this, 'checkboxList'), array($model, $attribute, $data, $widgetOptions));
 
 		return $this->customFieldGroupInternal($fieldData, $model, $attribute, $options);
@@ -785,27 +823,10 @@ class TbActiveForm extends CActiveForm {
 	public function radioButtonListGroup($model, $attribute, $options = array()) {
 		
 		$this->initOptions($options, true);
-		
+
 		$widgetOptions = $options['widgetOptions']['htmlOptions'];
-		
+		$this->initCheckListOptions($widgetOptions, $model, $attribute, $options);
 
-		// Bootstrap 4 replaced the .checkbox / .radio label classes with form-check-label; the
-		// inline variant is a class on the wrapper, not on the label.
-		if (!isset($widgetOptions['labelOptions']['class']))
-			$widgetOptions['labelOptions']['class'] = 'form-check-label';
-
-		// $widgetOptions is already the htmlOptions array - nesting another htmlOptions key
-		// inside it made CHtml render `htmlOptions="Array"` as an attribute (a TypeError on
-		// PHP 8) and the class never reached the inputs.
-		if (!isset($widgetOptions['class']))
-			$widgetOptions['class'] = 'form-check-input';
-		
-		if (!isset($widgetOptions['template']))
-			$widgetOptions['template'] = '{beginLabel}{input}{labelTitle}{endLabel}';
-
-		if (!isset($widgetOptions['separator']))
-			$widgetOptions['separator'] = "\n";
-		
 		$data = $options['widgetOptions']['data'];
 
 		$fieldData = array(array($this, 'radioButtonList'), array($model, $attribute, $data, $widgetOptions));
