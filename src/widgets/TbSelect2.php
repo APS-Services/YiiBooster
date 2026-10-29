@@ -75,6 +75,12 @@ class TbSelect2 extends CInputWidget {
 	 * Initializes the widget.
 	 */
 	public function init() {
+		// Select2 4 binds to a <select> only: on the hidden input it rendered nothing started
+		if (!$this->asDropDownList) {
+			throw new CException('TbSelect2::$asDropDownList = false was removed in YiiBooster 5.0: Select2 4 cannot bind to a hidden input. '
+				. 'Use the select (the default); for values typed in freely set options \'tags\' => true, with \'multiple\' => true for several. See UPGRADE-5.0.md.');
+		}
+
 		$this->normalizeData();
 
 		$this->normalizeOptions();
@@ -160,6 +166,10 @@ class TbSelect2 extends CInputWidget {
 				$name = $this->hasModel()
 					? CHtml::activeName($this->model, $this->attribute)
 					: $this->name;
+			}
+			// one hidden field per value: without [] PHP kept only the last one of a multiple select
+			if ((!empty($this->htmlOptions['multiple']) || !empty($this->options['multiple'])) && substr($name, -2) !== '[]') {
+				$name .= '[]';
 			}
 			$this->registerReadonlyValueField($id, $name);
 		} elseif ($this->disabled) {

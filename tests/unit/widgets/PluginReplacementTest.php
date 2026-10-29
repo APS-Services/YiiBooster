@@ -579,6 +579,34 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
+	 * A readonly multiple select posts every value: its hidden fields need [] (PHP kept only the
+	 * last of several Model[attr]).
+	 *
+	 * @test
+	 */
+	public function readonlyMultipleSelect2PostsAllItsValues()
+	{
+		$this->render('TbSelect2', array('name' => 'Post[tags]', 'data' => array('a' => 'A', 'b' => 'B'), 'readonly' => true, 'htmlOptions' => array('multiple' => 'multiple')));
+		$this->assertStringContainsString(".attr('name', " . CJavaScript::encode('Post[tags][]') . ")", $this->registeredScripts());
+
+		$this->clientScript->reset();
+		$this->render('TbSelect2', array('name' => 'Post[tag]', 'data' => array('a' => 'A'), 'readonly' => true));
+		$this->assertStringContainsString(".attr('name', " . CJavaScript::encode('Post[tag]') . ")", $this->registeredScripts());
+	}
+
+	/**
+	 * Select2 4 cannot bind to the hidden input asDropDownList = false rendered.
+	 *
+	 * @test
+	 */
+	public function select2WithoutASelectFailsLoudly()
+	{
+		$this->expectException('CException');
+		$this->expectExceptionMessage('asDropDownList');
+		$this->render('TbSelect2', array('name' => 'Post[a]', 'asDropDownList' => false));
+	}
+
+	/**
 	 * Yii's lowercase ids find Select2's lang-REGION files (pt_br used to fall back to pt, zh_cn
 	 * found nothing), and the translation becomes Select2's default language - Select2 4's files
 	 * only register themselves.
