@@ -11,6 +11,7 @@ require_once(__DIR__ . '/../../../src/widgets/TbColorPicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbBaseInputWidget.php');
 require_once(__DIR__ . '/../../../src/widgets/TbDatePicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbTabs.php');
+require_once(__DIR__ . '/../../../src/widgets/TbSelect2.php');
 require_once(__DIR__ . '/../../../src/widgets/TbActiveForm.php');
 require_once(__DIR__ . '/../../../src/helpers/TbCss.php');
 require_once(__DIR__ . '/../../../src/helpers/TbIcon.php');
@@ -417,6 +418,27 @@ class PluginReplacementTest extends WidgetTestCase
 		$scriptFiles = new ReflectionProperty('CClientScript', 'scriptFiles');
 		$scriptFiles->setAccessible(true);
 		$this->assertSame(CClientScript::POS_END, $positionOf($scriptFiles->getValue($this->clientScript)));
+	}
+
+	/**
+	 * The theme comes from the widget's $theme (settable once through the widget factory), unless
+	 * the options name one.
+	 *
+	 * @test
+	 */
+	public function select2UsesItsConfiguredTheme()
+	{
+		$this->render('TbSelect2', array('name' => 'Post[a]'));
+		// CJavaScript writes the hyphen as \x2D
+		$this->assertStringContainsString("'theme':'bootstrap\\x2D5'", $this->registeredScripts());
+
+		$this->clientScript->reset();
+		$this->render('TbSelect2', array('name' => 'Post[b]', 'theme' => 'default'));
+		$this->assertStringContainsString("'theme':'default'", $this->registeredScripts());
+
+		$this->clientScript->reset();
+		$this->render('TbSelect2', array('name' => 'Post[c]', 'theme' => 'default', 'options' => array('theme' => 'classic')));
+		$this->assertStringContainsString("'theme':'classic'", $this->registeredScripts());
 	}
 
 	protected function tearDown(): void

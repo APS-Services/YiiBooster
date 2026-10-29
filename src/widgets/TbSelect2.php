@@ -50,6 +50,14 @@ class TbSelect2 extends CInputWidget {
 	public $options;
 
 	/**
+	 * @var string Select2 theme used when the options name none. 'bootstrap-5' is the bundled
+	 * select2-bootstrap-5-theme; an application with its own Select2 styles (e.g. an admin template
+	 * styling Select2's 'default' theme) sets it once, e.g. through the widget factory.
+	 * @since 5.0.0
+	 */
+	public $theme = 'bootstrap-5';
+
+	/**
 	 * @var bool
 	 * @since 2.1.0
 	 */
@@ -212,7 +220,7 @@ class TbSelect2 extends CInputWidget {
 		// select2-bootstrap-5-theme only applies when Select2 is told to use it by name; without
 		// this the control renders in Select2's own default skin next to Bootstrap 5 inputs.
 		if (empty($this->options['theme'])) {
-			$this->options['theme'] = 'bootstrap-5';
+			$this->options['theme'] = $this->theme;
 		}
 	}
 

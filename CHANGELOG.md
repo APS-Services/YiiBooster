@@ -277,6 +277,9 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   mirrored in `afterValidateAttribute`, which Yii does not call on submit, so a rejected form showed
   its messages without `is-invalid`. `booster.js` now wraps Yii's `updateInput`, used for change,
   typing and submit; the application's own validation callbacks stay untouched (rather)
+- **(enh)** `TbSelect2::$theme` sets the Select2 theme used when the options name none (default
+  `bootstrap-5`), e.g. once through the widget factory for an admin template styling Select2's
+  `default` theme (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
