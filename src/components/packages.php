@@ -118,8 +118,10 @@ return array(
 		'depends' => array('bootstrap.js')
 	),
 	'bootstrap.wizard' => array(
+		// Patched in place for Bootstrap 5 (tabs found by data-bs-toggle), so only the unminified
+		// build ships - as for x-editable.
 		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-wizard',
-		'js' => array($this->minify ? 'jquery.bootstrap.wizard.min.js' : 'jquery.bootstrap.wizard.js')
+		'js' => array('jquery.bootstrap.wizard.js')
 	),
 	'ajax-cache' => array(
 		'baseUrl' => $this->getAssetsUrl() . '/ajax-cache',

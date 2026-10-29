@@ -76,13 +76,14 @@ class TbWizard extends CWidget
 	public $addTabsNavBar = false;
 
 	/**
-	 * @var string Pager HTML code
+	 * @var string Pager HTML code. Bootstrap 5 has no .pager: a pagination, which also styles the
+	 * plugin's .disabled items; the plugin finds the items by previous/next/first/last.
 	 */
-	public $pagerContent = '<ul class="pager wizard">
-				<li class="previous first" style="display:none;"><a href="#">First</a></li>
-				<li class="previous"><a href="#">Previous</a></li>
-				<li class="next last" style="display:none;"><a href="#">Last</a></li>
-				<li class="next"><a href="#">Next</a></li>
+	public $pagerContent = '<ul class="pagination wizard">
+				<li class="page-item previous first" style="display:none;"><a class="page-link" href="#">First</a></li>
+				<li class="page-item previous"><a class="page-link" href="#">Previous</a></li>
+				<li class="page-item next ms-auto"><a class="page-link" href="#">Next</a></li>
+				<li class="page-item next last" style="display:none;"><a class="page-link" href="#">Last</a></li>
 			</ul>';
 
 	/**
