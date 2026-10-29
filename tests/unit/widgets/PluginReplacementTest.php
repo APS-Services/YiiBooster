@@ -484,6 +484,29 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
+	 * With enableCdn: our noconflict snippet is not on jsDelivr (404), Highcharts 3.0.6 is on no CDN
+	 * (the unversioned one serves the latest release), and maxcdn.bootstrapcdn.com is retired.
+	 *
+	 * @test
+	 */
+	public function cdnPackagesOnlyPointAtFilesTheCdnHas()
+	{
+		$packages = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/components/packages.php');
+
+		// within each entry (up to the next package key at the start of a line): a local baseUrl only
+		foreach (array('datepicker', 'highcharts') as $package) {
+			$this->assertRegExp(
+				'/\n\t\'' . $package . '\' => array\((?:(?!\n\t\'\w).)*\'baseUrl\' => ' . preg_quote('$this->getAssetsUrl()', '/') . '/s',
+				$packages,
+				$package
+			);
+		}
+		// as URLs (the comments in packages.php name the hosts)
+		$this->assertStringNotContainsString("'//maxcdn.bootstrapcdn.com", $packages);
+		$this->assertStringNotContainsString("'//code.highcharts.com", $packages);
+	}
+
+	/**
 	 * The language of TbDateTimePicker applies to that picker alone (Booster.dateTimePickerOptions
 	 * reads its Moment locale data): moment.locale() set it for the whole page, changing the default
 	 * format of every TbDateRangePicker there.

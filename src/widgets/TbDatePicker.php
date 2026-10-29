@@ -111,7 +111,7 @@ class TbDatePicker extends TbBaseInputWidget {
 
 			if (file_exists(Yii::getPathOfAlias('booster.assets') . $filename)) {
 				if ($booster->enableCdn) {
-					// Must track the `datepicker` package in packages.php. This pointed at cdnjs
+					// Must track the `bootstrap-datepicker` package in packages.php. This pointed at cdnjs
 					// 1.2.0 while the plugin itself came from jsDelivr 1.10.0 - two CDNs and an
 					// eight-year gap, which is the same CSS/JS divergence 5.0 set out to fix.
 					Yii::app()->clientScript->registerScriptFile(

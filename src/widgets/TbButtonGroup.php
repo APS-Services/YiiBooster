@@ -148,7 +148,7 @@ class TbButtonGroup extends CWidget {
 			
 			$justifiedNotLink = $this->justified && $this->buttonType !== TbButton::BUTTON_LINK;
 			if($justifiedNotLink)
-				echo '<div class="btn-group">';
+				echo '<div class="btn-group flex-fill">'; // grows in the justified row, its button with it
 			
 			$this->controller->widget(
 				'booster.widgets.TbButton',

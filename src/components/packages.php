@@ -11,7 +11,8 @@
  */
 return array(
 	'font-awesome' => array(
-		'baseUrl' => $this->enableCdn ? '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/' : $this->getAssetsUrl().'/font-awesome/',
+		// jsDelivr as for the other packages (maxcdn.bootstrapcdn.com is retired)
+		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/font-awesome@4.3.0/' : $this->getAssetsUrl().'/font-awesome/',
 		'css' => array(($this->minify || $this->enableCdn) ? 'css/font-awesome.min.css' : 'css/font-awesome.css'),
 	),
 	'bootstrap.js' => array(
@@ -70,18 +71,24 @@ return array(
         'js' => array($this->minify ? 'js/jquery.layout.min.js' : 'js/jquery.layout.js'),
         'depends' => array('jquery', 'jquery.ui'),
     ),
-	'datepicker' => array(
+	'bootstrap-datepicker' => array(
 		'depends' => array('jquery'),
 		'baseUrl' => $this->enableCdn ? 'https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/' : $this->getAssetsUrl() . '/bootstrap-datepicker/',
 		// Filenames match upstream's dist layout exactly, so the CDN and local branches resolve
 		// the same relative paths. They previously diverged - the local copy was renamed on
 		// import, which would 404 the moment enableCdn was switched on.
 		'css' => array($this->minify ? 'css/bootstrap-datepicker3.min.css' : 'css/bootstrap-datepicker3.css'),
+		'js' => array($this->minify ? 'js/bootstrap-datepicker.min.js' : 'js/bootstrap-datepicker.js')
+	),
+	'datepicker' => array(
 		// The noconflict snippet lives in its own file so the vendored library stays pristine and
 		// can be dropped in wholesale on upgrade. It captures $.fn.datepicker so the patched
 		// jQuery UI build can restore it - that collision is jQuery UI vs bootstrap-datepicker and
-		// is unrelated to Bootstrap's own version.
-		'js' => array($this->minify ? 'js/bootstrap-datepicker.min.js' : 'js/bootstrap-datepicker.js', 'js/bootstrap-datepicker-noconflict.js')
+		// is unrelated to Bootstrap's own version. It is ours, so it is always served locally:
+		// with enableCdn it was requested from jsDelivr, where it does not exist (404).
+		'depends' => array('bootstrap-datepicker'),
+		'baseUrl' => $this->getAssetsUrl() . '/bootstrap-datepicker/',
+		'js' => array('js/bootstrap-datepicker-noconflict.js')
 	),
 	'date' => array(
 		'baseUrl' => $this->enableCdn ? '//cdnjs.cloudflare.com/ajax/libs/datejs/1.0/' : $this->getAssetsUrl() . '/js/',
@@ -194,7 +201,10 @@ return array(
 		'js' => array('ckeditor.js')
 	),
 	'highcharts' => array(
-		'baseUrl' => $this->enableCdn ? '//code.highcharts.com' : $this->getAssetsUrl() . '/highcharts',
+		// Always the bundled 3.0.6: no CDN serves that version (jsDelivr starts later, versioned
+		// code.highcharts.com paths are refused), and the unversioned one is the latest release,
+		// whose API differs.
+		'baseUrl' => $this->getAssetsUrl() . '/highcharts',
 		'js' => array($this->minify ? 'highcharts.js' : 'highcharts.src.js')
 	),
 );
