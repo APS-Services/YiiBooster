@@ -179,8 +179,19 @@ at the offending line rather than on a missing include. The stubs are deleted in
 | `TbImageGallery` | Its plugin reads `$.fn.modal.Constructor.prototype` at load time and throws under Bootstrap 5, taking the page's JavaScript with it | A framework-neutral lightbox (blueimp Gallery, GLightbox, PhotoSwipe) |
 | `TbModalManager` | Bootstrap 5 stacks modals natively | `TbModal` |
 
+`TbHtml` and `TbArray` throw on every static call (`TbHtml::button()` …); their stubs do not extend
+`CHtml`, so nothing falls back quietly to markup without the Bootstrap classes.
+
 `TbActiveForm::chosenGroup()` and `passFieldGroup()` are gone with their widgets, as is the `pass`
 alias in `TbFormInputElement`.
+
+Two options of kept widgets throw for the same reason:
+
+- **`TbSelect2::$asDropDownList = false`** — Select2 4 cannot bind to the hidden input it rendered.
+  Use the select (the default); for values typed in freely set `'options' => array('tags' => true)`,
+  with `'multiple'` for several.
+- **`TbEditable` `'type' => 'datetime'`** — x-editable builds it on the archived smalot
+  datetimepicker, which 5.0 removed. Use `combodate` (date and time from selects) or `date`.
 
 ### 2.2 Behaviour removed
 
@@ -189,9 +200,10 @@ plugin's toggle and checkbox/radio behaviour outright — there is no attribute 
 emitting the old one would look migrated while doing nothing. Use inputs with the `btn-check` class
 inside the button group.
 
-`TbButton` with `'buttonType' => 'link'` renders an `<a>` in the colours of its context and no longer
-adds `btn-link`, which in Bootstrap 5 overrides those colours. Without a valid context (e.g. `''`) it
-is still a `btn-link`; otherwise set `'context' => 'link'` for a plain text link.
+`TbButton` with `'buttonType' => 'link'` and a context you set (e.g. `'success'`) renders an `<a>`
+in the colours of that context and no longer adds `btn-link`, which in Bootstrap 5 overrides those
+colours. Without a context of its own — none, `''` or the untouched default — it is a text link
+(`btn-link`) as before; `'context' => 'link'` says the same explicitly.
 
 ### 2.3 Icons
 
@@ -221,6 +233,12 @@ To use Font Awesome instead, set `iconPrefix`:
 ),
 ```
 
+The Glyphicons translation above targets Bootstrap Icons only. With another `iconPrefix` the names
+you pass are used as they are (`'ok'` becomes `fa fa-ok`), so pass names of that family. The icons
+YiiBooster draws itself (sort caret, time picker add-on, default grid buttons, toggle column) come
+from `TbIcon::familyIcon()`, which knows the Font Awesome names; other families can be added to
+`TbIcon::$familyNames`.
+
 **Raw `glyphicon-*` or `icon-*` markup in your own views is not touched** — only values passed to
 widgets go through the helper. Grep for those separately.
 
@@ -244,11 +262,22 @@ widgets go through the helper. Grep for those separately.
 
 The hardcoded `col-sm-3` / `col-sm-9` horizontal grid is now `$labelCssClass` / `$controlCssClass`.
 
+Checkbox and radio lists (`checkboxListGroup`, `radioButtonListGroup`) render every item as a
+`.form-check`; `'inline' => true` (or an inline form) makes them `.form-check-inline`. A custom
+`template`/`separator` in the list's `htmlOptions` is kept as given.
+
 **Validation state.** Bootstrap 5 styles the invalid state on the control, while Yii's client
 validation toggles a class on the container. YiiBooster bridges the two: Yii keeps flagging the
-container with a neutral marker class, and `booster.js` wraps Yii's `$.fn.yiiactiveform.updateInput`
-(used on change, while typing and on submit) to mirror the real state onto the input. Your own
-`afterValidate` / `afterValidateAttribute` stay untouched.
+container with a neutral marker class (found through `inputContainer`, which follows
+`$groupCssClass`), and `booster.js` wraps Yii's `$.fn.yiiactiveform.updateInput` (used on change,
+while typing and on submit) to mirror the real state onto the input - onto every input of a checkbox
+or radio list - and a form reset clears it. Your own `afterValidate` / `afterValidateAttribute` stay
+untouched.
+
+Error messages carry `invalid-feedback`. Yii still shows and hides them itself with an inline
+style; a message the server found is rendered visible, since Bootstrap only reveals
+`.invalid-feedback` next to an `.is-invalid` sibling (not the case in input groups). Do not add
+`d-block` to `errorMessageCssClass`: its `!important` keeps hidden messages on screen.
 
 If your own CSS targets `.has-error`, update it to `.is-invalid`.
 
@@ -274,7 +303,16 @@ reads `$.fn.modal` before the bundle has loaded will still not find them.
 
 All Bootstrap data attributes are now namespaced: `data-toggle` → `data-bs-toggle`,
 `data-target` → `data-bs-target`, `data-dismiss` → `data-bs-dismiss`, `data-slide` →
-`data-bs-slide`, `data-spy` → `data-bs-spy`. Update any you have written by hand.
+`data-bs-slide`, `data-spy` → `data-bs-spy`. Update any you have written by hand. The same goes for
+component options set as attributes (`data-placement`, `data-trigger`, `data-html`, `data-delay`,
+`data-container` …): Bootstrap 5 reads only `data-bs-*`. `TbButton::$tooltipOptions` is written
+that way for you.
+
+**Popover and tooltip content is sanitized.** Bootstrap 5 runs HTML content through its allow list,
+which drops tables, forms, inputs, buttons and styles. Content of your own that needs them takes
+`'sanitize' => false` (or an extended `allowList`) in the widget's options - e.g. for
+`TbPopoverColumn`. The picker of `TbJsonPickerColumn` shows the application's own markup and is not
+sanitized, as in Bootstrap 3.
 
 Widget `events` options are unaffected — `'shown.bs.modal' => 'js:function(){...}'` still works,
 because Bootstrap 5 triggers a jQuery event alongside the native one.
@@ -325,6 +363,8 @@ grep -rn "chosenGroup\|passFieldGroup" protected/
 grep -rn "'toggle'\s*=>" protected/
 grep -rnE "\w+Row\(" protected/views/          # 3.x form API
 grep -rn "bootstrap.widgets.\|BootstrapFilter\|components.Bootstrap" protected/   # 3.x aliases
+grep -rn "asDropDownList'\s*=>\s*false" protected/                  # TbSelect2 on a hidden input
+grep -rn "'type'\s*=>\s*'datetime'" protected/ | grep -i editable   # x-editable datetime
 ```
 
 ## What will fail quietly
@@ -359,6 +399,9 @@ $el.prop('disabled', true).trigger('change');  // 4.x
 `initSelection` and `query` were replaced by `dataAdapter`/`ajax`. If you pass either through
 `TbSelect2::$options`, see Select2's own 3.5 → 4.0 release notes.
 
+Select2 4's translations only register themselves; the one matching the application language
+(Yii ids like `pt_br` are matched to `pt-BR`) is made Select2's default language for you.
+
 **bootstrap-datepicker 1.3.1 → 1.10.0.** No API change.
 
 **x-editable** is archived upstream, so its popover container and select2 adapter are patched in
@@ -366,6 +409,12 @@ place here for Bootstrap 5 (also its form buttons: Bootstrap Icons instead of Gl
 `TbEditableDetailView` keep their APIs. Note that only the unminified build ships - the vendored
 minified copy could not be regenerated from patched source, and shipping a stale one would have
 quietly reintroduced the Bootstrap 3 container wherever `minify` is on, which is the default.
+Its `select2` type runs on Select2 4: a remote source sends `query` from `params.term` and reads the
+response through `processResults` (3.x's `results` and `data(term)` are ignored if you pass your
+own `ajax` options), and several values are an array. The `datetime` type is gone (see 2.1).
+
+**bootstrap-wizard** (`TbWizard`) is patched in place too: it finds its steps by `data-bs-toggle`,
+and the pager is a Bootstrap 5 pagination. Only the unminified build ships.
 
 **bootstrap-timepicker** (`TbTimePicker`) is patched in place the same way: its arrows are Bootstrap
 Icons chevrons instead of Glyphicons, a click on the input group's `.input-group-text` opens it, and
@@ -401,16 +450,24 @@ Things to check when you upgrade:
   lists keep working; the new `list` property is the preferred way to pass one. For remote lookups,
   drive the Awesomplete instance from your own fetch.
 - **`TbDateTimePicker` options** are now daterangepicker's. `language` is mapped onto Moment's
-  locale for you; the smalot plugin's other options are not. Without a `locale.format` the format
-  is the locale's date plus time, with a 24-hour clock unless the locale uses AM/PM.
+  locale data for that picker (format, day and month names, first weekday - other pickers on the
+  page are not affected); the smalot plugin's other options are not mapped. Without a
+  `locale.format` the format is the locale's date plus time, with a 24-hour clock unless the locale
+  uses AM/PM.
+- **`TbDateRangePicker` options.** daterangepicker 3.1 reads `format`, `separator` and the labels
+  only inside `locale`; given at the top level, as up to 4.x, they are moved there for you.
+- **`TbMarkdownEditor`** syncs EasyMDE into the textarea on every change (`forceSync`), so forms
+  sent by AJAX post the edited text; set `'forceSync' => false` in its options to turn that off.
 - **Empty date inputs stay empty.** `TbDateRangePicker` and `TbDateTimePicker` write the input only
   when a date is applied, unless you set daterangepicker's `autoUpdateInput` yourself. An existing
   value is still read as the selected date; give it in the picker's `locale.format`.
-- **`TbTags` options** are now Select2's, and it renders a `multiple <select>` rather than
-  bootstrap-tags' div plus hidden field — so the control that submits has changed element. Mapped
-  for you: `suggestions` → `data`, `restrictTo` → `data` with `tags: false`, `promptText` →
-  `placeholder`. **Not** mapped, because Select2 has no equivalent: `tagClass`, `displayPopovers`,
-  `popoverData`, `exclude`. A comma-separated string value still works as the initial tag list.
+- **`TbTags` options** are now Select2's, and it renders a `multiple <select>` (without a name)
+  rather than bootstrap-tags' div. The value is still posted as before: one comma-separated string,
+  by a hidden field with the attribute's name that is kept in sync - so string columns need no
+  change. Mapped for you: `suggestions` → `data`, `restrictTo` → `data` with `tags: false`,
+  `promptText` → `placeholder`. **Not** mapped, because Select2 has no equivalent: `tagClass`,
+  `displayPopovers`, `popoverData`, `exclude`. A comma-separated string or an array works as the
+  initial tag list, also from a model.
 - **`TbColorPicker::$format`** still accepts `rgba`; it is sent to Coloris as `rgb` with alpha
   enabled, since Coloris has no `rgba` format. `hsl`, `auto` and `mixed` are newly available.
 - **`TbColorPicker`** binds by selector through Coloris and has no jQuery plugin. Its `events` are

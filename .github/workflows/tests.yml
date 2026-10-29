@@ -7,6 +7,32 @@ on:
     branches: [ master ]
 
 jobs:
+  # src/ promises PHP 5.3 syntax, which the PHPUnit job on 7.4 cannot check ([], ??, ::class
+  # parse there). A syntax check needs no Composer, so it runs on the oldest PHP itself.
+  lint:
+    name: Syntax (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [ '5.3', '8.3' ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      # vendored libraries under src/assets are not ours to keep 5.3-clean
+      - name: Lint src/
+        run: |
+          find src -name '*.php' -not -path 'src/assets/*' -print0 \
+            | xargs -0 -n1 php -l > lint.log || { grep -v '^No syntax errors' lint.log; exit 1; }
+
   phpunit:
     name: PHPUnit (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest

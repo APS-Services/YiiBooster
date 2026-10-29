@@ -632,10 +632,6 @@ class Booster extends CApplicationComponent {
 	}
 
 	/**
-	 * Registers the Font Awesome CSS.
-	 * @since 1.0.6
-	 */
-	/**
 	 * Tells TbIcon which icon family widgets should emit.
 	 *
 	 * Done in init() so that $iconPrefix is a normal component configuration option, while

@@ -303,6 +303,43 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   (`Booster::registerSelect2Package()`). An application styling Select2's `default` theme itself
   loaded the unused stylesheet on every page (rather)
 
+Fixes from the review of the Bootstrap 5 pull request:
+- **(fix)** `TbActiveForm` error messages are `invalid-feedback` without `d-block`, whose
+  `!important` kept fixed messages on screen; messages the server found are shown inline (rather)
+- **(fix)** checkbox and radio lists: every item a `.form-check` (`form-check-inline` for `inline` and
+  inline forms), `is-invalid` on each input, also from client validation; `radioButtonGroup` in a
+  `.form-check`; a form reset clears `is-invalid`; `inputContainer` follows `$groupCssClass` (rather)
+- **(fix)** `TbExtendedGridView` with `chartOptions` threw: its grid/chart switch used the removed
+  radio toggle (rather)
+- **(fix)** `TbWizard` found no steps: the bundled plugin is patched to `data-bs-toggle` (unminified
+  only), the pager is a Bootstrap 5 pagination (rather)
+- **(fix)** `TbIcon` maps Glyphicons names onto Bootstrap Icons only; with another `iconPrefix` names
+  pass through as documented. `TbIcon::familyIcon()` gives the library's own icons per family (rather)
+- **(fix)** `TbButton::$tooltipOptions` as `data-bs-*`; the token lint also checks component option
+  attributes (rather)
+- **(fix)** `TbPopoverColumn`/`TbJsonPickerColumn` popovers are disposed with their rows and always use
+  the manual trigger; `picker('destroy')` disposes; picker content is not sanitized (rather)
+- **(fix)** a failed grid update restores the tooltips and popovers of the remaining rows (rather)
+- **(fix)** Select2 translations for Yii's lowercase language ids (`pt_br`), applied as Select2's
+  default language (rather)
+- **(fix)** throwing stubs for `TbHtml`/`TbArray`; `TbPickerColumn`'s stub imports `CGridColumn` (rather)
+- **(fix)** `TbEditable` type `datetime` throws (it needs the removed smalot plugin); the `select2`
+  type is ported to Select2 4 (select element, `processResults`, arrays) (rather)
+- **(fix)** `TbTags` bound to a model keeps its tags selected and posts one comma-separated string
+  again (rather)
+- **(security)** `TbHtml5Editor` loads the stored HTML through Quill's clipboard instead of
+  `innerHTML`, which ran `<img onerror>` for whoever opened the form (rather)
+- **(fix)** readonly multiple `TbSelect2` posts all values; `asDropDownList = false` throws (rather)
+- **(fix)** `TbCarousel` indicators target `htmlOptions['id']`; `TbMenu` lists are `flex-column`,
+  `dropup` sits on the dropdown items (rather)
+- **(fix)** `TbButton` link type with the default context is a text link again; `TbMarkdownEditor`
+  uses `forceSync`; `TbDateRangePicker` moves top-level `format`/`separator`/labels into `locale`;
+  `TbDateTimePicker`'s language applies to that picker only (rather)
+- **(fix)** justified `TbButtonGroup` buttons share the row; CDN: Font Awesome from jsDelivr, the
+  datepicker noconflict snippet and Highcharts always local; `implode()` argument order in
+  `TbBaseMenu` (rather)
+- **(enh)** CI checks the syntax of `src/` on PHP 5.3 and 8.3 (rather)
+
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
   libraries; 5.0 consolidates onto `TbMarkdownEditor`. Keeps a throwing stub.

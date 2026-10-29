@@ -273,7 +273,7 @@ abstract class TbBaseMenu extends CMenu {
 				}
 
 				if (!empty($classes)) {
-					$classes = implode($classes, ' ');
+					$classes = implode(' ', $classes);
 					if (isset($item['itemOptions']['class'])) {
 						$item['itemOptions']['class'] .= ' ' . $classes;
 					} else {
