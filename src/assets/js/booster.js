@@ -142,6 +142,63 @@
 	};
 
 	/**
+	 * daterangepicker on the matched elements (TbDateRangePicker, TbDateTimePicker).
+	 *
+	 * Unless the options set autoUpdateInput, an input is written only when a date is applied:
+	 * daterangepicker's own autoUpdateInput writes today into an empty field as soon as it loads, so
+	 * a form saved a date - or a filter filtered by one - that nobody had chosen. An existing value
+	 * is still read as the selected date (daterangepicker does that from the input itself).
+	 *
+	 * @param {string} selector
+	 * @param {Object} options daterangepicker options
+	 * @param {Function} [callback]
+	 * @return {jQuery}
+	 */
+	Booster.dateRangePicker = function (selector, options, callback) {
+		var $ = window.jQuery;
+		var writeOnApply = options.autoUpdateInput === undefined;
+		if (writeOnApply) {
+			options.autoUpdateInput = false;
+		}
+
+		return $(selector).each(function () {
+			var $element = $(this);
+			$element.daterangepicker(options, callback);
+			if (!writeOnApply || !$element.is('input')) {
+				return;
+			}
+			$element.on('apply.daterangepicker', function (event, picker) {
+				var value = picker.startDate.format(picker.locale.format);
+				if (!picker.singleDatePicker) {
+					value += picker.locale.separator + picker.endDate.format(picker.locale.format);
+				}
+				$element.val(value).trigger('change');
+			});
+		});
+	};
+
+	/**
+	 * Defaults of a date with time (TbDateTimePicker) from the current Moment locale, under the
+	 * given options: the format is the locale's date plus time (daterangepicker's own default is the
+	 * date only, so the time was lost), and the clock is 24-hour unless the locale uses AM/PM.
+	 *
+	 * @param {Object} options daterangepicker options
+	 * @return {Object}
+	 */
+	Booster.dateTimePickerOptions = function (options) {
+		var data = window.moment ? window.moment.localeData() : null;
+		if (!data) {
+			return options;
+		}
+		var time = data.longDateFormat('LT');
+
+		return window.jQuery.extend(true, {
+			timePicker24Hour: !/a/i.test(time),
+			locale: {format: data.longDateFormat('L') + ' ' + time}
+		}, options);
+	};
+
+	/**
 	 * Mirrors Yii's validation result onto the control, for Bootstrap 5.
 	 *
 	 * Yii's jquery.yiiactiveform.js toggles its errorCssClass on the *container* element, which is

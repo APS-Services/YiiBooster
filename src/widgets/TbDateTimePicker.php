@@ -75,14 +75,17 @@ class TbDateTimePicker extends TbBaseInputWidget {
 
 		// The smalot datetimepicker this used to drive was archived in 2019 and never supported
 		// Bootstrap 4 or 5. Dan Grossman's daterangepicker - already bundled here for
-		// TbDateRangePicker - does single-date-with-time too, via singleDatePicker.
+		// TbDateRangePicker - does single-date-with-time too, via singleDatePicker. Format and
+		// 24-hour clock default to the Moment locale's, and an empty input stays empty until a
+		// date is applied (Booster.dateTimePickerOptions, Booster.dateRangePicker).
 		$options = array_merge(
-			array('singleDatePicker' => true, 'timePicker' => true, 'autoUpdateInput' => true),
+			array('singleDatePicker' => true, 'timePicker' => true),
 			(array) $this->options
 		);
 
+		Booster::getBooster()->registerPackage('booster');
 		ob_start();
-		echo "jQuery('#{$id}').daterangepicker(" . CJavaScript::encode($options) . ")";
+		echo "Booster.dateRangePicker('#{$id}', Booster.dateTimePickerOptions(" . CJavaScript::encode((object) $options) . "))";
 		foreach ($this->events as $event => $handler) {
 			echo ".on('{$event}', " . CJavaScript::encode($handler) . ")";
 		}
@@ -111,10 +114,12 @@ class TbDateTimePicker extends TbBaseInputWidget {
 		if (isset($this->options['language']) && $this->options['language'] !== 'en') {
 			$language = $this->options['language'];
 			unset($this->options['language']);
+			// POS_END: after the script files (Moment with its locales). At POS_BEGIN Moment was not
+			// loaded yet, so the locale was never set and the picker stayed English with US dates.
 			Yii::app()->getClientScript()->registerScript(
 				__CLASS__ . '#locale#' . $language,
 				"if (window.moment) { moment.locale(" . CJavaScript::encode($language) . "); }",
-				CClientScript::POS_BEGIN
+				CClientScript::POS_END
 			);
 		}
 	}

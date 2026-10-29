@@ -94,11 +94,13 @@ class TbDateRangePicker extends TbBaseInputWidget {
 	 * @throws CException
 	 */
 	public function registerScript($selector, $options = array(), $callback = null) {
-		
+
+		// Booster.dateRangePicker keeps an empty input empty until a range is applied
+		Booster::getBooster()->registerPackage('booster');
 		Yii::app()->clientScript->registerScript(
 				uniqid(__CLASS__ . '#', true),
-				'$("' . $selector . '").daterangepicker(' . CJavaScript::encode($options) . ($callback
-						? ', ' . CJavaScript::encode($callback) : '') . ');'
+				'Booster.dateRangePicker(' . CJavaScript::encode($selector) . ', ' . CJavaScript::encode((object) $options)
+						. ($callback ? ', ' . CJavaScript::encode($callback) : '') . ');'
 		);
 	}
 

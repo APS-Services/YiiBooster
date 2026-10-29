@@ -286,6 +286,12 @@ guide - it covers upgrading from 4.x (Bootstrap 3) and from 3.x (Bootstrap 2) se
   the unminified build ships (rather)
 - **(fix)** x-editable form buttons: Bootstrap Icons check/x instead of Glyphicons (the buttons were
   empty) and `btn-secondary` instead of `btn-default`; the package depends on `bootstrap-icons` (rather)
+- **(fix)** `TbDateTimePicker` sets its Moment locale at `POS_END`, after Moment has loaded (at
+  `POS_BEGIN` the picker stayed English with US dates); format and 24-hour clock default to the
+  locale's date plus time (daterangepicker's default dropped the time) (rather)
+- **(fix)** `TbDateRangePicker` and `TbDateTimePicker` keep an empty input empty until a date is
+  applied: daterangepicker's `autoUpdateInput` wrote today into it on load, so forms saved and
+  filters filtered by a date nobody chose. Set `autoUpdateInput` in the options for the old behaviour (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead

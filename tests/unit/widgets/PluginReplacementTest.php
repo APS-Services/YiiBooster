@@ -12,6 +12,8 @@ require_once(__DIR__ . '/../../../src/widgets/TbBaseInputWidget.php');
 require_once(__DIR__ . '/../../../src/widgets/TbDatePicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbTabs.php');
 require_once(__DIR__ . '/../../../src/widgets/TbSelect2.php');
+require_once(__DIR__ . '/../../../src/widgets/TbDateRangePicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbDateTimePicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbActiveForm.php');
 require_once(__DIR__ . '/../../../src/helpers/TbCss.php');
 require_once(__DIR__ . '/../../../src/helpers/TbIcon.php');
@@ -439,6 +441,46 @@ class PluginReplacementTest extends WidgetTestCase
 		$packages = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/components/packages.php');
 		// within the timepicker entry: up to the next package key at the start of a line
 		$this->assertRegExp("/'timepicker' => array\\((?:(?!\\n\\t'\\w).)*'depends' => array\\([^)]*'bootstrap-icons'/s", $packages);
+	}
+
+	/**
+	 * The Moment locale of TbDateTimePicker is set after the script files: at POS_BEGIN Moment was
+	 * not loaded yet, so the picker stayed English with US dates (found in myAPS).
+	 *
+	 * @test
+	 */
+	public function dateTimePickerLocaleIsSetAfterMomentLoaded()
+	{
+		$widget = new TbDateTimePicker();
+		$widget->options = array('language' => 'de');
+		$widget->registerLanguageScript();
+
+		$scripts = new ReflectionProperty('CClientScript', 'scripts');
+		$scripts->setAccessible(true);
+		$registered = $scripts->getValue($this->clientScript);
+
+		$this->assertArrayHasKey('TbDateTimePicker#locale#de', $registered[CClientScript::POS_END]);
+		$this->assertArrayNotHasKey('language', $widget->options);
+	}
+
+	/**
+	 * Both daterangepicker widgets go through Booster.dateRangePicker, which keeps an empty input
+	 * empty until a date is applied (daterangepicker's autoUpdateInput wrote today into it on load);
+	 * the date with time also takes its format from the Moment locale.
+	 *
+	 * @test
+	 */
+	public function dateRangeWidgetsKeepEmptyInputsEmpty()
+	{
+		$this->render('TbDateRangePicker', array('name' => 'Filter[range]'));
+		$this->render('TbDateTimePicker', array('name' => 'Event[start]', 'options' => array('language' => 'en')));
+		$script = $this->registeredScripts();
+
+		// CJavaScript writes the # of the selector as \x23
+		$this->assertStringContainsString('Booster.dateRangePicker(\'\\x23Filter_range\'', $script);
+		$this->assertStringContainsString("Booster.dateRangePicker('#Event_start', Booster.dateTimePickerOptions(", $script);
+		$this->assertStringNotContainsString('autoUpdateInput', $script);
+		$this->assertStringNotContainsString('.daterangepicker(', $script);
 	}
 
 	/**

@@ -399,7 +399,11 @@ Things to check when you upgrade:
   lists keep working; the new `list` property is the preferred way to pass one. For remote lookups,
   drive the Awesomplete instance from your own fetch.
 - **`TbDateTimePicker` options** are now daterangepicker's. `language` is mapped onto Moment's
-  locale for you; the smalot plugin's other options are not.
+  locale for you; the smalot plugin's other options are not. Without a `locale.format` the format
+  is the locale's date plus time, with a 24-hour clock unless the locale uses AM/PM.
+- **Empty date inputs stay empty.** `TbDateRangePicker` and `TbDateTimePicker` write the input only
+  when a date is applied, unless you set daterangepicker's `autoUpdateInput` yourself. An existing
+  value is still read as the selected date; give it in the picker's `locale.format`.
 - **`TbTags` options** are now Select2's, and it renders a `multiple <select>` rather than
   bootstrap-tags' div plus hidden field — so the control that submits has changed element. Mapped
   for you: `suggestions` → `data`, `restrictTo` → `data` with `tags: false`, `promptText` →
