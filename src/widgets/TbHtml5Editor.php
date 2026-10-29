@@ -80,6 +80,9 @@ class TbHtml5Editor extends CInputWidget {
 		// rather than a textarea, so it is mounted next to the field and writes its HTML back on
 		// every change - which keeps the original input as the thing that actually submits, and
 		// means no server-side change is needed.
+		// The stored HTML goes in through Quill's clipboard, which parses it with an inert
+		// DOMParser: assigning it to innerHTML (even of a detached div) ran handlers such as
+		// <img onerror> in whoever opened the form - stored XSS.
 		Yii::app()->getClientScript()->registerScript(
 			__CLASS__ . '#' . $id,
 			"(function () {"
@@ -87,12 +90,12 @@ class TbHtml5Editor extends CInputWidget {
 			. " if (!input) { return; }"
 			. " var host = document.createElement('div');"
 			. " host.className = 'booster-quill';"
-			. " host.innerHTML = input.value;"
 			. " input.parentNode.insertBefore(host, input.nextSibling);"
 			. " input.style.display = 'none';"
 			. " var o = {$options};"
 			. " if (!o.theme) { o.theme = 'snow'; }"
 			. " var editor = new Quill(host, o);"
+			. " if (input.value) { editor.clipboard.dangerouslyPasteHTML(input.value, 'silent'); }"
 			. " editor.on('text-change', function () {"
 			. " input.value = editor.root.innerHTML;"
 			. " });"

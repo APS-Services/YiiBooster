@@ -14,6 +14,7 @@ require_once(__DIR__ . '/../../../src/widgets/TbTabs.php');
 require_once(__DIR__ . '/../../../src/widgets/TbSelect2.php');
 require_once(__DIR__ . '/../../../src/widgets/TbDateRangePicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbDateTimePicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbHtml5Editor.php');
 require_once(__DIR__ . '/../../../src/widgets/TbTimePicker.php');
 require_once(__DIR__ . '/../../../src/widgets/TbActiveForm.php');
 require_once(__DIR__ . '/../../../src/helpers/TbCss.php');
@@ -100,6 +101,22 @@ class PluginReplacementTest extends WidgetTestCase
 		$this->assertNodeCount($xpath, '//input[@type="hidden"][@name="Post[tags]"]', 1);
 		$this->assertEquals('', $select->getAttribute('name'));
 		$this->assertNodeCount($xpath, '//div[contains(@class, "tags")]', 0);
+	}
+
+	/**
+	 * The stored HTML goes into Quill through its clipboard (an inert DOMParser). Assigned to
+	 * innerHTML, <img onerror> ran for whoever opened the form - stored XSS.
+	 *
+	 * @test
+	 */
+	public function html5EditorDoesNotParseStoredHtmlIntoTheLiveDocument()
+	{
+		$this->render('TbHtml5Editor', array('name' => 'Post[body]', 'value' => '<img src=x onerror=alert(1)>'));
+		$script = $this->registeredScripts();
+
+		$this->assertStringContainsString('new Quill(', $script);
+		$this->assertStringContainsString('editor.clipboard.dangerouslyPasteHTML(input.value', $script);
+		$this->assertStringNotContainsString('innerHTML = input.value', $script);
 	}
 
 	/**
