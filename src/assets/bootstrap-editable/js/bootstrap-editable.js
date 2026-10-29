@@ -3712,12 +3712,13 @@ $(function(){
 
             if (typeof source === 'string') {
                 options.select2.ajax = options.select2.ajax || {};
-                //some default ajax params
+                //some default ajax params (Select2 4: data() gets a params object, the response
+                //goes through processResults - 3.x's `results` is ignored)
                 if(!options.select2.ajax.data) {
-                    options.select2.ajax.data = function(term) {return { query:term };};
+                    options.select2.ajax.data = function(params) {return { query: params.term };};
                 }
-                if(!options.select2.ajax.results) {
-                    options.select2.ajax.results = function(data) { return {results:data };};
+                if(!options.select2.ajax.processResults) {
+                    options.select2.ajax.processResults = function(data) { return {results:data };};
                 }
                 options.select2.ajax.url = source;
             } else {
@@ -3760,11 +3761,18 @@ $(function(){
             //apply select2 only in value2input
             //this.$input.select2(this.options.select2);
 
-            //when data is loaded via ajax, we need to know when it's done to populate listData
+            //Select2 4 binds to a <select>; several values need its multiple attribute
+            if(this.isMultiple) {
+                this.$input.attr('multiple', 'multiple');
+            }
+
+            //remote entries are known once chosen (Select2 4 has no select2-loaded event): keep
+            //them, value2html shows their text
             if(this.isRemote) {
-                //listen to loaded event to populate data
-                this.$input.on('select2-loaded', $.proxy(function(e) {
-                    this.sourceData = e.items.results;
+                this.$input.on('change', $.proxy(function() {
+                    if(this.$input.data('select2')) {
+                        this.sourceData = this.$input.select2('data');
+                    }
                 }, this));
             }
 
@@ -3812,46 +3820,37 @@ $(function(){
        },
 
        value2input: function(value) {
-           // if value array => join it anyway
-           if($.isArray(value)) {
-              value = value.join(this.getSeparator());
+           // Select2 4 on a <select>: several values are an array, one a scalar
+           if(this.isMultiple) {
+               value = $.isArray(value) ? value : (this.str2value(value) || []);
+           } else if($.isArray(value)) {
+               value = value.length ? value[0] : null;
            }
 
-           //for remote source just set value, text is updated by initSelection
+           // the local data becomes the select's options when Select2 starts
            if(!this.$input.data('select2')) {
-               this.$input.val(value);
                this.$input.select2(this.options.select2);
-           } else {
-               //second argument needed to separate initial change from user's click (for autosubmit)   
-               this.$input.val(value).trigger('change', true); 
-
-               //Uncaught Error: cannot call val() if initSelection() is not defined
-               //this.$input.select2('val', value);
            }
 
-           // if defined remote source AND no multiple mode AND no user's initSelection provided --> 
-           // we should somehow get text for provided id.
-           // The solution is to use element's text as text for that id (exclude empty)
-           if(this.isRemote && !this.isMultiple && !this.options.select2.initSelection) {
-               // customId and customText are methods to extract `id` and `text` from data object
-               // we can use this workaround only if user did not define these methods
-               // otherwise we cant construct data object
-               var customId = this.options.select2.id,
-                   customText = this.options.select2.formatSelection;
+           var values = $.isArray(value) ? value : (value === null || value === undefined || value === '' ? [] : [value]),
+               that = this;
 
-               if(!customId && !customText) {
-                   var $el = $(this.options.scope);
-                   if (!$el.data('editable').isEmpty) {
-                       // Select2 4.x dropped the 'data' command. Injecting the option directly
-                       // is the documented way to seed a value whose text is not in the DOM.
-                       var text = $el.text();
-                       if (!this.$input.find('option[value="' + value + '"]').length) {
-                           this.$input.append(new Option(text, value, true, true));
-                       }
-                       this.$input.val(value).trigger('change');
-                   }
+           // values without an option: tags typed earlier, the current entry of a remote source.
+           // Select2 4.x dropped the 'data' command and initSelection; injecting the option is the
+           // documented way to seed a value. A remote entry shows the element's text (as before:
+           // only if the caller did not define id/formatSelection, otherwise the text is unknown).
+           var $el = $(this.options.scope),
+               elementText = this.isRemote && !this.isMultiple && !this.options.select2.id && !this.options.select2.formatSelection
+                   && $el.data('editable') && !$el.data('editable').isEmpty ? $el.text() : null;
+           $.each(values, function(i, v) {
+               var exists = that.$input.find('option').filter(function() { return this.value == v; }).length;
+               if(!exists) {
+                   that.$input.append(new Option(elementText !== null ? elementText : v, v, true, true));
                }
-           }
+           });
+
+           //second argument needed to separate initial change from user's click (for autosubmit)
+           this.$input.val(value).trigger('change', true);
        },
        
        input2value: function() {
@@ -3888,7 +3887,8 @@ $(function(){
         },
 
         getSeparator: function() {
-            return this.options.select2.separator || $.fn.select2.defaults.separator;
+            // Select2 4 has no default separator any more
+            return this.options.select2.separator || ',';
         },
 
         /*
@@ -3917,10 +3917,10 @@ $(function(){
 
     Constructor.defaults = $.extend({}, $.fn.editabletypes.abstractinput.defaults, {
         /**
-        @property tpl 
-        @default <input type="hidden">
+        @property tpl
+        @default <select></select> (Select2 4 does not bind to hidden inputs)
         **/
-        tpl:'<input type="hidden">',
+        tpl:'<select></select>',
         /**
         Configuration of select2. [Full list of options](http://ivaynberg.github.com/select2).
 
