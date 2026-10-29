@@ -304,14 +304,14 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
-	 * Hardcoding `bi-` defeated Booster::$iconPrefix and produced `fa fa-bi-…`.
+	 * Hardcoding `bi-` defeated Booster::$iconPrefix and produced `fa fa-bi-…`; Font Awesome names the caret `caret-down`.
 	 *
 	 * @test
 	 */
 	public function sortCaretFollowsTheConfiguredIconFamily()
 	{
 		TbIcon::$family = 'fa';
-		$this->assertStringContainsString('class="fa fa-caret-down-fill"', TbIcon::renderNamed('caret-down-fill'));
+		$this->assertStringContainsString('class="fa fa-caret-down"', TbIcon::renderNamed('caret-down-fill'));
 
 		TbIcon::$family = 'bi';
 		$this->assertStringContainsString('class="bi bi-caret-down-fill"', TbIcon::renderNamed('caret-down-fill'));

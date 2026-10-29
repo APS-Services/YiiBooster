@@ -275,12 +275,12 @@ EOD
 			echo '</select>&nbsp;';
 
 			echo CHtml::link(
-				TbIcon::render('ok'),
+				TbIcon::renderNamed('check-lg'),
 				'#',
 				array('class' => 'btn btn-primary btn-extended-filter-apply')
 			);
 			echo '&nbsp;';
-			echo CHtml::link(TbIcon::render('trash'), '#', array('class' => 'btn btn-warning btn-extended-filter-delete'));
+			echo CHtml::link(TbIcon::renderNamed('trash'), '#', array('class' => 'btn btn-warning btn-extended-filter-delete'));
 			echo '</div></div>';
 		}
 	}

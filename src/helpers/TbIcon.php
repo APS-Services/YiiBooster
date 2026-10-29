@@ -45,6 +45,39 @@ class TbIcon
 	public static $foreignFamilies = array('fa', 'fas', 'far', 'fal', 'fab', 'fad', 'ti');
 
 	/**
+	 * @var array the icons YiiBooster itself uses (named as in Bootstrap Icons) in the other families
+	 * it supports: family => (Bootstrap Icons name => name in that family). Names missing here are
+	 * the same in that family. See familyIcon().
+	 * @since 5.0.0
+	 */
+	public static $familyNames = array(
+		'fa' => array(
+			'caret-down-fill' => 'caret-down',
+			'check-lg' => 'check',
+			'x-circle' => 'times-circle',
+			'clock' => 'clock-o',
+		),
+	);
+
+	/**
+	 * CSS classes of an icon YiiBooster itself uses (sort caret, picker add-on, default buttons),
+	 * named as in Bootstrap Icons, in the configured family. Unlike render() it does not read the
+	 * name as a Glyphicons name.
+	 *
+	 * @param string $name Bootstrap Icons name, e.g. 'caret-down-fill'
+	 * @return string e.g. 'bi bi-caret-down-fill', or 'fa fa-caret-down' with $family 'fa'
+	 * @since 5.0.0
+	 */
+	public static function familyIcon($name)
+	{
+		if (isset(self::$familyNames[self::$family][$name])) {
+			$name = self::$familyNames[self::$family][$name];
+		}
+
+		return self::$family . ' ' . self::$family . '-' . $name;
+	}
+
+	/**
 	 * Bootstrap 2/3 icon names that Bootstrap Icons spells differently.
 	 *
 	 * Only names that actually changed are listed - anything absent is passed through unchanged,
@@ -227,9 +260,11 @@ class TbIcon
 			return $icon;
 		}
 
+		// the Glyphicons map translates into Bootstrap Icons names; any other family gets the names
+		// as they are, as Booster::$iconPrefix documents (`ok` is no Font Awesome `check-lg`)
 		$names = $explicitNames;
 		foreach ($legacyNames as $name) {
-			$names[] = self::mapLegacyName($name);
+			$names[] = self::$family === 'bi' ? self::mapLegacyName($name) : $name;
 		}
 
 		if (empty($names)) {
@@ -265,7 +300,7 @@ class TbIcon
 			return '';
 		}
 
-		return self::renderWithCssClass(self::$family . ' ' . self::$family . '-' . $name, $htmlOptions);
+		return self::renderWithCssClass(self::familyIcon($name), $htmlOptions);
 	}
 
 	/**

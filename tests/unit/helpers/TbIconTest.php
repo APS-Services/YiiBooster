@@ -18,6 +18,13 @@ class TbIconTest extends PHPUnit_Framework_TestCase
 		TbIcon::$family = 'bi';
 	}
 
+	// the family is static: one test switching it to 'fa' would change the icons of every test
+	// class that runs afterwards
+	protected function tearDown(): void
+	{
+		TbIcon::$family = 'bi';
+	}
+
 	/**
 	 * @return array
 	 */
@@ -181,5 +188,37 @@ class TbIconTest extends PHPUnit_Framework_TestCase
 		TbIcon::$family = 'fa';
 
 		$this->assertEquals('fa fa-trash', TbIcon::resolveCssClass('trash'));
+	}
+
+	/**
+	 * Only Bootstrap Icons gets the Glyphicons translation: under Font Awesome `ok` became
+	 * `fa fa-check-lg`, a Bootstrap Icons name Font Awesome does not have.
+	 *
+	 * @test
+	 */
+	public function otherFamiliesGetNamesUnmapped()
+	{
+		$this->assertEquals('bi bi-check-lg', TbIcon::resolveCssClass('ok'));
+
+		TbIcon::$family = 'fa';
+		$this->assertEquals('fa fa-ok', TbIcon::resolveCssClass('ok'));
+	}
+
+	/**
+	 * The library's own icons (sort caret, picker add-on, default buttons) exist in each family.
+	 *
+	 * @test
+	 */
+	public function theLibrarysOwnIconsExistInEachFamily()
+	{
+		$this->assertEquals('bi bi-caret-down-fill', TbIcon::familyIcon('caret-down-fill'));
+		$this->assertEquals('bi bi-clock', TbIcon::familyIcon('clock'));
+
+		TbIcon::$family = 'fa';
+		$this->assertEquals('fa fa-caret-down', TbIcon::familyIcon('caret-down-fill'));
+		$this->assertEquals('fa fa-clock-o', TbIcon::familyIcon('clock'));
+		$this->assertEquals('fa fa-check', TbIcon::familyIcon('check-lg'));
+		$this->assertEquals('fa fa-trash', TbIcon::familyIcon('trash'));
+		$this->assertStringContainsString('fa fa-caret-down', TbIcon::renderNamed('caret-down-fill'));
 	}
 }

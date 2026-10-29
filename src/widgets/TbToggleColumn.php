@@ -62,21 +62,24 @@ class TbToggleColumn extends TbDataColumn {
 	public $emptyButtonLabel;
 
 	/**
-	 * @var string the glyph icon toggle button "checked" state.
-	 * You may set this property to be false to render a text link instead.
+	 * @var string|null|false the icon of the toggle button's "checked" state; null: a checked
+	 * circle in the configured icon family. You may set this property to be false to render a
+	 * text link instead.
 	 */
-	public $checkedIcon = 'ok-circle';
+	public $checkedIcon;
 
 	/**
-	 * @var string the glyph icon toggle button "unchecked" state.
-	 * You may set this property to be false to render a text link instead.
+	 * @var string|null|false the icon of the toggle button's "unchecked" state; null: a crossed
+	 * circle in the configured icon family. You may set this property to be false to render a
+	 * text link instead.
 	 */
-	public $uncheckedIcon = 'remove-sign';
+	public $uncheckedIcon;
 
 	/**
-	 * @var string the glyph icon toggle button "empty" state (example for null value)
+	 * @var string|null the icon of the toggle button's "empty" state (example for null value);
+	 * null: a question mark in a circle in the configured icon family
 	 */
-	public $emptyIcon = 'question-sign';
+	public $emptyIcon;
 
 	/**
 	 * @var boolean display button with text or only icon with label tooltip
@@ -146,6 +149,14 @@ class TbToggleColumn extends TbDataColumn {
 	public function init()
 	{
 		$this->assertNameNotNull();
+
+		// the defaults in the family Booster::$iconPrefix chose (TbIcon::render would read them as
+		// Glyphicons names, which only Bootstrap Icons translates)
+		foreach (array('checkedIcon' => 'check-circle', 'uncheckedIcon' => 'x-circle', 'emptyIcon' => 'question-circle') as $property => $name) {
+			if ($this->$property === null) {
+				$this->$property = TbIcon::familyIcon($name);
+			}
+		}
 
 		$this->initButton();
 		$this->registerClientScript();

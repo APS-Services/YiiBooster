@@ -162,6 +162,6 @@ class TbTimePicker extends TbBaseInputWidget {
 
 	private function echoAppend() {
 		
-		echo CHtml::tag('span', array('class' => 'input-group-text'), TbIcon::render('time'));
+		echo CHtml::tag('span', array('class' => 'input-group-text'), TbIcon::renderNamed('clock'));
 	}
 }
