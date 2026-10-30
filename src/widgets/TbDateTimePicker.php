@@ -56,7 +56,7 @@ class TbDateTimePicker extends TbBaseInputWidget {
 	 * Runs the widget.
 	 */
 	public function run() {
-		
+
 		list($name, $id) = $this->resolveNameID();
 
 		if ($this->hasModel()) {
@@ -72,16 +72,25 @@ class TbDateTimePicker extends TbBaseInputWidget {
 
 		$this->registerClientScript();
 		$this->registerLanguageScript();
-		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
 
+		// The smalot datetimepicker this used to drive was archived in 2019 and never supported
+		// Bootstrap 4 or 5. Dan Grossman's daterangepicker - already bundled here for
+		// TbDateRangePicker - does single-date-with-time too, via singleDatePicker. Format and
+		// 24-hour clock default to the Moment locale's, and an empty input stays empty until a
+		// date is applied (Booster.dateTimePickerOptions, Booster.dateRangePicker).
+		$options = array_merge(
+			array('singleDatePicker' => true, 'timePicker' => true),
+			(array) $this->options
+		);
+
+		Booster::getBooster()->registerPackage('booster');
 		ob_start();
-		echo "jQuery('#{$id}').datetimepicker({$options})";
+		echo "Booster.dateRangePicker('#{$id}', Booster.dateTimePickerOptions(" . CJavaScript::encode((object) $options) . "))";
 		foreach ($this->events as $event => $handler) {
 			echo ".on('{$event}', " . CJavaScript::encode($handler) . ")";
 		}
 
 		Yii::app()->getClientScript()->registerScript(__CLASS__ . '#' . $this->getId(), ob_get_clean() . ';');
-
 	}
 
 	/**
@@ -91,23 +100,22 @@ class TbDateTimePicker extends TbBaseInputWidget {
 	 * in order to attach events if any
 	 */
 	public function registerClientScript() {
-		
-        Booster::getBooster()->registerPackage('datetimepicker');
+
+		Booster::getBooster()->registerPackage('daterangepicker');
 	}
 
 	public function registerLanguageScript() {
-		
-		if (isset($this->options['language']) && $this->options['language'] != 'en') {
-			$file = 'locales/bootstrap-datetimepicker.' . $this->options['language'] . '.js';
-            $booster = Booster::getBooster();
-			if (@file_exists(Yii::getPathOfAlias('booster.assets.bootstrap-datetimepicker') . '/js/' . $file)) {
-				if ($booster->enableCdn) {
-					// Not in CDN yet
-                    $booster->registerAssetJs('../bootstrap-datetimepicker' . '/js/' . $file);
-				} else {
-                    $booster->registerAssetJs('../bootstrap-datetimepicker' . '/js/' . $file);
-				}
-			}
+
+		// daterangepicker has no locale files of its own: it takes its strings through the
+		// `locale` option and formats dates with Moment. A `language` option carried over from the
+		// old smalot plugin is mapped onto Moment's locale data for this picker only
+		// (Booster.dateTimePickerOptions): moment.locale() changed the default format of every
+		// TbDateRangePicker on the page. The locale data has to be present, which is what
+		// Booster::$momentLocales controls - it defaults to true precisely so a widget-level
+		// language works regardless of the application language.
+		if (isset($this->options['language']) && $this->options['language'] !== 'en') {
+			$this->options['momentLocale'] = $this->options['language'];
 		}
+		unset($this->options['language']);
 	}
 }

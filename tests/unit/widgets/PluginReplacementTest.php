@@ -1,0 +1,711 @@
+<?php
+/**
+ * YiiBooster project.
+ * @license [New BSD License](http://www.opensource.org/licenses/bsd-license.php)
+ */
+
+require_once(__DIR__ . '/../../fakes/WidgetTestCase.php');
+require_once(__DIR__ . '/../../fakes/AssetsRegistryHook.php');
+require_once(__DIR__ . '/../../../src/widgets/TbTags.php');
+require_once(__DIR__ . '/../../../src/widgets/TbColorPicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbBaseInputWidget.php');
+require_once(__DIR__ . '/../../../src/widgets/TbDatePicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbTabs.php');
+require_once(__DIR__ . '/../../../src/widgets/TbSelect2.php');
+require_once(__DIR__ . '/../../../src/widgets/TbDateRangePicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbDateTimePicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbHtml5Editor.php');
+require_once(__DIR__ . '/../../../src/widgets/TbTimePicker.php');
+require_once(__DIR__ . '/../../../src/widgets/TbActiveForm.php');
+require_once(__DIR__ . '/../../../src/helpers/TbCss.php');
+require_once(__DIR__ . '/../../../src/helpers/TbIcon.php');
+
+/**
+ * Regression tests for the Bootstrap 5 plugin replacements, covering the defects a code review
+ * found after the swap - each of which was a case of the plugin call being replaced while the
+ * markup or options it depended on were left behind.
+ */
+/**
+ * Local model: FakeModel is declared inside TbActiveFormTest.php, so using it here would couple
+ * this file to PHPUnit's file ordering.
+ */
+class PluginReplacementModel extends CFormModel
+{
+	public $colour;
+	public $tags;
+	public $choice;
+
+	public function rules()
+	{
+		return array(array('colour, tags, choice', 'safe'));
+	}
+}
+
+class PluginReplacementTest extends WidgetTestCase
+{
+	/**
+	 * @var AssetsRegistryHook
+	 */
+	protected $clientScript;
+
+	/**
+	 * @var CClientScript the component replaced in setUp(), restored in tearDown().
+	 */
+	protected $realClientScript;
+
+	protected function setUp(): void
+	{
+		parent::setUp();
+
+		$this->realClientScript = Yii::app()->getClientScript();
+		$this->clientScript = new AssetsRegistryHook();
+		Yii::app()->setComponent('clientScript', $this->clientScript);
+	}
+
+	/**
+	 * @return string every script body the widget registered.
+	 */
+	protected function registeredScripts()
+	{
+		$reflection = new ReflectionProperty('CClientScript', 'scripts');
+		$reflection->setAccessible(true);
+
+		$flat = '';
+		foreach ((array) $reflection->getValue($this->clientScript) as $position) {
+			foreach ((array) $position as $body) {
+				$flat .= $body . "\n";
+			}
+		}
+
+		return $flat;
+	}
+
+	/**
+	 * bootstrap-tags decorated an empty div and kept the value in a sibling hidden field it
+	 * synchronised itself. Select2 is select-backed - it reads and writes the <select>'s options -
+	 * so pointing it at the old div left it with nothing to bind to and the value never updated.
+	 *
+	 * @test
+	 */
+	public function tagsRendersAMultipleSelectForSelect2()
+	{
+		$xpath = $this->renderXPath('TbTags', array('name' => 'Post[tags]'));
+
+		$select = $this->firstNode($xpath, '//select');
+		$this->assertNotEquals('', $select->getAttribute('multiple'), 'Select2 tags mode needs a multiple select.');
+		$this->assertStringStartsWith('tags_', $select->getAttribute('id'));
+
+		// The value is posted as bootstrap-tags posted it - one comma-separated string - by a
+		// hidden field the script keeps in sync; the select has no name (an array broke string
+		// columns).
+		$this->assertNodeCount($xpath, '//input[@type="hidden"][@name="Post[tags]"]', 1);
+		$this->assertEquals('', $select->getAttribute('name'));
+		$this->assertNodeCount($xpath, '//div[contains(@class, "tags")]', 0);
+	}
+
+	/**
+	 * The stored HTML goes into Quill through its clipboard (an inert DOMParser). Assigned to
+	 * innerHTML, <img onerror> ran for whoever opened the form - stored XSS.
+	 *
+	 * @test
+	 */
+	public function html5EditorDoesNotParseStoredHtmlIntoTheLiveDocument()
+	{
+		$this->render('TbHtml5Editor', array('name' => 'Post[body]', 'value' => '<img src=x onerror=alert(1)>'));
+		$script = $this->registeredScripts();
+
+		$this->assertStringContainsString('new Quill(', $script);
+		$this->assertStringContainsString('editor.clipboard.dangerouslyPasteHTML(input.value', $script);
+		$this->assertStringNotContainsString('innerHTML = input.value', $script);
+	}
+
+	/**
+	 * @test
+	 */
+	public function tagsInitialisesSelect2OnThatSameSelect()
+	{
+		$this->render('TbTags', array('name' => 'Post[tags]'));
+		$script = $this->registeredScripts();
+
+		$this->assertStringContainsString('.select2(', $script);
+		$this->assertStringContainsString("jQuery('#tags_", $script);
+		$this->assertStringNotContainsString('.tags(', $script, 'The bootstrap-tags plugin is gone.');
+	}
+
+	/**
+	 * @test
+	 */
+	public function tagsPreSelectsExistingValues()
+	{
+		$xpath = $this->renderXPath('TbTags', array(
+			'name' => 'Post[tags]',
+			'tagData' => array('yii', 'bootstrap'),
+		));
+
+		$this->assertNodeCount($xpath, '//select/option[@selected]', 2);
+		$this->assertNodeCount($xpath, '//select/option[@value="yii"]', 1);
+		$this->assertNodeCount($xpath, '//select/option[@value="bootstrap"]', 1);
+	}
+
+	/**
+	 * Bound to a model, a comma-separated column has its tags selected: compared against the
+	 * whole string none was, and saving without touching the field cleared the tags.
+	 *
+	 * @test
+	 */
+	public function tagsOfAModelStartSelectedAndPostAString()
+	{
+		$model = new PluginReplacementModel();
+		$model->tags = 'php,yii';
+
+		$xpath = $this->renderXPath('TbTags', array('model' => $model, 'attribute' => 'tags'));
+
+		$this->assertNodeCount($xpath, '//select/option[@selected]', 2);
+		$hidden = $this->firstNode($xpath, '//input[@type="hidden"]');
+		$this->assertEquals('PluginReplacementModel[tags]', $hidden->getAttribute('name'));
+		$this->assertEquals('php,yii', $hidden->getAttribute('value'));
+	}
+
+	/**
+	 * A plain text column holding "a, b" has to work as well as an array.
+	 *
+	 * @test
+	 */
+	public function tagsAcceptsACommaSeparatedValue()
+	{
+		$xpath = $this->renderXPath('TbTags', array(
+			'name' => 'Post[tags]',
+			'value' => 'yii, bootstrap ,  php',
+		));
+
+		$this->assertNodeCount($xpath, '//select/option', 3);
+		$this->assertNodeCount($xpath, '//select/option[@value="php"]', 1);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function colorFormats()
+	{
+		return array(
+			// configured format, expected Coloris format, expected alpha flag
+			'hex'   => array('hex', 'hex', 'false'),
+			'rgb'   => array('rgb', 'rgb', 'false'),
+			'hsl'   => array('hsl', 'hsl', 'false'),
+			// rgba is not a Coloris format; it must become rgb with alpha enabled.
+			'rgba'  => array('rgba', 'rgb', 'true'),
+		);
+	}
+
+	/**
+	 * Coloris accepts hex, rgb, hsl, auto or mixed. `rgba` was valid under
+	 * bootstrap-colorpicker, and passing it straight through reaches a format radio that does not
+	 * exist, throwing as the picker opens.
+	 *
+	 * @test
+	 * @dataProvider colorFormats
+	 *
+	 * @param string $configured
+	 * @param string $expectedFormat
+	 * @param string $expectedAlpha
+	 */
+	public function colorPickerTranslatesFormatsColorisUnderstands($configured, $expectedFormat, $expectedAlpha)
+	{
+		$this->render('TbColorPicker', array('name' => 'Post[colour]', 'format' => $configured));
+		$script = $this->registeredScripts();
+
+		// CJavaScript::encode emits single-quoted keys, not JSON.
+		$this->assertStringContainsString("'format':'" . $expectedFormat . "'", $script);
+		$this->assertStringContainsString("'alpha':" . $expectedAlpha, $script);
+		$this->assertStringNotContainsString("'format':'rgba'", $script);
+	}
+
+	/**
+	 * `flex-column` alone only sets flex-direction; without d-flex the wrapper is still a block,
+	 * so side placement rendered identically to the default.
+	 *
+	 * @test
+	 */
+	public function sideTabPlacementProducesAFlexRow()
+	{
+		$xpath = $this->renderXPath('TbTabs', array(
+			'placement' => TbTabs::PLACEMENT_LEFT,
+			'tabs' => array(array('label' => 'One', 'content' => 'first', 'active' => true)),
+		));
+
+		$wrapper = $this->firstNode($xpath, '//div[contains(@class, "d-flex")]');
+		$this->assertStringContainsString('d-flex', $wrapper->getAttribute('class'));
+		$this->assertStringNotContainsString('flex-row-reverse', $wrapper->getAttribute('class'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function rightTabPlacementReversesTheRow()
+	{
+		$xpath = $this->renderXPath('TbTabs', array(
+			'placement' => TbTabs::PLACEMENT_RIGHT,
+			'tabs' => array(array('label' => 'One', 'content' => 'first', 'active' => true)),
+		));
+
+		$wrapper = $this->firstNode($xpath, '//div[contains(@class, "d-flex")]');
+		$this->assertStringContainsString('flex-row-reverse', $wrapper->getAttribute('class'));
+	}
+
+	/**
+	 * `$widgetOptions` in the list groups IS the htmlOptions array; nesting another htmlOptions
+	 * key inside it made CHtml emit `htmlOptions="Array"` as an attribute.
+	 *
+	 * @test
+	 */
+	public function checkboxListGroupPutsTheControlClassOnTheInputs()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		$model = new PluginReplacementModel();
+
+		$html = $form->checkboxListGroup($model, 'choice', array(
+			'widgetOptions' => array('data' => array('a' => 'A', 'b' => 'B')),
+		));
+
+		$this->assertStringNotContainsString('htmlOptions', $html, 'htmlOptions leaked as an attribute.');
+		$this->assertStringContainsString('form-check-input', $html);
+	}
+
+	/**
+	 * @test
+	 */
+	public function radioButtonListGroupPutsTheControlClassOnTheInputs()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		$model = new PluginReplacementModel();
+
+		$html = $form->radioButtonListGroup($model, 'choice', array(
+			'widgetOptions' => array('data' => array('a' => 'A', 'b' => 'B')),
+		));
+
+		$this->assertStringNotContainsString('htmlOptions', $html);
+		$this->assertStringContainsString('form-check-input', $html);
+	}
+
+	/**
+	 * PHP copies arrays on assignment, so the classes had to be applied before the copy the
+	 * field is rendered from was taken - they were being written to a dead path.
+	 *
+	 * @test
+	 */
+	public function radioButtonGroupReachesTheInputWithItsClasses()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		// init() normally seeds this; constructing the form directly skips it.
+		$form->clientOptions['errorCssClass'] = 'has-validation-error';
+		$model = new PluginReplacementModel();
+		$model->addError('choice', 'nope');
+
+		$html = $form->radioButtonGroup($model, 'choice');
+
+		$this->assertStringContainsString('form-check-input', $html);
+		$this->assertStringContainsString('is-invalid', $html);
+		$this->assertStringContainsString('form-check', $html);
+	}
+
+	/**
+	 * The group renderer emitted the attribute label as well as the one inside the form-check
+	 * label, because the suppression wrote to a local copy.
+	 *
+	 * @test
+	 */
+	public function radioButtonGroupRendersItsLabelOnlyOnce()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		$model = new PluginReplacementModel();
+
+		$html = $form->radioButtonGroup($model, 'choice');
+
+		$this->assertEquals(
+			1,
+			substr_count($html, $model->getAttributeLabel('choice')),
+			'The attribute label appears more than once.'
+		);
+	}
+
+	/**
+	 * array_combine() on two empty arrays returns false on PHP 5.3, which src/ targets - and the
+	 * empty case is the normal one for a new record.
+	 *
+	 * @test
+	 */
+	public function tagsHandlesHavingNoTagsAtAll()
+	{
+		$xpath = $this->renderXPath('TbTags', array('name' => 'Post[tags]'));
+
+		$this->assertNodeCount($xpath, '//select', 1);
+		$this->assertNodeCount($xpath, '//select/option', 0);
+	}
+
+	/**
+	 * Hardcoding `bi-` defeated Booster::$iconPrefix and produced `fa fa-bi-…`; Font Awesome names the caret `caret-down`.
+	 *
+	 * @test
+	 */
+	public function sortCaretFollowsTheConfiguredIconFamily()
+	{
+		TbIcon::$family = 'fa';
+		$this->assertStringContainsString('class="fa fa-caret-down"', TbIcon::renderNamed('caret-down-fill'));
+
+		TbIcon::$family = 'bi';
+		$this->assertStringContainsString('class="bi bi-caret-down-fill"', TbIcon::renderNamed('caret-down-fill'));
+
+		// a name of the configured family is completed with its base class, also when that family
+		// is one of the foreign ones (it used to be handed back without it)
+		TbIcon::$family = 'fa';
+		$this->assertEquals('fa fa-caret-down-fill', TbIcon::resolveCssClass('fa-caret-down-fill'));
+	}
+
+	/**
+	 * Coloris' `format`/`alpha` are global; only `el` is per-binding. Two pickers with different
+	 * formats on one page overwrote each other.
+	 *
+	 * @test
+	 */
+	public function colorPickerScopesItsOptionsToTheInput()
+	{
+		$this->render('TbColorPicker', array('name' => 'Post[colour]', 'format' => 'rgba'));
+		$script = $this->registeredScripts();
+
+		$this->assertStringContainsString('Coloris.setInstance(', $script);
+	}
+
+	/**
+	 * The five drifted copies of addCssClass are now one implementation.
+	 *
+	 * @test
+	 */
+	public function cssClassHelperIsConsistentAndDeduplicates()
+	{
+		$options = array();
+		TbCss::add($options, '');
+		$this->assertArrayNotHasKey('class', $options, 'An empty class should add nothing.');
+
+		TbCss::add($options, 'a');
+		TbCss::add($options, 'b a');
+		$this->assertEquals('a b', $options['class']);
+	}
+
+	/**
+	 * Every library vendored under src/assets is redistributed by `phing dist`, so its licence
+	 * notice has to travel with it.
+	 *
+	 * @test
+	 */
+	public function vendoredLibrariesCarryTheirLicence()
+	{
+		$root = dirname(dirname(dirname(__DIR__))) . '/src/assets/';
+
+		// Libraries whose upstream ships no LICENSE file but carries the notice in the file
+		// header instead - which satisfies MIT just as well.
+		$noticeInHeader = array('daterangepicker' => 'daterangepicker.js');
+
+		foreach (array('select2', 'easymde', 'quill', 'awesomplete', 'coloris', 'bootstrap-icons',
+				'bootbox', 'bootstrap', 'daterangepicker') as $library) {
+
+			$files = glob($root . $library . '/LICEN[CS]E*');
+
+			if (!empty($files)) {
+				continue;
+			}
+
+			$this->assertArrayHasKey(
+				$library,
+				$noticeInHeader,
+				"Vendored library '{$library}' has no LICENSE file and is not recorded as carrying "
+				. 'its notice in a file header.'
+			);
+
+			$header = substr(file_get_contents($root . $library . '/' . $noticeInHeader[$library]), 0, 600);
+			$this->assertRegExp('/licen[cs]e/i', $header, $library);
+			$this->assertRegExp('/copyright/i', $header, $library);
+		}
+	}
+	/**
+	 * The datepicker's locale file extends $.fn.datepicker. Registered for the head it ran before
+	 * jQuery and the plugin had loaded - "jQuery is not defined", found in myAPS - and the picker
+	 * stayed English.
+	 *
+	 * @test
+	 */
+	public function datePickerLocaleLoadsAfterThePlugin()
+	{
+		$booster = Booster::getBooster();
+		$realClientScript = $booster->cs;
+		$booster->cs = $this->clientScript;
+		try {
+			$widget = new TbDatePicker();
+			$widget->options = array('language' => 'de');
+			$widget->registerLanguageScript();
+		} finally {
+			$booster->cs = $realClientScript;
+		}
+
+		$positionOf = function ($files) {
+			foreach ($files as $position => $urls) {
+				foreach (array_keys($urls) as $url) {
+					if (strpos($url, 'bootstrap-datepicker.de.js') !== false) {
+						return $position;
+					}
+				}
+			}
+
+			return null;
+		};
+		$scriptFiles = new ReflectionProperty('CClientScript', 'scriptFiles');
+		$scriptFiles->setAccessible(true);
+		$this->assertSame(CClientScript::POS_END, $positionOf($scriptFiles->getValue($this->clientScript)));
+	}
+
+	/**
+	 * bootstrap-timepicker is patched in place: its widget drew Glyphicons (gone in Bootstrap 5, so
+	 * the arrows were invisible), opened from .input-group-addon and used Bootstrap 3 modal markup.
+	 *
+	 * @test
+	 */
+	public function timepickerIsPatchedForBootstrap5()
+	{
+		$js = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/assets/bootstrap-timepicker/js/bootstrap-timepicker.js');
+
+		$this->assertStringNotContainsString('glyphicon', $js);
+		$this->assertStringContainsString('bi bi-chevron-up', $js);
+		$this->assertStringNotContainsString('input-group-addon', $js);
+		$this->assertStringNotContainsString('data-dismiss=', $js);
+
+		// the package needs the icon font (packages.php is evaluated by the Booster component)
+		$packages = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/components/packages.php');
+		// within the timepicker entry: up to the next package key at the start of a line
+		$this->assertRegExp("/'timepicker' => array\\((?:(?!\\n\\t'\\w).)*'depends' => array\\([^)]*'bootstrap-icons'/s", $packages);
+	}
+
+	/**
+	 * With enableCdn: our noconflict snippet is not on jsDelivr (404), Highcharts 3.0.6 is on no CDN
+	 * (the unversioned one serves the latest release), and maxcdn.bootstrapcdn.com is retired.
+	 *
+	 * @test
+	 */
+	public function cdnPackagesOnlyPointAtFilesTheCdnHas()
+	{
+		$packages = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/components/packages.php');
+
+		// within each entry (up to the next package key at the start of a line): a local baseUrl only
+		foreach (array('datepicker', 'highcharts') as $package) {
+			$this->assertRegExp(
+				'/\n\t\'' . $package . '\' => array\((?:(?!\n\t\'\w).)*\'baseUrl\' => ' . preg_quote('$this->getAssetsUrl()', '/') . '/s',
+				$packages,
+				$package
+			);
+		}
+		// as URLs (the comments in packages.php name the hosts)
+		$this->assertStringNotContainsString("'//maxcdn.bootstrapcdn.com", $packages);
+		$this->assertStringNotContainsString("'//code.highcharts.com", $packages);
+	}
+
+	/**
+	 * The language of TbDateTimePicker applies to that picker alone (Booster.dateTimePickerOptions
+	 * reads its Moment locale data): moment.locale() set it for the whole page, changing the default
+	 * format of every TbDateRangePicker there.
+	 *
+	 * @test
+	 */
+	public function dateTimePickerLanguageAppliesToThatPickerOnly()
+	{
+		$this->render('TbDateTimePicker', array('name' => 'Event[start]', 'options' => array('language' => 'de')));
+		$script = $this->registeredScripts();
+
+		$this->assertStringContainsString("'momentLocale':'de'", $script);
+		$this->assertStringNotContainsString('moment.locale(', $script);
+		$this->assertStringNotContainsString("'language'", $script);
+	}
+
+	/**
+	 * daterangepicker 3.1 reads format and separator only inside `locale`; at the top level (as up
+	 * to 4.x) they were ignored and the input posted MM/DD/YYYY - MM/DD/YYYY.
+	 *
+	 * @test
+	 */
+	public function dateRangePickerMovesTopLevelFormatIntoLocale()
+	{
+		$this->render('TbDateRangePicker', array('name' => 'Filter[range]', 'options' => array('format' => 'DD.MM.YYYY', 'separator' => '~')));
+		$script = $this->registeredScripts();
+
+		$this->assertRegExp("/'locale':\{[^}]*'format':'DD\.MM\.YYYY'/", $script);
+		$this->assertRegExp("/'locale':\{[^}]*'separator':" . preg_quote(CJavaScript::encode('~'), '/') . '/', $script);
+	}
+
+	/**
+	 * Both daterangepicker widgets go through Booster.dateRangePicker, which keeps an empty input
+	 * empty until a date is applied (daterangepicker's autoUpdateInput wrote today into it on load);
+	 * the date with time also takes its format from the Moment locale.
+	 *
+	 * @test
+	 */
+	public function dateRangeWidgetsKeepEmptyInputsEmpty()
+	{
+		$this->render('TbDateRangePicker', array('name' => 'Filter[range]'));
+		$this->render('TbDateTimePicker', array('name' => 'Event[start]', 'options' => array('language' => 'en')));
+		$script = $this->registeredScripts();
+
+		// CJavaScript writes the # of the selector as \x23
+		$this->assertStringContainsString('Booster.dateRangePicker(\'\\x23Filter_range\'', $script);
+		$this->assertStringContainsString("Booster.dateRangePicker('#Event_start', Booster.dateTimePickerOptions(", $script);
+		$this->assertStringNotContainsString('autoUpdateInput', $script);
+		$this->assertStringNotContainsString('.daterangepicker(', $script);
+	}
+
+	/**
+	 * x-editable's form buttons were Glyphicons on Bootstrap 3's btn-default: empty buttons under
+	 * Bootstrap 5.
+	 *
+	 * @test
+	 */
+	public function editableFormButtonsUseBootstrapIcons()
+	{
+		$js = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/assets/bootstrap-editable/js/bootstrap-editable.js');
+
+		$this->assertStringNotContainsString('class="glyphicon', $js);
+		$this->assertStringNotContainsString('btn-default', preg_replace('/^\s*\/\/.*$/m', '', $js));
+		$this->assertStringContainsString('bi bi-check-lg', $js);
+
+		$packages = file_get_contents(dirname(dirname(dirname(__DIR__))) . '/src/components/packages.php');
+		$this->assertRegExp("/'x-editable' => array\\((?:(?!\\n\\t'\\w).)*'depends' => array\\([^)]*'bootstrap-icons'/s", $packages);
+	}
+
+	/**
+	 * The picker starts on the rendered input, also when htmlOptions give it an id other than the
+	 * widget id.
+	 *
+	 * @test
+	 */
+	public function timePickerStartsOnItsInput()
+	{
+		$this->render('TbTimePicker', array('name' => 'Time[start]', 'htmlOptions' => array('id' => 'Time_start')));
+		$this->assertStringContainsString("jQuery('#Time_start').timepicker(", $this->registeredScripts());
+
+		$this->clientScript->reset();
+		$this->render('TbTimePicker', array('name' => 'Time[end]', 'id' => 'endPicker'));
+		$this->assertStringContainsString("jQuery('#endPicker').timepicker(", $this->registeredScripts());
+	}
+
+	/**
+	 * The theme comes from the widget's $theme (settable once through the widget factory), unless
+	 * the options name one.
+	 *
+	 * @test
+	 */
+	public function select2UsesItsConfiguredTheme()
+	{
+		$this->render('TbSelect2', array('name' => 'Post[a]'));
+		// CJavaScript writes the hyphen as \x2D
+		$this->assertStringContainsString("'theme':'bootstrap\\x2D5'", $this->registeredScripts());
+
+		$this->clientScript->reset();
+		$this->render('TbSelect2', array('name' => 'Post[b]', 'theme' => 'default'));
+		$this->assertStringContainsString("'theme':'default'", $this->registeredScripts());
+
+		$this->clientScript->reset();
+		$this->render('TbSelect2', array('name' => 'Post[c]', 'theme' => 'default', 'options' => array('theme' => 'classic')));
+		$this->assertStringContainsString("'theme':'classic'", $this->registeredScripts());
+	}
+
+	/**
+	 * A readonly multiple select posts every value: its hidden fields need [] (PHP kept only the
+	 * last of several Model[attr]).
+	 *
+	 * @test
+	 */
+	public function readonlyMultipleSelect2PostsAllItsValues()
+	{
+		$this->render('TbSelect2', array('name' => 'Post[tags]', 'data' => array('a' => 'A', 'b' => 'B'), 'readonly' => true, 'htmlOptions' => array('multiple' => 'multiple')));
+		$this->assertStringContainsString(".attr('name', " . CJavaScript::encode('Post[tags][]') . ")", $this->registeredScripts());
+
+		$this->clientScript->reset();
+		$this->render('TbSelect2', array('name' => 'Post[tag]', 'data' => array('a' => 'A'), 'readonly' => true));
+		$this->assertStringContainsString(".attr('name', " . CJavaScript::encode('Post[tag]') . ")", $this->registeredScripts());
+	}
+
+	/**
+	 * Select2 4 cannot bind to the hidden input asDropDownList = false rendered.
+	 *
+	 * @test
+	 */
+	public function select2WithoutASelectFailsLoudly()
+	{
+		$this->expectException('CException');
+		$this->expectExceptionMessage('asDropDownList');
+		$this->render('TbSelect2', array('name' => 'Post[a]', 'asDropDownList' => false));
+	}
+
+	/**
+	 * Yii's lowercase ids find Select2's lang-REGION files (pt_br used to fall back to pt, zh_cn
+	 * found nothing), and the translation becomes Select2's default language - Select2 4's files
+	 * only register themselves.
+	 *
+	 * @test
+	 */
+	public function select2FindsAndUsesTheTranslationOfYiisLanguage()
+	{
+		$booster = Booster::getBooster();
+		$resolve = new ReflectionMethod($booster, 'resolveSelect2Locale');
+		$resolve->setAccessible(true);
+		$language = Yii::app()->language;
+
+		try {
+			$expected = array('pt_br' => 'pt-BR', 'zh_cn' => 'zh-CN', 'sr_cyrl' => 'sr-Cyrl', 'de_de' => 'de', 'en_us' => null);
+			foreach ($expected as $yiiLanguage => $locale) {
+				Yii::app()->language = $yiiLanguage;
+				$this->assertSame($locale, $resolve->invoke($booster), $yiiLanguage);
+			}
+
+			Yii::app()->language = 'de';
+			$booster->cs->reset();
+			$booster->registerSelect2Package(array());
+			$scripts = new ReflectionProperty('CClientScript', 'scripts');
+			$scripts->setAccessible(true);
+			$this->assertStringContainsString("jQuery.fn.select2.defaults.set('language', 'de');", implode("\n", (array) current((array) $scripts->getValue($booster->cs))));
+		} finally {
+			Yii::app()->language = $language;
+		}
+	}
+
+	/**
+	 * select2-bootstrap-5-theme is loaded only where a control uses it: an application styling the
+	 * 'default' theme itself (myAPS with its admin template) loaded it on every page for nothing.
+	 *
+	 * @test
+	 */
+	public function select2LoadsTheBootstrap5ThemeOnlyWhenUsed()
+	{
+		$booster = Booster::getBooster();
+		$coreScripts = new ReflectionProperty('CClientScript', 'coreScripts');
+		$coreScripts->setAccessible(true);
+
+		$booster->cs->reset();
+		$this->render('TbSelect2', array('name' => 'Post[a]'));
+		$packages = array_keys((array) $coreScripts->getValue($booster->cs));
+		$this->assertContains('select2', $packages);
+		$this->assertContains('select2-bootstrap-5-theme', $packages);
+
+		$booster->cs->reset();
+		$this->render('TbSelect2', array('name' => 'Post[b]', 'theme' => 'default'));
+		$packages = array_keys((array) $coreScripts->getValue($booster->cs));
+		$this->assertContains('select2', $packages);
+		$this->assertNotContains('select2-bootstrap-5-theme', $packages);
+	}
+
+	protected function tearDown(): void
+	{
+		// Restore the real component: PHPUnit runs the whole suite in one process against one
+		// MinimalApplication, so leaving the double installed silently affects every test class
+		// that happens to run afterwards - and which those are depends on file ordering.
+		Yii::app()->setComponent('clientScript', $this->realClientScript);
+
+		parent::tearDown();
+	}
+
+}

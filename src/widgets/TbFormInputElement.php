@@ -43,7 +43,7 @@ class TbFormInputElement extends CFormElement {
 		'maskedtext' => 'maskedTextFieldGroup',
 		'colorpicker' => 'colorPickerGroup',
 		//'captcha' => 'captchaGroup',
-		'pass' => 'passFieldGroup'
+		// 'pass' and 'chosen' were dropped in 5.0 along with TbPassfield and TbChosen.
 	);
 	
 	public $widgetOptions = array();

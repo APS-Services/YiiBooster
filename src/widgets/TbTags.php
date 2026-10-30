@@ -15,6 +15,8 @@
  *
  * @package booster.widgets.forms.inputs
  */
+Yii::import('booster.helpers.TbCss');
+
 class TbTags extends CInputWidget {
 	
 	/**
@@ -118,18 +120,26 @@ class TbTags extends CInputWidget {
 		
 		parent::init();
 		
-		$this->options = CMap::mergeArray(
-			array(
-				'suggestions' => $this->suggestions,
-				'restrictTo' => $this->restrictTo,
-				'exclude' => $this->exclude,
-				'displayPopovers' => $this->displayPopovers,
-				'tagClass' => $this->tagClass,
-				'tagData' => $this->tagData,
-				'popoverData' => $this->popoverData
-			),
-			$this->options
-		);
+		// Only the options with a Select2 equivalent are forwarded. bootstrap-tags' tagClass,
+		// displayPopovers, popoverData and exclude have none, and passing them through would look
+		// honoured while doing nothing - see UPGRADE-5.0.md.
+		$mapped = array();
+
+		if (!empty($this->suggestions)) {
+			$mapped['data'] = array_values($this->suggestions);
+		}
+
+		// restrictTo means "no free-form values", which is Select2's tags flag inverted.
+		if (!empty($this->restrictTo)) {
+			$mapped['data'] = array_values($this->restrictTo);
+			$mapped['tags'] = false;
+		}
+
+		if ($this->promptText !== null && $this->promptText !== '') {
+			$mapped['placeholder'] = $this->promptText;
+		}
+
+		$this->options = CMap::mergeArray($mapped, $this->options);
 	}
 
 	/**
@@ -157,26 +167,71 @@ class TbTags extends CInputWidget {
 	 */
 	public function renderContent($id, $name) {
 
-		if ($this->hasModel()) {
-			if ($this->form) {
-				echo $this->form->hiddenField($this->model, $this->attribute);
-			} else {
-				echo CHtml::activeHiddenField($this->model, $this->attribute);
-			}
+		// Select2 binds to a <select multiple>, bootstrap-tags decorated a <div>. The value is
+		// still posted as bootstrap-tags posted it: one comma-separated string in a hidden field
+		// with the attribute's name (and the input's id, which labels and client validation use),
+		// kept in sync by registerClientScript(). An array (Model[tags][]) broke string columns.
+		$this->htmlOptions['id'] = 'tags_' . $id;
+		$this->htmlOptions['multiple'] = 'multiple';
+		unset($this->htmlOptions['name']);
+		self::addCssClass($this->htmlOptions, 'tag-list');
 
-		} else {
-			echo CHtml::hiddenField($name, $this->value);
+		$selected = $this->resolveTags();
+		// Select2's `tags` mode accepts values that are not in the option list, so the current
+		// tags are the whole list - there is nothing else to offer.
+		// array_combine() on two empty arrays returns false on PHP 5.3/5.4 rather than array(),
+		// and src/ targets 5.3 - the empty case is the normal one for a new record.
+		$data = empty($selected) ? array() : array_combine($selected, $selected);
+
+		// the current tags selected in every case: compared against the whole stored value (a
+		// comma string), none of them was, and saving untouched cleared the tags
+		$selectOptions = $this->htmlOptions;
+		$options = CHtml::listOptions($selected, $data, $selectOptions);
+
+		$hiddenName = $this->hasModel() ? CHtml::activeName($this->model, $this->attribute) : $name;
+		echo CHtml::hiddenField($hiddenName, implode(',', $selected), array('id' => $id));
+		echo CHtml::tag('select', $selectOptions, $options);
+	}
+
+	/**
+	 * The tags to pre-select, as a flat list of strings.
+	 *
+	 * Accepts what both this widget and bootstrap-tags accepted: an array, or a comma-separated
+	 * string as stored by a plain text column.
+	 *
+	 * @return array
+	 * @since 5.0.0
+	 */
+	protected function resolveTags() {
+
+		$value = !empty($this->tagData) ? $this->tagData : null;
+
+		if ($value === null) {
+			$value = $this->hasModel()
+				? CHtml::value($this->model, $this->attribute)
+				: $this->value;
 		}
 
-		$this->htmlOptions['id'] = 'tags_'.$id;
-		if(isset($this->htmlOptions['class']) && !empty($this->htmlOptions['class']))
-			$this->htmlOptions['class'] .= ' tag-list';
-		else
-			$this->htmlOptions['class'] = 'tag-list';
-		
-		echo CHtml::openTag('div', $this->htmlOptions);
-		echo "<div class='tags'></div>";
-		echo CHtml::closeTag('div');
+		if (is_array($value)) {
+			$tags = $value;
+		} elseif ($value === null || $value === '') {
+			$tags = array();
+		} else {
+			$tags = preg_split('/\s*,\s*/', (string) $value, -1, PREG_SPLIT_NO_EMPTY);
+		}
+
+		$tags = array_values(array_unique(array_map('strval', $tags)));
+
+		return $tags;
+	}
+
+	/**
+	 * @param array $htmlOptions
+	 * @param string $class
+	 */
+	protected static function addCssClass(&$htmlOptions, $class) {
+
+		TbCss::add($htmlOptions, $class);
 	}
 
 	/**
@@ -189,15 +244,22 @@ class TbTags extends CInputWidget {
 	 * @param string $id
 	 */
 	public function registerClientScript($id) {
-		
-        $booster = Booster::getBooster();
-        $booster->registerPackage('bootstrap-tags');
 
-		$options = !empty($this->options) ? CJavaScript::encode($this->options) : '';
+		// bootstrap-tags has been untouched since 2017. Select2 is already bundled and already on
+		// 4.x, and its `tags` mode is the same feature - so this drops a dependency rather than
+		// swapping one.
+		$options = array_merge(
+			array('tags' => true, 'tokenSeparators' => array(',', ' '), 'theme' => 'bootstrap-5', 'width' => '100%'),
+			(array) $this->options
+		);
 
+		Booster::getBooster()->registerSelect2Package($options);
+
+		// the hidden field posts the tags joined by commas (see renderContent())
 		Yii::app()->getClientScript()->registerScript(
 			__CLASS__ . '#' . $this->getId(),
-			"jQuery('#tags_{$id}').tags({$options});"
+			"jQuery('#tags_{$id}').select2(" . CJavaScript::encode($options) . ")"
+			. ".on('change', function () { jQuery('#{$id}').val((jQuery(this).val() || []).join(',')); });"
 		);
 	}
 }

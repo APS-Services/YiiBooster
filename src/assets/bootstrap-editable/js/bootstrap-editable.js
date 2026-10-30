@@ -1008,7 +1008,19 @@ Applied as jQuery method.
         @method tip()
         */         
         tip: function() {
-            return this.container() ? this.container().$tip : null;
+            var instance = this.container();
+            if (!instance) {
+                return null;
+            }
+
+            // Bootstrap 3 exposed the rendered popover as a jQuery object on `$tip`; Bootstrap 5
+            // exposes a raw Element on `tip`, and only once the popover has been shown. Every
+            // caller here uses jQuery methods (addClass/is/append/find/empty), so wrap it.
+            if (instance.$tip) {
+                return instance.$tip;
+            }
+
+            return instance.tip ? $(instance.tip) : null;
         },
 
         /* returns container object */
@@ -2444,7 +2456,7 @@ To create your own input you can inherit from this class.
        **/
        activate: function() {
            if(this.$input.is(':visible')) {
-               this.$input.focus();
+               this.$input.get(0).focus({preventScroll: true});
            }
        },
 
@@ -2909,7 +2921,7 @@ $(function(){
         
         activate: function() {
             if(this.$input.is(':visible')) {
-                this.$input.focus();
+                this.$input.get(0).focus({preventScroll: true});
                 $.fn.editableutils.setCursorPosition(this.$input.get(0), this.$input.val().length);
                 if(this.toggleClear) {
                     this.toggleClear();
@@ -3335,7 +3347,7 @@ $(function(){
         },
         
        activate: function() {
-           this.$input.first().focus();
+           this.$input.get(0).focus({preventScroll: true});
        },
        
        autosubmit: function() {
@@ -3562,7 +3574,7 @@ Range (inherit from number)
             });  
         },
         activate: function() {
-            this.$input.focus();
+            this.$input.get(0).focus({preventScroll: true});
         }         
     });
     Range.defaults = $.extend({}, $.fn.editabletypes.number.defaults, {
@@ -3700,12 +3712,13 @@ $(function(){
 
             if (typeof source === 'string') {
                 options.select2.ajax = options.select2.ajax || {};
-                //some default ajax params
+                //some default ajax params (Select2 4: data() gets a params object, the response
+                //goes through processResults - 3.x's `results` is ignored)
                 if(!options.select2.ajax.data) {
-                    options.select2.ajax.data = function(term) {return { query:term };};
+                    options.select2.ajax.data = function(params) {return { query: params.term };};
                 }
-                if(!options.select2.ajax.results) {
-                    options.select2.ajax.results = function(data) { return {results:data };};
+                if(!options.select2.ajax.processResults) {
+                    options.select2.ajax.processResults = function(data) { return {results:data };};
                 }
                 options.select2.ajax.url = source;
             } else {
@@ -3748,11 +3761,18 @@ $(function(){
             //apply select2 only in value2input
             //this.$input.select2(this.options.select2);
 
-            //when data is loaded via ajax, we need to know when it's done to populate listData
+            //Select2 4 binds to a <select>; several values need its multiple attribute
+            if(this.isMultiple) {
+                this.$input.attr('multiple', 'multiple');
+            }
+
+            //remote entries are known once chosen (Select2 4 has no select2-loaded event): keep
+            //them, value2html shows their text
             if(this.isRemote) {
-                //listen to loaded event to populate data
-                this.$input.on('select2-loaded', $.proxy(function(e) {
-                    this.sourceData = e.items.results;
+                this.$input.on('change', $.proxy(function() {
+                    if(this.$input.data('select2')) {
+                        this.sourceData = this.$input.select2('data');
+                    }
                 }, this));
             }
 
@@ -3800,45 +3820,42 @@ $(function(){
        },
 
        value2input: function(value) {
-           // if value array => join it anyway
-           if($.isArray(value)) {
-              value = value.join(this.getSeparator());
+           // Select2 4 on a <select>: several values are an array, one a scalar
+           if(this.isMultiple) {
+               value = $.isArray(value) ? value : (this.str2value(value) || []);
+           } else if($.isArray(value)) {
+               value = value.length ? value[0] : null;
            }
 
-           //for remote source just set value, text is updated by initSelection
+           // the local data becomes the select's options when Select2 starts
            if(!this.$input.data('select2')) {
-               this.$input.val(value);
                this.$input.select2(this.options.select2);
-           } else {
-               //second argument needed to separate initial change from user's click (for autosubmit)   
-               this.$input.val(value).trigger('change', true); 
-
-               //Uncaught Error: cannot call val() if initSelection() is not defined
-               //this.$input.select2('val', value);
            }
 
-           // if defined remote source AND no multiple mode AND no user's initSelection provided --> 
-           // we should somehow get text for provided id.
-           // The solution is to use element's text as text for that id (exclude empty)
-           if(this.isRemote && !this.isMultiple && !this.options.select2.initSelection) {
-               // customId and customText are methods to extract `id` and `text` from data object
-               // we can use this workaround only if user did not define these methods
-               // otherwise we cant construct data object
-               var customId = this.options.select2.id,
-                   customText = this.options.select2.formatSelection;
+           var values = $.isArray(value) ? value : (value === null || value === undefined || value === '' ? [] : [value]),
+               that = this;
 
-               if(!customId && !customText) {
-                   var $el = $(this.options.scope);
-                   if (!$el.data('editable').isEmpty) {
-                       var data = {id: value, text: $el.text()};
-                       this.$input.select2('data', data); 
-                   }
+           // values without an option: tags typed earlier, the current entry of a remote source.
+           // Select2 4.x dropped the 'data' command and initSelection; injecting the option is the
+           // documented way to seed a value. A remote entry shows the element's text (as before:
+           // only if the caller did not define id/formatSelection, otherwise the text is unknown).
+           var $el = $(this.options.scope),
+               elementText = this.isRemote && !this.isMultiple && !this.options.select2.id && !this.options.select2.formatSelection
+                   && $el.data('editable') && !$el.data('editable').isEmpty ? $el.text() : null;
+           $.each(values, function(i, v) {
+               var exists = that.$input.find('option').filter(function() { return this.value == v; }).length;
+               if(!exists) {
+                   that.$input.append(new Option(elementText !== null ? elementText : v, v, true, true));
                }
-           }
+           });
+
+           //second argument needed to separate initial change from user's click (for autosubmit)
+           this.$input.val(value).trigger('change', true);
        },
        
-       input2value: function() { 
-           return this.$input.select2('val');
+       input2value: function() {
+           // Select2 4.x removed the 'val' command; the underlying <select> holds the value.
+           return this.$input.val();
        },
 
        str2value: function(str, separator) {
@@ -3870,7 +3887,8 @@ $(function(){
         },
 
         getSeparator: function() {
-            return this.options.select2.separator || $.fn.select2.defaults.separator;
+            // Select2 4 has no default separator any more
+            return this.options.select2.separator || ',';
         },
 
         /*
@@ -3899,10 +3917,10 @@ $(function(){
 
     Constructor.defaults = $.extend({}, $.fn.editabletypes.abstractinput.defaults, {
         /**
-        @property tpl 
-        @default <input type="hidden">
+        @property tpl
+        @default <select></select> (Select2 4 does not bind to hidden inputs)
         **/
-        tpl:'<input type="hidden">',
+        tpl:'<select></select>',
         /**
         Configuration of select2. [Full list of options](http://ivaynberg.github.com/select2).
 
@@ -4548,7 +4566,7 @@ $(function(){
        },       
        
        activate: function() {
-           this.$input.siblings('.combodate').find('select').eq(0).focus();
+           this.$input.siblings('.combodate').find('select').eq(0).each(function () { this.focus({preventScroll: true}); });
        },
        
        /*
@@ -4677,13 +4695,15 @@ Editableform based on Twitter Bootstrap 3
     });    
     
     //buttons
-    $.fn.editableform.buttons = 
-      '<button type="submit" class="btn btn-primary btn-sm editable-submit">'+
-        '<i class="glyphicon glyphicon-ok"></i>'+
+    // YiiBooster: Bootstrap Icons instead of Glyphicons (gone in Bootstrap 5, the buttons were
+    // empty), btn-secondary instead of Bootstrap 3's btn-default
+    $.fn.editableform.buttons =
+      '<button type="submit" class="btn btn-primary btn-sm editable-submit" aria-label="OK">'+
+        '<i class="bi bi-check-lg"></i>'+
       '</button>'+
-      '<button type="button" class="btn btn-default btn-sm editable-cancel">'+
-        '<i class="glyphicon glyphicon-remove"></i>'+
-      '</button>';         
+      '<button type="button" class="btn btn-secondary btn-sm editable-cancel" aria-label="Cancel">'+
+        '<i class="bi bi-x-lg"></i>'+
+      '</button>';
     
     //error classes
     $.fn.editableform.errorGroupClass = 'has-error';
@@ -4692,228 +4712,134 @@ Editableform based on Twitter Bootstrap 3
     $.fn.editableform.engine = 'bs3';  
 }(window.jQuery));
 /**
-* Editable Popover3 (for Bootstrap 3) 
+* Editable Popover (Bootstrap 5)
 * ---------------------
-* requires bootstrap-popover.js
+* Patched for YiiBooster 5.0.
+*
+* x-editable is archived upstream and its Popover3 container was written against Bootstrap 3's
+* jQuery plugin. Three things broke under Bootstrap 5:
+*
+*  1. `defaults: $.fn.popover.Constructor.DEFAULTS` was evaluated at script-execution time.
+*     Bootstrap 5 only installs its jQuery plugins on DOMContentLoaded, so $.fn.popover was
+*     undefined here and the whole file threw on load. Defaults are now read lazily.
+*  2. The content element is `.popover-body`; `.popover-content` was the Bootstrap 3 name.
+*  3. `destroy()` became `dispose()`, and instances are no longer stored in jQuery .data(),
+*     so the container is fetched through bootstrap.Popover.getInstance().
+*
+* The hand-rolled setPosition() that reimplemented Bootstrap 3's applyPlacement is gone
+* entirely - Bootstrap 5 positions popovers with Popper, and asking the instance to update()
+* does the same job correctly.
 */
 (function ($) {
     "use strict";
+
+    function bsPopover() {
+        return (window.bootstrap && window.bootstrap.Popover) || null;
+    }
 
     //extend methods
     $.extend($.fn.editableContainer.Popup.prototype, {
         containerName: 'popover',
         containerDataName: 'bs.popover',
-        innerCss: '.popover-content',
-        defaults: $.fn.popover.Constructor.DEFAULTS,
+        innerCss: '.popover-body',
+
+        /* Bootstrap 5 exposes its defaults as Popover.Default, and only once it has loaded. */
+        defaults: {},
+
+        containerDefaults: function() {
+            var Popover = bsPopover();
+            return (Popover && Popover.Default) || {};
+        },
+
+        /* Bootstrap 5 keeps instances in its own registry rather than jQuery .data(). */
+        container: function() {
+            var Popover = bsPopover();
+            if (Popover && this.$element.length) {
+                return Popover.getInstance(this.$element[0]);
+            }
+            return null;
+        },
+
+        call: function() {
+            var Popover = bsPopover();
+            if (!Popover || !this.$element.length) {
+                return;
+            }
+
+            var element = this.$element[0];
+            var first = arguments[0];
+
+            if (typeof first === 'string') {
+                var instance = Popover.getInstance(element);
+                if (!instance) {
+                    return;
+                }
+                // Bootstrap 5 renamed destroy() to dispose().
+                var method = first === 'destroy' ? 'dispose' : first;
+                if (typeof instance[method] === 'function') {
+                    instance[method]();
+                }
+                return;
+            }
+
+            Popover.getOrCreateInstance(element, first || {});
+        },
 
         initContainer: function(){
             $.extend(this.containerOptions, {
                 trigger: 'manual',
                 selector: false,
                 content: ' ',
-                template: this.defaults.template
+                html: true,
+                template: this.containerDefaults().template
             });
-            
+
             //as template property is used in inputs, hide it from popover
             var t;
             if(this.$element.data('template')) {
                t = this.$element.data('template');
-               this.$element.removeData('template');  
-            } 
-            
+               this.$element.removeData('template');
+            }
+
             this.call(this.containerOptions);
-            
+
             if(t) {
                //restore data('template')
-               this.$element.data('template', t); 
+               this.$element.data('template', t);
             }
-        }, 
-        
+        },
+
         /* show */
         innerShow: function () {
-            this.call('show');                
-        },  
-        
+            this.call('show');
+        },
+
         /* hide */
         innerHide: function () {
-            this.call('hide');       
-        }, 
-        
+            this.call('hide');
+        },
+
         /* destroy */
         innerDestroy: function() {
             this.call('destroy');
-        },                               
-        
+        },
+
         setContainerOption: function(key, value) {
-            this.container().options[key] = value; 
-        },               
+            var instance = this.container();
+            if (instance && instance._config) {
+                instance._config[key] = value;
+            }
+        },
 
         /**
-        * move popover to new position. This function mainly copied from bootstrap-popover.
+        * Re-position after the content changed size. Popper does the actual work.
         */
-        /*jshint laxcomma: true, eqeqeq: false*/
-        setPosition: function () { 
-
-            (function() {
-            /*    
-                var $tip = this.tip()
-                , inside
-                , pos
-                , actualWidth
-                , actualHeight
-                , placement
-                , tp
-                , tpt
-                , tpb
-                , tpl
-                , tpr;
-
-                placement = typeof this.options.placement === 'function' ?
-                this.options.placement.call(this, $tip[0], this.$element[0]) :
-                this.options.placement;
-
-                inside = /in/.test(placement);
-               
-                $tip
-              //  .detach()
-              //vitalets: remove any placement class because otherwise they dont influence on re-positioning of visible popover
-                .removeClass('top right bottom left')
-                .css({ top: 0, left: 0, display: 'block' });
-              //  .insertAfter(this.$element);
-               
-                pos = this.getPosition(inside);
-
-                actualWidth = $tip[0].offsetWidth;
-                actualHeight = $tip[0].offsetHeight;
-
-                placement = inside ? placement.split(' ')[1] : placement;
-
-                tpb = {top: pos.top + pos.height, left: pos.left + pos.width / 2 - actualWidth / 2};
-                tpt = {top: pos.top - actualHeight, left: pos.left + pos.width / 2 - actualWidth / 2};
-                tpl = {top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth};
-                tpr = {top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width};
-
-                switch (placement) {
-                    case 'bottom':
-                        if ((tpb.top + actualHeight) > ($(window).scrollTop() + $(window).height())) {
-                            if (tpt.top > $(window).scrollTop()) {
-                                placement = 'top';
-                            } else if ((tpr.left + actualWidth) < ($(window).scrollLeft() + $(window).width())) {
-                                placement = 'right';
-                            } else if (tpl.left > $(window).scrollLeft()) {
-                                placement = 'left';
-                            } else {
-                                placement = 'right';
-                            }
-                        }
-                        break;
-                    case 'top':
-                        if (tpt.top < $(window).scrollTop()) {
-                            if ((tpb.top + actualHeight) < ($(window).scrollTop() + $(window).height())) {
-                                placement = 'bottom';
-                            } else if ((tpr.left + actualWidth) < ($(window).scrollLeft() + $(window).width())) {
-                                placement = 'right';
-                            } else if (tpl.left > $(window).scrollLeft()) {
-                                placement = 'left';
-                            } else {
-                                placement = 'right';
-                            }
-                        }
-                        break;
-                    case 'left':
-                        if (tpl.left < $(window).scrollLeft()) {
-                            if ((tpr.left + actualWidth) < ($(window).scrollLeft() + $(window).width())) {
-                                placement = 'right';
-                            } else if (tpt.top > $(window).scrollTop()) {
-                                placement = 'top';
-                            } else if (tpt.top > $(window).scrollTop()) {
-                                placement = 'bottom';
-                            } else {
-                                placement = 'right';
-                            }
-                        }
-                        break;
-                    case 'right':
-                        if ((tpr.left + actualWidth) > ($(window).scrollLeft() + $(window).width())) {
-                            if (tpl.left > $(window).scrollLeft()) {
-                                placement = 'left';
-                            } else if (tpt.top > $(window).scrollTop()) {
-                                placement = 'top';
-                            } else if (tpt.top > $(window).scrollTop()) {
-                                placement = 'bottom';
-                            }
-                        }
-                        break;
-                }
-
-                switch (placement) {
-                    case 'bottom':
-                        tp = tpb;
-                        break;
-                    case 'top':
-                        tp = tpt;
-                        break;
-                    case 'left':
-                        tp = tpl;
-                        break;
-                    case 'right':
-                        tp = tpr;
-                        break;
-                }
-
-                $tip
-                .offset(tp)
-                .addClass(placement)
-                .addClass('in');
-           */
-                     
-           
-            var $tip = this.tip();
-            
-            var placement = typeof this.options.placement == 'function' ?
-                this.options.placement.call(this, $tip[0], this.$element[0]) :
-                this.options.placement;            
-
-            var autoToken = /\s?auto?\s?/i;
-            var autoPlace = autoToken.test(placement);
-            if (autoPlace) {
-                placement = placement.replace(autoToken, '') || 'top';
+        setPosition: function () {
+            var instance = this.container();
+            if (instance && typeof instance.update === 'function') {
+                instance.update();
             }
-            
-            
-            var pos = this.getPosition();
-            var actualWidth = $tip[0].offsetWidth;
-            var actualHeight = $tip[0].offsetHeight;
-
-            if (autoPlace) {
-                var $parent = this.$element.parent();
-
-                var orgPlacement = placement;
-                var docScroll    = document.documentElement.scrollTop || document.body.scrollTop;
-                var parentWidth  = this.options.container == 'body' ? window.innerWidth  : $parent.outerWidth();
-                var parentHeight = this.options.container == 'body' ? window.innerHeight : $parent.outerHeight();
-                var parentLeft   = this.options.container == 'body' ? 0 : $parent.offset().left;
-
-                placement = placement == 'bottom' && pos.top   + pos.height  + actualHeight - docScroll > parentHeight  ? 'top'    :
-                            placement == 'top'    && pos.top   - docScroll   - actualHeight < 0                         ? 'bottom' :
-                            placement == 'right'  && pos.right + actualWidth > parentWidth                              ? 'left'   :
-                            placement == 'left'   && pos.left  - actualWidth < parentLeft                               ? 'right'  :
-                            placement;
-
-                $tip
-                  .removeClass(orgPlacement)
-                  .addClass(placement);
-            }
-
-
-            var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight);
-
-            this.applyPlacement(calculatedOffset, placement);            
-                     
-                
-            }).call(this.container());
-          /*jshint laxcomma: false, eqeqeq: true*/  
-        }            
+        }
     });
 
 }(window.jQuery));

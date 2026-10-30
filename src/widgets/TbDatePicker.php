@@ -97,8 +97,13 @@ class TbDatePicker extends TbBaseInputWidget {
         Booster::getBooster()->registerPackage('datepicker');
 	}
 
+	/**
+	 * The locale file extends $.fn.datepicker, so it goes to POS_END: Yii renders package scripts
+	 * (the plugin) before the files registered for the same position, wherever the application puts
+	 * its core scripts. In the head it ran before jQuery and the plugin had loaded.
+	 */
 	public function registerLanguageScript() {
-		
+
 		$booster = Booster::getBooster();
 
 		if (isset($this->options['language']) && $this->options['language'] != 'en') {
@@ -106,12 +111,16 @@ class TbDatePicker extends TbBaseInputWidget {
 
 			if (file_exists(Yii::getPathOfAlias('booster.assets') . $filename)) {
 				if ($booster->enableCdn) {
+					// Must track the `bootstrap-datepicker` package in packages.php. This pointed at cdnjs
+					// 1.2.0 while the plugin itself came from jsDelivr 1.10.0 - two CDNs and an
+					// eight-year gap, which is the same CSS/JS divergence 5.0 set out to fix.
 					Yii::app()->clientScript->registerScriptFile(
-						'//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.2.0/js/locales/bootstrap-datepicker.' . $this->options['language'] . '.js',
-						CClientScript::POS_HEAD
+						'https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/locales/bootstrap-datepicker.'
+						. $this->options['language'] . '.min.js',
+						CClientScript::POS_END
 					);
 				} else {
-					$booster->cs->registerScriptFile($booster->getAssetsUrl() . $filename, CClientScript::POS_HEAD);
+					$booster->cs->registerScriptFile($booster->getAssetsUrl() . $filename, CClientScript::POS_END);
 				}
 			}
 		}

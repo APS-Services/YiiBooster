@@ -9,6 +9,7 @@
  */
 
 Yii::import('zii.widgets.grid.CButtonColumn');
+Yii::import('booster.helpers.TbIcon');
 
 /**
  *## Bootstrap button column widget.
@@ -20,19 +21,19 @@ Yii::import('zii.widgets.grid.CButtonColumn');
 class TbButtonColumn extends CButtonColumn {
 	
 	/**
-	 * @var string the view button icon (defaults to 'eye-open').
+	 * @var string|null|false the view button icon; null: an eye in the configured icon family
 	 */
-	public $viewButtonIcon = 'eye-open';
+	public $viewButtonIcon;
 
 	/**
-	 * @var string the update button icon (defaults to 'pencil').
+	 * @var string|null|false the update button icon; null: a pencil in the configured icon family
 	 */
-	public $updateButtonIcon = 'pencil';
+	public $updateButtonIcon;
 
 	/**
-	 * @var string the delete button icon (defaults to 'trash').
+	 * @var string|null|false the delete button icon; null: a trash can in the configured icon family
 	 */
-	public $deleteButtonIcon = 'trash';
+	public $deleteButtonIcon;
 
 	/**
 	 *### .initDefaultButtons()
@@ -40,8 +41,20 @@ class TbButtonColumn extends CButtonColumn {
 	 * Initializes the default buttons (view, update and delete).
 	 */
 	protected function initDefaultButtons() {
-		
+
 		parent::initDefaultButtons();
+
+		// the defaults in the family Booster::$iconPrefix chose (TbIcon::render would read them as
+		// Glyphicons names, which only Bootstrap Icons translates)
+		if ($this->viewButtonIcon === null) {
+			$this->viewButtonIcon = TbIcon::familyIcon('eye');
+		}
+		if ($this->updateButtonIcon === null) {
+			$this->updateButtonIcon = TbIcon::familyIcon('pencil');
+		}
+		if ($this->deleteButtonIcon === null) {
+			$this->deleteButtonIcon = TbIcon::familyIcon('trash');
+		}
 
 		if ($this->viewButtonIcon !== false && !isset($this->buttons['view']['icon'])) {
 			$this->buttons['view']['icon'] = $this->viewButtonIcon;
@@ -83,16 +96,12 @@ class TbButtonColumn extends CButtonColumn {
 			$options['title'] = $label;
 		}
 
-		if (!isset($options['data-toggle'])) {
-			$options['data-toggle'] = 'tooltip';
+		if (!isset($options['data-bs-toggle'])) {
+			$options['data-bs-toggle'] = 'tooltip';
 		}
 
 		if (isset($button['icon']) && $button['icon']) {
-			if (strpos($button['icon'], 'icon') === false && strpos($button['icon'], 'fa') === false) {
-				$button['icon'] = 'glyphicon glyphicon-' . implode('glyphicon-', explode(' ', $button['icon']));
-			}
-
-			echo CHtml::link('<i class="' . $button['icon'] . '"></i>', $url, $options);
+			echo CHtml::link(TbIcon::render($button['icon']), $url, $options);
 		} else if (isset($button['imageUrl']) && is_string($button['imageUrl'])) {
 			echo CHtml::link(CHtml::image($button['imageUrl'], $label), $url, $options);
 		} else {

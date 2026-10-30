@@ -9,7 +9,7 @@
 	'enableAjaxValidation'=>false,
 )); ?>\n"; ?>
 
-<p class="help-block">Fields with <span class="required">*</span> are required.</p>
+<p class="form-text">Fields with <span class="required">*</span> are required.</p>
 
 <?php echo "<?php echo \$form->errorSummary(\$model); ?>\n"; ?>
 
@@ -24,7 +24,7 @@ foreach ($this->tableSchema->columns as $column) {
 <?php
 }
 ?>
-<div class="form-actions">
+<div class="mb-3">
 	<?php echo "<?php \$this->widget('booster.widgets.TbButton', array(
 			'buttonType'=>'submit',
 			'context'=>'primary',

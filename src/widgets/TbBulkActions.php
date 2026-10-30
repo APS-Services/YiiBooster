@@ -122,7 +122,7 @@ class TbBulkActions extends CComponent {
      */
     public function init() {
     	
-        $this->align = $this->align == 'left' ? 'pull-left' : 'pull-right';
+        $this->align = $this->align == 'left' ? 'float-start' : 'float-end';
         $this->initColumn();
         $this->initButtons();
     }

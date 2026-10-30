@@ -94,11 +94,24 @@ class TbDateRangePicker extends TbBaseInputWidget {
 	 * @throws CException
 	 */
 	public function registerScript($selector, $options = array(), $callback = null) {
-		
+
+		// daterangepicker 3.1 reads these only inside `locale`; given at the top level, as up to
+		// 4.x, they were ignored and the input posted MM/DD/YYYY - MM/DD/YYYY
+		foreach (array('format', 'separator', 'applyLabel', 'cancelLabel', 'fromLabel', 'toLabel', 'customRangeLabel', 'weekLabel', 'firstDay') as $key) {
+			if (array_key_exists($key, $options)) {
+				if (!isset($options['locale'][$key])) {
+					$options['locale'][$key] = $options[$key];
+				}
+				unset($options[$key]);
+			}
+		}
+
+		// Booster.dateRangePicker keeps an empty input empty until a range is applied
+		Booster::getBooster()->registerPackage('booster');
 		Yii::app()->clientScript->registerScript(
 				uniqid(__CLASS__ . '#', true),
-				'$("' . $selector . '").daterangepicker(' . CJavaScript::encode($options) . ($callback
-						? ', ' . CJavaScript::encode($callback) : '') . ');'
+				'Booster.dateRangePicker(' . CJavaScript::encode($selector) . ', ' . CJavaScript::encode((object) $options)
+						. ($callback ? ', ' . CJavaScript::encode($callback) : '') . ');'
 		);
 	}
 
@@ -147,8 +160,9 @@ class TbDateRangePicker extends TbBaseInputWidget {
 	public function registerClientScript() {
 		
         $booster = Booster::getBooster();
-        $booster->registerAssetCss('bootstrap-daterangepicker.css');
-        $booster->registerAssetJs('bootstrap.daterangepicker.js');
+        // Upgraded from the loose 1.3.12 copy that used to live in assets/js to the packaged
+        // 3.1.0 build, which is Bootstrap-version agnostic and still maintained.
+        $booster->registerPackage('daterangepicker');
         $booster->registerPackage('moment');
 	}
 }

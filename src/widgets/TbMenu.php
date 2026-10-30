@@ -65,21 +65,25 @@ class TbMenu extends TbBaseMenu {
 
 		$validTypes = array(self::TYPE_TABS, self::TYPE_PILLS, self::TYPE_LIST, self::TYPE_NAVBAR);
 
-		if (isset($this->type) && in_array($this->type, $validTypes)) {
+		if ($this->type === self::TYPE_LIST) {
+			// nav-list was Bootstrap 2; .nav is a wrapping flex row, so a list menu (isVertical())
+			// is a column of its own
+			$classes[] = 'flex-column';
+		} elseif (isset($this->type) && in_array($this->type, $validTypes)) {
 			$classes[] = $this->type === self::TYPE_NAVBAR ? 'navbar-nav' : 'nav-' . $this->type;
 		}
 
+		// nav-stacked was removed in Bootstrap 4; stacking is a flex utility now.
 		if ($this->stacked && $this->type !== self::TYPE_LIST) {
-			$classes[] = 'nav-stacked';
+			$classes[] = 'flex-column';
 		}
-		
+
 		if ($this->justified && $this->type !== self::TYPE_LIST) {
 			$classes[] = 'nav-justified';
 		}
 
-		if ($this->dropup === true) {
-			$classes[] = 'dropup';
-		}
+		// dropup goes on each dropdown's <li> (getDropdownCssClass()): Bootstrap 5 reads it from
+		// the toggle's parent only, so on the <ul> the menus still opened downwards
 
 		if (isset($this->scrollspy)) {
 			$scrollspy = is_string($this->scrollspy) ? array('target' => $this->scrollspy) : $this->scrollspy;
@@ -104,8 +108,28 @@ class TbMenu extends TbBaseMenu {
 	 * @return string the class name
 	 */
 	public function getDividerCssClass() {
-		
-		return (isset($this->type) && $this->type === self::TYPE_LIST) ? 'nav-divider' : 'divider-vertical';
+
+		// nav-divider and divider-vertical were both Bootstrap 2 names and have been dead since
+		// Bootstrap 3; the surviving separator is the dropdown one.
+		return 'dropdown-divider';
+	}
+
+	/**
+	 * @return string
+	 * @since 5.0.0
+	 */
+	public function getItemCssClass() {
+
+		return 'nav-item';
+	}
+
+	/**
+	 * @return string
+	 * @since 5.0.0
+	 */
+	public function getLinkCssClass() {
+
+		return 'nav-link';
 	}
 
 	/**
@@ -116,8 +140,8 @@ class TbMenu extends TbBaseMenu {
 	 * @return string the class name
 	 */
 	public function getDropdownCssClass() {
-		
-		return 'dropdown';
+
+		return $this->dropup === true ? 'dropup' : 'dropdown';
 	}
 
 	/**

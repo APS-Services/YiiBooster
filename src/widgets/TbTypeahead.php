@@ -36,6 +36,13 @@ class TbTypeahead extends TbBaseInputWidget {
 	public $datasets = array();
 
 	/**
+	 * @var array a flat list of suggestions, passed straight to Awesomplete.
+	 * Preferred over $datasets, which exists for backwards compatibility.
+	 * @since 5.0.0
+	 */
+	public $list = array();
+
+	/**
 	 * Initializes the widget.
 	 */
 	public function init() {
@@ -55,6 +62,7 @@ class TbTypeahead extends TbBaseInputWidget {
 	 * Runs the widget.
 	 */
 	public function run() {
+
 		list($name, $id) = $this->resolveNameID();
 
 		if (isset($this->htmlOptions['id'])) {
@@ -73,85 +81,77 @@ class TbTypeahead extends TbBaseInputWidget {
 			echo CHtml::textField($name, $this->value, $this->htmlOptions);
 		}
 
-		if (isset($this->datasets['source']))
-			$this->datasets = array($this->datasets);
+		$options = array_merge(
+			array('minChars' => isset($this->options['minLength']) ? $this->options['minLength'] : 1),
+			$this->awesompleteOptions()
+		);
+		$options['list'] = $this->resolveList();
 
-		$datasets_js = array();
-		foreach ($this->datasets as $i => $dataset) {
+		Yii::app()->clientScript->registerScript(
+			__CLASS__ . '#' . $id,
+			"new Awesomplete(document.getElementById('{$id}'), " . CJavaScript::encode($options) . ");"
+		);
+	}
+
+	/**
+	 * @return array $options minus the typeahead.js-only keys that Awesomplete does not know.
+	 */
+	protected function awesompleteOptions() {
+
+		$options = $this->options;
+		unset($options['minLength'], $options['highlight'], $options['hint'], $options['classNames']);
+
+		return $options;
+	}
+
+	/**
+	 * Flattens the legacy `datasets` structure into the flat list Awesomplete expects.
+	 *
+	 * typeahead.js was abandoned in 2015 and its remote support came from Bloodhound, which
+	 * Awesomplete has no equivalent for - a remote source is now a fetch you write yourself and
+	 * feed to the instance. Rather than silently returning an empty list for those, this says so.
+	 *
+	 * @return array
+	 * @throws CException
+	 */
+	protected function resolveList() {
+
+		if (!empty($this->list)) {
+			return $this->list;
+		}
+
+		$datasets = $this->datasets;
+		if (isset($datasets['source'])) {
+			$datasets = array($datasets);
+		}
+
+		$list = array();
+		foreach ($datasets as $dataset) {
 			if (!isset($dataset['source'])) {
 				throw new CException('The source for a Typeahead dataset was not set');
 			}
-			if (isset($dataset['source']['name'])) {
-				$name = preg_replace('/[^\da-z]/i', '_', $dataset['source']['name']);
-				$bloodhound_id = $this->id .'_bloodhound_'. $name;
-				$dataset['source'] = 'js:'. $bloodhound_id .'.ttAdapter()';
-			} else {
-				$dataset['source'] = 'js:substringMatcher(_'. $this->id .'_source_list_'. $i .')';
+
+			if (!is_array($dataset['source']) || isset($dataset['source']['name'])) {
+				throw new CException(
+					'TbTypeahead no longer supports Bloodhound remote sources. typeahead.js was '
+					. 'abandoned in 2015 and is replaced by Awesomplete in YiiBooster 5.0, which '
+					. 'takes a plain list. Pass one through the `list` property, or drive the '
+					. 'Awesomplete instance yourself for remote lookups. See UPGRADE-5.0.md.'
+				);
 			}
-			$this->datasets[$i] = $dataset;
-			$datasets_js[] = CJavaScript::encode($dataset);
+
+			$list = array_merge($list, array_values($dataset['source']));
 		}
-		
-		$options = CJavaScript::encode($this->options);
-		$datasets = implode(', ', $datasets_js);
-		
-		Yii::app()->clientScript->registerScript(__CLASS__ . '#' . $id, "jQuery('#{$id}').typeahead({$options}, {$datasets});");
-		
+
+		return $list;
 	}
 
-	function registerClientScript() {
-	
-		$booster = Booster::getBooster();
-		$booster->registerPackage('typeahead');
+	/**
+	 * Registers the Awesomplete assets.
+	 */
+	public function registerClientScript() {
 
-		$datasets = $this->datasets;
-		if (isset($this->datasets['source']))
-			$datasets = array($this->datasets);
-
-		Yii::app()->clientScript->registerScript(__CLASS__ . '#substringMatcher', '
-			var substringMatcher = function(strs) {
-				return function findMatches(q, cb) {
-					var matches, substringRegex;
-
-					// an array that will be populated with substring matches
-					matches = [];
-
-					// regex used to determine if a string contains the substring `q`
-					substrRegex = new RegExp(q, "i");
-
-					// iterate through the pool of strings and for any string that
-					// contains the substring `q`, add it to the `matches` array
-					$.each(strs, function(i, str) {
-						if (substrRegex.test(str)) {
-							// the typeahead jQuery plugin expects suggestions to a
-							// JavaScript object, refer to typeahead docs for more info
-							matches.push({ value: str });
-						}
-					});
-
-					cb(matches);
-				};
-			};
-		', CClientScript::POS_HEAD);
-
-		if (isset($this->datasets['source']))
-			$this->datasets = array($this->datasets);
-
-		foreach ($datasets as $i => $dataset) {
-			if (isset($dataset['source']['name'])) {
-				$name = preg_replace('/[^\da-z]/i', '_', $dataset['source']['name']);
-				$bloodhound_id = $this->id .'_bloodhound_'. $name;
-				$bloodhound_config = CJavaScript::encode($dataset['source']);
-				Yii::app()->clientScript->registerScript(__CLASS__ .'_'. $bloodhound_id, "
-					var $bloodhound_id = new Bloodhound($bloodhound_config);
-					$bloodhound_id.initialize();
-				", CClientScript::POS_HEAD);
-			} else {
-				$source_list = CJavaScript::encode($dataset['source']);
-				Yii::app()->clientScript->registerScript(__CLASS__ .'#source_list#'. $i, '
-					var _'.$this->id.'_source_list_'. $i .' = '.$source_list.';
-				', CClientScript::POS_HEAD);
-			}
-		}
+		Booster::getBooster()->registerPackage('awesomplete');
 	}
+
 }

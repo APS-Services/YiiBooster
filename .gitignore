@@ -38,3 +38,6 @@ switch
 /vendor*
 
 /phpdoc.xml
+
+# PHPUnit 8+ test-result cache
+/tests/.phpunit.result.cache

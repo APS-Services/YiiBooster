@@ -23,11 +23,13 @@ class TbGridView extends CGridView
 	const TYPE_STRIPED = 'striped';
 	const TYPE_BORDERED = 'bordered';
 	const TYPE_CONDENSED = 'condensed';
+	const TYPE_SMALL = 'sm';
 	const TYPE_HOVER = 'hover';
 
 	/**
 	 * @var string|array the table type.
-	 * Valid values are 'striped', 'bordered', 'condensed' and/or 'hover'.
+	 * Valid values are 'striped', 'bordered', 'sm', 'hover' and/or the legacy 'condensed',
+	 * which Bootstrap 4 renamed to 'sm' and which is still accepted as an alias for it.
 	 */
 	public $type;
 
@@ -63,6 +65,21 @@ class TbGridView extends CGridView
 	 *
 	 * Initializes the widget.
 	 */
+	/**
+	 * Maps an accepted table type name onto its Bootstrap 5 class suffix.
+	 *
+	 * Bootstrap 4 renamed `table-condensed` to `table-sm`. The name `condensed` stays valid so
+	 * existing configuration keeps working; it simply renders as `table-sm` now.
+	 *
+	 * @param string $type
+	 * @return string
+	 * @since 5.0.0
+	 */
+	protected function tableTypeCssClass($type)
+	{
+		return 'table-' . ($type === self::TYPE_CONDENSED ? self::TYPE_SMALL : $type);
+	}
+
 	public function init() {
 		
 		parent::init();
@@ -74,11 +91,17 @@ class TbGridView extends CGridView
 			}
 
 			if (!empty($this->type)) {
-				$validTypes = array(self::TYPE_STRIPED, self::TYPE_BORDERED, self::TYPE_CONDENSED, self::TYPE_HOVER);
+				$validTypes = array(
+					self::TYPE_STRIPED,
+					self::TYPE_BORDERED,
+					self::TYPE_CONDENSED,
+					self::TYPE_SMALL,
+					self::TYPE_HOVER,
+				);
 
 				foreach ($this->type as $type) {
 					if (in_array($type, $validTypes)) {
-						$classes[] = 'table-' . $type;
+						$classes[] = $this->tableTypeCssClass($type);
 					}
 				}
 			}
@@ -93,19 +116,16 @@ class TbGridView extends CGridView
 			}
 		}
 
-        $booster = Booster::getBooster();
-		$popover = $booster->popoverSelector;
-		$tooltip = $booster->tooltipSelector;
+		// Tooltip/popover lifecycle across AJAX updates. Both callbacks are built by Booster so
+		// this widget and TbListView cannot drift apart; see Booster::createAjaxUpdateCallbacks().
+		$callbacks = Booster::getBooster()->createAjaxUpdateCallbacks();
 
-		$afterAjaxUpdate = "js:function() {
-			jQuery('.popover').remove();
-			jQuery('{$popover}').popover();
-			jQuery('.tooltip').remove();
-			jQuery('{$tooltip}').tooltip();
-		}";
+		if (!isset($this->beforeAjaxUpdate)) {
+			$this->beforeAjaxUpdate = $callbacks['beforeAjaxUpdate'];
+		}
 
 		if (!isset($this->afterAjaxUpdate)) {
-			$this->afterAjaxUpdate = $afterAjaxUpdate;
+			$this->afterAjaxUpdate = $callbacks['afterAjaxUpdate'];
 		}
 	}
 
