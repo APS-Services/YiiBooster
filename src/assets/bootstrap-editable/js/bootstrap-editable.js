@@ -1301,7 +1301,7 @@ Applied as jQuery method.
         @method activate()
         **/         
         activate: function() {
-            if(this.tip && this.tip().is(':visible') && this.$form) {
+            if(this.tip() && this.tip().is(':visible') && this.$form) {
                this.$form.data('editableform').input.activate(); 
             }
         } 
@@ -1806,7 +1806,7 @@ Makes editable any HTML element on the page. Applied as jQuery method.
                 //listen `save` event 
                 this.$element.on("save.internal", $.proxy(this.save, this));
                 this.container = this.$element.data('editableContainer'); 
-            } else if(this.container.tip().is(':visible')) {
+            } else if(this.container.tip() && this.container.tip().is(':visible')) {
                 return;
             }      
             
@@ -1830,7 +1830,7 @@ Makes editable any HTML element on the page. Applied as jQuery method.
         @param {boolean} closeAll Whether to close all other editable containers when showing this one. Default true.
         **/  
         toggle: function(closeAll) {
-            if(this.container && this.container.tip().is(':visible')) {
+            if(this.container && this.container.tip() && this.container.tip().is(':visible')) {
                 this.hide();
             } else {
                 this.show(closeAll);
