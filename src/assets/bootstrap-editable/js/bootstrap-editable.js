@@ -2456,7 +2456,7 @@ To create your own input you can inherit from this class.
        **/
        activate: function() {
            if(this.$input.is(':visible')) {
-               this.$input.focus();
+               this.$input.get(0).focus({preventScroll: true});
            }
        },
 
@@ -2921,7 +2921,7 @@ $(function(){
         
         activate: function() {
             if(this.$input.is(':visible')) {
-                this.$input.focus();
+                this.$input.get(0).focus({preventScroll: true});
                 $.fn.editableutils.setCursorPosition(this.$input.get(0), this.$input.val().length);
                 if(this.toggleClear) {
                     this.toggleClear();
@@ -3347,7 +3347,7 @@ $(function(){
         },
         
        activate: function() {
-           this.$input.first().focus();
+           this.$input.get(0).focus({preventScroll: true});
        },
        
        autosubmit: function() {
@@ -3574,7 +3574,7 @@ Range (inherit from number)
             });  
         },
         activate: function() {
-            this.$input.focus();
+            this.$input.get(0).focus({preventScroll: true});
         }         
     });
     Range.defaults = $.extend({}, $.fn.editabletypes.number.defaults, {
@@ -4566,7 +4566,7 @@ $(function(){
        },       
        
        activate: function() {
-           this.$input.siblings('.combodate').find('select').eq(0).focus();
+           this.$input.siblings('.combodate').find('select').eq(0).each(function () { this.focus({preventScroll: true}); });
        },
        
        /*

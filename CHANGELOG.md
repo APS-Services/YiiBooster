@@ -338,6 +338,8 @@ Fixes from the review of the Bootstrap 5 pull request:
 - **(fix)** justified `TbButtonGroup` buttons share the row; CDN: Font Awesome from jsDelivr, the
   datepicker noconflict snippet and Highcharts always local; `implode()` argument order in
   `TbBaseMenu` (rather)
+- **(fix)** x-editable inputs focus with `preventScroll`: the page jumped to the top because the input
+  got the focus before Popper had placed the popover (rather)
 - **(enh)** CI checks the syntax of `src/` on PHP 5.3 and 8.3 (rather)
 
 ### Removed
