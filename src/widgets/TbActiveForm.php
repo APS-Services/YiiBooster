@@ -216,8 +216,9 @@ class TbActiveForm extends CActiveForm {
 		if(!isset($this->clientOptions['successCssClass'])){
 			$this->clientOptions['successCssClass'] = 'has-validation-success';
 		}
-		// the group wrapper, whichever class $groupCssClass gives it
-		if(!isset($this->clientOptions['inputContainer'])){
+		// the group wrapper, whichever class $groupCssClass gives it; without one Yii's default (the closest div):
+		// 'div.' is no selector, jQuery would throw on every change, keystroke and submit
+		if(!isset($this->clientOptions['inputContainer']) && trim($this->groupCssClass) !== ''){
 			$this->clientOptions['inputContainer'] = 'div.' . implode('.', preg_split('/\s+/', trim($this->groupCssClass)));
 		}
 		// hooks Yii's single update point for every validation (change, type and submit), so the

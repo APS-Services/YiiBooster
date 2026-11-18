@@ -95,7 +95,9 @@ class TbHtml5Editor extends CInputWidget {
 			. " var o = {$options};"
 			. " if (!o.theme) { o.theme = 'snow'; }"
 			. " var editor = new Quill(host, o);"
-			. " if (input.value) { editor.clipboard.dangerouslyPasteHTML(input.value, 'silent'); }"
+			// parsed by the clipboard (an inert DOMParser) without selecting: dangerouslyPasteHTML() ends with
+			// setSelection(0), which focuses the editor, so every editor with content took the focus on page load
+			. " if (input.value) { editor.setContents(editor.clipboard.convert({html: input.value, text: ''}), 'silent'); }"
 			. " editor.on('text-change', function () {"
 			. " input.value = editor.root.innerHTML;"
 			. " });"

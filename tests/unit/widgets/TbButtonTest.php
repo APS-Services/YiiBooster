@@ -94,6 +94,26 @@ class TbButtonTest extends WidgetTestCase
 	}
 
 	/**
+	 * Booleans as Bootstrap parses them: data-bs-html="1" (CHtml's true) made Bootstrap throw a TypeError, which
+	 * stopped every tooltip and popover of the page.
+	 *
+	 * @test
+	 */
+	public function booleanTooltipOptionsAreWrittenAsTrueAndFalse()
+	{
+		$xpath = $this->renderXPath('TbButton', array(
+			'label' => 'Save',
+			'tooltip' => true,
+			'tooltipOptions' => array('html' => true, 'animation' => false),
+			'htmlOptions' => array('title' => '<b>Save</b>'),
+		));
+
+		$button = $this->firstNode($xpath, '//button');
+		$this->assertEquals('true', $button->getAttribute('data-bs-html'));
+		$this->assertEquals('false', $button->getAttribute('data-bs-animation'));
+	}
+
+	/**
 	 * Without setting a context (the default one) a link button is a text link as up to 4.x, not a
 	 * grey filled btn-secondary - that turned every Cancel/Back link into a button.
 	 *

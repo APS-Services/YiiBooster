@@ -212,6 +212,19 @@ class TbActiveForm2Test extends PHPUnit_Framework_TestCase {
 		$this->assertEquals('div.mb-2.form-group', $form->clientOptions['inputContainer']);
 	}
 
+	/**
+	 * Without a group class Yii's own default (the closest div): 'div.' made jQuery throw on every validation.
+	 */
+	public function testNoInputContainerWithoutAGroupClass() {
+
+		$form = $this->makeWidget();
+		$form->groupCssClass = '';
+		ob_start();
+		$form->init();
+		ob_end_clean();
+		$this->assertArrayNotHasKey('inputContainer', $form->clientOptions);
+	}
+
 	public function testInitClientOptions() {
 		
 		$form = $this->makeWidget();

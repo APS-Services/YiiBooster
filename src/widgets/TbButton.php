@@ -286,8 +286,10 @@ class TbButton extends TbWidget {
 
             // Bootstrap 5 reads a tooltip's options only from data-bs-* attributes
             $this->htmlOptions['data-bs-toggle'] = 'tooltip';
+            // booleans as Bootstrap parses them: CHtml writes true as "1" and false as "", which Bootstrap reads as a
+            // number and null and then refuses the option (TypeError), stopping every tooltip and popover after it
             foreach ($this->tooltipOptions as $key => $value) {
-                $this->htmlOptions['data-bs-' . $key] = $value;
+                $this->htmlOptions['data-bs-' . $key] = is_bool($value) ? ($value ? 'true' : 'false') : $value;
             }
 
             /**

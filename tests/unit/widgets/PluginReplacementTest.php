@@ -115,7 +115,9 @@ class PluginReplacementTest extends WidgetTestCase
 		$script = $this->registeredScripts();
 
 		$this->assertStringContainsString('new Quill(', $script);
-		$this->assertStringContainsString('editor.clipboard.dangerouslyPasteHTML(input.value', $script);
+		$this->assertStringContainsString('editor.clipboard.convert({html: input.value', $script);
+		// dangerouslyPasteHTML() selects (and so focuses) the editor on page load
+		$this->assertStringNotContainsString('dangerouslyPasteHTML', $script);
 		$this->assertStringNotContainsString('innerHTML = input.value', $script);
 	}
 
