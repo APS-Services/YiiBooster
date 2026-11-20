@@ -195,16 +195,15 @@ class TbGridView extends CGridView
 			/** @var TbDataColumn $column */
 			ob_start();
 			$column->renderHeaderCell();
-			$name = strip_tags(ob_get_clean());
+			$name = addcslashes(trim(strip_tags(ob_get_clean())), "'\\");
 
 			$labels .= "#$this->id td:nth-of-type($cnt):before { content: '{$name}'; }\n";
 			$cnt++;
 		}
 
+		// phones only (tablets keep the table), each row a block with soft borders that suit light and dark themes
 		$css = <<<EOD
-@media
-	only screen and (max-width: 760px),
-	(min-device-width: 768px) and (max-device-width: 1024px)  {
+@media only screen and (max-width: 767.98px) {
 
 		/* Force table to not be like tables anymore */
 		#{$this->id} table,#{$this->id} thead,#{$this->id} tbody,#{$this->id} th,#{$this->id} td,#{$this->id} tr {
@@ -218,24 +217,43 @@ class TbGridView extends CGridView
 			left: -9999px;
 		}
 
-		#{$this->id} tr { border: 1px solid #ccc; }
+		#{$this->id} tr {
+			margin-bottom: 0.5rem;
+			border: 1px solid rgba(127, 127, 127, 0.25);
+			border-radius: 0.5rem;
+			overflow: hidden;
+		}
 
 		#{$this->id} td {
 			/* Behave  like a "row" */
 			border: none;
-			border-bottom: 1px solid #eee;
+			border-bottom: 1px solid rgba(127, 127, 127, 0.15);
 			position: relative;
-			padding-left: 50%;
+			/* !important: themes often pad the first and last cell of a table row with !important */
+			padding-left: 45% !important;
+			padding-right: 0.75rem !important;
+			min-height: 2.25rem;
+			overflow-wrap: anywhere;
+			/* centered or right aligned columns read wrong next to their label */
+			text-align: left !important;
+		}
+
+		#{$this->id} td:last-child {
+			border-bottom: none;
 		}
 
 		#{$this->id} td:before {
 			/* Now like a table header */
 			position: absolute;
 			/* Top/left values mimic padding */
-			top: 6px;
-			left: 6px;
-			width: 45%;
-			padding-right: 10px;
+			top: 0.75rem;
+			left: 0.75rem;
+			width: calc(45% - 1.25rem);
+			overflow: hidden;
+			font-size: 0.8em;
+			font-weight: 600;
+			opacity: 0.7;
+			text-overflow: ellipsis;
 			white-space: nowrap;
 		}
 		.grid-view .button-column {
