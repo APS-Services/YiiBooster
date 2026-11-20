@@ -23,11 +23,13 @@ class TbGridView extends CGridView
 	const TYPE_STRIPED = 'striped';
 	const TYPE_BORDERED = 'bordered';
 	const TYPE_CONDENSED = 'condensed';
+	const TYPE_SMALL = 'sm';
 	const TYPE_HOVER = 'hover';
 
 	/**
 	 * @var string|array the table type.
-	 * Valid values are 'striped', 'bordered', 'condensed' and/or 'hover'.
+	 * Valid values are 'striped', 'bordered', 'sm', 'hover' and/or the legacy 'condensed',
+	 * which Bootstrap 4 renamed to 'sm' and which is still accepted as an alias for it.
 	 */
 	public $type;
 
@@ -63,6 +65,21 @@ class TbGridView extends CGridView
 	 *
 	 * Initializes the widget.
 	 */
+	/**
+	 * Maps an accepted table type name onto its Bootstrap 5 class suffix.
+	 *
+	 * Bootstrap 4 renamed `table-condensed` to `table-sm`. The name `condensed` stays valid so
+	 * existing configuration keeps working; it simply renders as `table-sm` now.
+	 *
+	 * @param string $type
+	 * @return string
+	 * @since 5.0.0
+	 */
+	protected function tableTypeCssClass($type)
+	{
+		return 'table-' . ($type === self::TYPE_CONDENSED ? self::TYPE_SMALL : $type);
+	}
+
 	public function init() {
 		
 		parent::init();
@@ -74,11 +91,17 @@ class TbGridView extends CGridView
 			}
 
 			if (!empty($this->type)) {
-				$validTypes = array(self::TYPE_STRIPED, self::TYPE_BORDERED, self::TYPE_CONDENSED, self::TYPE_HOVER);
+				$validTypes = array(
+					self::TYPE_STRIPED,
+					self::TYPE_BORDERED,
+					self::TYPE_CONDENSED,
+					self::TYPE_SMALL,
+					self::TYPE_HOVER,
+				);
 
 				foreach ($this->type as $type) {
 					if (in_array($type, $validTypes)) {
-						$classes[] = 'table-' . $type;
+						$classes[] = $this->tableTypeCssClass($type);
 					}
 				}
 			}
@@ -93,19 +116,16 @@ class TbGridView extends CGridView
 			}
 		}
 
-        $booster = Booster::getBooster();
-		$popover = $booster->popoverSelector;
-		$tooltip = $booster->tooltipSelector;
+		// Tooltip/popover lifecycle across AJAX updates. Both callbacks are built by Booster so
+		// this widget and TbListView cannot drift apart; see Booster::createAjaxUpdateCallbacks().
+		$callbacks = Booster::getBooster()->createAjaxUpdateCallbacks();
 
-		$afterAjaxUpdate = "js:function() {
-			jQuery('.popover').remove();
-			jQuery('{$popover}').popover();
-			jQuery('.tooltip').remove();
-			jQuery('{$tooltip}').tooltip();
-		}";
+		if (!isset($this->beforeAjaxUpdate)) {
+			$this->beforeAjaxUpdate = $callbacks['beforeAjaxUpdate'];
+		}
 
 		if (!isset($this->afterAjaxUpdate)) {
-			$this->afterAjaxUpdate = $afterAjaxUpdate;
+			$this->afterAjaxUpdate = $callbacks['afterAjaxUpdate'];
 		}
 	}
 
@@ -175,16 +195,15 @@ class TbGridView extends CGridView
 			/** @var TbDataColumn $column */
 			ob_start();
 			$column->renderHeaderCell();
-			$name = strip_tags(ob_get_clean());
+			$name = addcslashes(trim(strip_tags(ob_get_clean())), "'\\");
 
 			$labels .= "#$this->id td:nth-of-type($cnt):before { content: '{$name}'; }\n";
 			$cnt++;
 		}
 
+		// phones only (tablets keep the table), each row a block with soft borders that suit light and dark themes
 		$css = <<<EOD
-@media
-	only screen and (max-width: 760px),
-	(min-device-width: 768px) and (max-device-width: 1024px)  {
+@media only screen and (max-width: 767.98px) {
 
 		/* Force table to not be like tables anymore */
 		#{$this->id} table,#{$this->id} thead,#{$this->id} tbody,#{$this->id} th,#{$this->id} td,#{$this->id} tr {
@@ -198,24 +217,43 @@ class TbGridView extends CGridView
 			left: -9999px;
 		}
 
-		#{$this->id} tr { border: 1px solid #ccc; }
+		#{$this->id} tr {
+			margin-bottom: 0.5rem;
+			border: 1px solid rgba(127, 127, 127, 0.25);
+			border-radius: 0.5rem;
+			overflow: hidden;
+		}
 
 		#{$this->id} td {
 			/* Behave  like a "row" */
 			border: none;
-			border-bottom: 1px solid #eee;
+			border-bottom: 1px solid rgba(127, 127, 127, 0.15);
 			position: relative;
-			padding-left: 50%;
+			/* !important: themes often pad the first and last cell of a table row with !important */
+			padding-left: 45% !important;
+			padding-right: 0.75rem !important;
+			min-height: 2.25rem;
+			overflow-wrap: anywhere;
+			/* centered or right aligned columns read wrong next to their label */
+			text-align: left !important;
+		}
+
+		#{$this->id} td:last-child {
+			border-bottom: none;
 		}
 
 		#{$this->id} td:before {
 			/* Now like a table header */
 			position: absolute;
 			/* Top/left values mimic padding */
-			top: 6px;
-			left: 6px;
-			width: 45%;
-			padding-right: 10px;
+			top: 0.75rem;
+			left: 0.75rem;
+			width: calc(45% - 1.25rem);
+			overflow: hidden;
+			font-size: 0.8em;
+			font-weight: 600;
+			opacity: 0.7;
+			text-overflow: ellipsis;
 			white-space: nowrap;
 		}
 		.grid-view .button-column {

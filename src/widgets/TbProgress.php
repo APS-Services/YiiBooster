@@ -65,13 +65,15 @@ class TbProgress extends TbWidget {
 	public function init() {
 		
 		if ($this->isValidContext())
-			$this->progressBarClasses[] = 'progress-bar-' . $this->getContextClass();
-		
+			$this->progressBarClasses[] = 'bg-' . $this->getContextClass();
+
+		// Both of these belong on the bar, not on the container. The old code put them on the
+		// container, which was already wrong under Bootstrap 3 - striping has never worked here.
 		if ($this->striped)
-			$this->progressClasses[] = 'progress-striped';
-		
+			$this->progressBarClasses[] = 'progress-bar-striped';
+
 		if ($this->animated)
-			$this->progressClasses[] = 'active';
+			$this->progressBarClasses[] = 'progress-bar-animated';
 
 		if ($this->percent < 0)
 			$this->percent = 0;
@@ -99,7 +101,14 @@ class TbProgress extends TbWidget {
 		
 		echo CHtml::openTag('div', $this->htmlOptions);
 		if (empty($this->stacked)) {
-			echo '<div class="'.implode(' ', $this->progressBarClasses).'" style="width: ' . $this->percent . '%;">' . $this->content . '</div>';
+			echo CHtml::tag('div', array(
+				'class' => implode(' ', $this->progressBarClasses),
+				'style' => 'width: ' . $this->percent . '%;',
+				'role' => 'progressbar',
+				'aria-valuenow' => $this->percent,
+				'aria-valuemin' => '0',
+				'aria-valuemax' => '100',
+			), $this->content);
 		} elseif (is_array($this->stacked)) {
 			foreach ($this->stacked as $bar) {
 				$options = isset($bar['htmlOptions']) ? $bar['htmlOptions'] : array();
@@ -113,9 +122,16 @@ class TbProgress extends TbWidget {
 				if (empty($options['class'])) {
 					$options['class'] = '';
 				} else {
-					$options['style'] .= ' ';
+					// Was $options['style'] - a copy/paste slip that appended the separator to the
+					// wrong attribute, running the caller's class into ours.
+					$options['class'] .= ' ';
 				}
-				$options['class'] .= 'progress-bar progress-bar-' . $bar['context'];
+				$options['class'] .= 'progress-bar bg-' . $bar['context'];
+
+				$options['role'] = 'progressbar';
+				$options['aria-valuenow'] = $bar['percent'];
+				$options['aria-valuemin'] = '0';
+				$options['aria-valuemax'] = '100';
 
 				echo '<div ' . CHtml::renderAttributes($options) . '>' . @$bar['content'] . '</div>';
 			}

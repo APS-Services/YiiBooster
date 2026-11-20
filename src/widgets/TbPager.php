@@ -70,44 +70,19 @@ class TbPager extends CLinkPager {
 
 		$classes = array('pagination');
 
-		/* TODO: move these to styles files! */
-		$style = '';
-		$containerStyle = '';
-		
-		$validAlignments = array(self::ALIGNMENT_CENTER, self::ALIGNMENT_RIGHT);
-
-		if (in_array($this->alignment, $validAlignments)) {
-			if($this->alignment == self::ALIGNMENT_RIGHT)
-				$classes[] = 'pull-right';
-			
-			if($this->alignment == self::ALIGNMENT_CENTER) {
-				// $style = 'margin-left: auto; margin-right: auto;'; // not needed!
-				$containerStyle = 'text-align: center;';
-			}
+		// Bootstrap 5 aligns pagination with flex utilities on the list itself. Before 5.0 this
+		// floated the list with a Bootstrap 3 utility class, or set text alignment on the
+		// container with an inline style.
+		if ($this->alignment === self::ALIGNMENT_RIGHT) {
+			$classes[] = 'justify-content-end';
+		} elseif ($this->alignment === self::ALIGNMENT_CENTER) {
+			$classes[] = 'justify-content-center';
 		}
 
-		if (!empty($classes)) {
-			$classes = implode(' ', $classes);
-			if (isset($this->htmlOptions['class'])) {
-				$this->htmlOptions['class'] = ' ' . $classes;
-			} else {
-				$this->htmlOptions['class'] = $classes;
-			}
-		}
-		
-		if(!empty($style)) {
-			if(isset($this->htmlOptions['style']) && !empty($this->htmlOptions['style']))
-				$this->htmlOptions['style'] .= ' '.$style;
-			else 
-				$this->htmlOptions['style'] = $style;
-		}
-		
-		if(!empty($containerStyle)) {
-			if(isset($this->containerHtmlOptions['style']) && !empty($this->containerHtmlOptions['style']))
-				$this->containerHtmlOptions['style'] .= ' '.$containerStyle;
-			else
-				$this->containerHtmlOptions['style'] = $containerStyle;
-		}
+		// Append rather than assign. This used to overwrite htmlOptions['class'] outright, so a
+		// caller-supplied class was silently discarded.
+		$existing = isset($this->htmlOptions['class']) ? trim($this->htmlOptions['class']) : '';
+		$this->htmlOptions['class'] = trim(implode(' ', $classes) . ' ' . $existing);
 
 		parent::init();
 	}
@@ -125,7 +100,6 @@ class TbPager extends CLinkPager {
 		echo CHtml::openTag($this->containerTag, $this->containerHtmlOptions);
 		echo $this->header;
 		echo CHtml::tag('ul',$this->htmlOptions,implode("\n",$buttons));
-		echo '<div style="clear: both;"></div>';
 		echo $this->footer;
 		echo CHtml::closeTag($this->containerTag);
 	}
@@ -193,6 +167,40 @@ class TbPager extends CLinkPager {
 	}
 
 	/**
+	 * Builds the CSS class for one pagination list item.
+	 *
+	 * Bootstrap 5 styles pagination through page-item on the list item and page-link on the
+	 * anchor. Without them the list renders as plain bullets, which is what every grid in an
+	 * application looked like before 5.0.
+	 *
+	 * Shared with TbJsonPager, which hands the same class to a client-side template rather than
+	 * rendering it here, so the two must not drift apart.
+	 *
+	 * @param string $class 'first', 'last', 'next', 'previous' or ''. Not Bootstrap classes -
+	 * kept as styling hooks that applications may already target.
+	 * @param boolean $hidden whether the button is disabled.
+	 * @param boolean $selected whether the button is the current page.
+	 * @return string
+	 * @since 5.0.0
+	 */
+	protected function pageItemCssClass($class, $hidden, $selected)
+	{
+		$classes = array('page-item');
+
+		if ($class !== '') {
+			$classes[] = $class;
+		}
+		if ($hidden) {
+			$classes[] = 'disabled';
+		}
+		if ($selected) {
+			$classes[] = 'active';
+		}
+
+		return implode(' ', $classes);
+	}
+
+	/**
 	 *### .createPageButton()
 	 *
 	 * Creates a page button.
@@ -208,10 +216,23 @@ class TbPager extends CLinkPager {
 	 */
 	protected function createPageButton($label, $page, $class, $hidden, $selected)
 	{
-		if ($hidden || $selected) {
-			$class .= ' ' . ($hidden ? 'disabled' : 'active');
+		$itemOptions = array('class' => $this->pageItemCssClass($class, $hidden, $selected));
+		if ($selected) {
+			$itemOptions['aria-current'] = 'page';
 		}
 
-		return CHtml::tag('li', array('class' => $class), CHtml::link($label, $this->createPageUrl($page)));
+		$linkOptions = array('class' => 'page-link');
+		if ($hidden) {
+			// .disabled only styles the item; the anchor is still focusable and clickable, so
+			// take it out of the tab order and mark it up as Bootstrap's own docs do.
+			$linkOptions['tabindex'] = '-1';
+			$linkOptions['aria-disabled'] = 'true';
+		}
+
+		return CHtml::tag(
+			'li',
+			$itemOptions,
+			CHtml::link($label, $this->createPageUrl($page), $linkOptions)
+		);
 	}
 }

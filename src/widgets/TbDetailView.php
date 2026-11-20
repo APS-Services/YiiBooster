@@ -21,10 +21,12 @@ class TbDetailView extends CDetailView
 	const TYPE_STRIPED = 'striped';
 	const TYPE_BORDERED = 'bordered';
 	const TYPE_CONDENSED = 'condensed';
+	const TYPE_SMALL = 'sm';
 
 	/**
 	 * @var string|array the table type.
-	 * Valid values are 'striped', 'bordered' and/or 'condensed'.
+	 * Valid values are 'striped', 'bordered', 'sm' and/or the legacy 'condensed', which
+	 * Bootstrap 4 renamed to 'sm' and which is still accepted as an alias for it.
 	 */
 	public $type = array(self::TYPE_STRIPED, self::TYPE_CONDENSED);
 
@@ -39,6 +41,21 @@ class TbDetailView extends CDetailView
 	 *
 	 * Initializes the widget.
 	 */
+	/**
+	 * Maps an accepted table type name onto its Bootstrap 5 class suffix.
+	 *
+	 * Bootstrap 4 renamed `table-condensed` to `table-sm`. The name `condensed` stays valid so
+	 * existing configuration keeps working; it simply renders as `table-sm` now.
+	 *
+	 * @param string $type
+	 * @return string
+	 * @since 5.0.0
+	 */
+	protected function tableTypeCssClass($type)
+	{
+		return 'table-' . ($type === self::TYPE_CONDENSED ? self::TYPE_SMALL : $type);
+	}
+
 	public function init()
 	{
 		parent::init();
@@ -50,12 +67,12 @@ class TbDetailView extends CDetailView
 				$this->type = explode(' ', $this->type);
 			}
 
-			$validTypes = array(self::TYPE_STRIPED, self::TYPE_BORDERED, self::TYPE_CONDENSED);
+			$validTypes = array(self::TYPE_STRIPED, self::TYPE_BORDERED, self::TYPE_CONDENSED, self::TYPE_SMALL);
 
 			if (!empty($this->type)) {
 				foreach ($this->type as $type) {
 					if (in_array($type, $validTypes)) {
-						$classes[] = 'table-' . $type;
+						$classes[] = $this->tableTypeCssClass($type);
 					}
 				}
 			}

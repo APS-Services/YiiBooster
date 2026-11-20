@@ -36,20 +36,25 @@
         "yiisoft/yii": ">=1.1.15"
     },
     "require-dev": {
-        "ext-xdebug": "*",
-        "phing/phing": "2.12.0",
+        "phing/phing": "^2.17",
 
-        "phpunit/phpunit": "4.8",
+        "phpunit/phpunit": "^8.5",
 
-        "phploc/phploc": "2.0.6",
-        "sebastian/phpcpd": "2.0.1",
-        "pdepend/pdepend": "2.2.2",
-        "phpmd/phpmd": "2.3.2",
-        "squizlabs/php_codesniffer": "2.3.4",
-
-        "apigen/apigen": "^4",
-        "mayflower/php-codebrowser": "1.1.1",
-
-        "ncuesta/pinocchio": "dev-master"
+        "phpmd/phpmd": "^2.10",
+        "squizlabs/php_codesniffer": "^3.6"
+    },
+    "suggest": {
+        "ext-xdebug": "Required only for PHPUnit code-coverage reports and the `pdepend` build target.",
+        "phploc/phploc": "Report-only build target. Install standalone (PHIVE or a separate composer.json) - its sebastian/* dependencies are version-locked to a PHPUnit major and conflict with ours.",
+        "sebastian/phpcpd": "Report-only build target. Install standalone, same version-lock conflict as phploc.",
+        "pdepend/pdepend": "Report-only build target; also needs ext-xdebug for coverage input.",
+        "apigen/apigen": "Required only for the `phing apigen` documentation target.",
+        "ncuesta/pinocchio": "Required only for the `phing annotated` documentation target.",
+        "mayflower/php-codebrowser": "Required only for the `phing codebrowser` build target."
+    },
+    "config": {
+        "platform": {
+            "php": "7.4.33"
+        }
     }
 }

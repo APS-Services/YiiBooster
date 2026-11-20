@@ -56,6 +56,11 @@ After that, consult the [YiiBooster documentation website][booster-docs] or the 
 ## Widgets end-user documentation
 Check out [YiiBooster documentation website][booster-docs].
 
+## Upgrading
+
+Upgrading to 5.0 is a breaking change - see [`UPGRADE-5.0.md`](UPGRADE-5.0.md). It has separate
+paths for 4.x (Bootstrap 3) and 3.x (Bootstrap 2) applications.
+
 ## Contributing
 Long story short: make pull requests from separate branches dedicated for individual features to `master`.
 Please see the [wiki page about how to contribute to YiiBooster](https://github.com/clevertech/YiiBooster/wiki/How-to-contribute-to-this-repository) for details.
