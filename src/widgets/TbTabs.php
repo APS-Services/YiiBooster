@@ -171,8 +171,8 @@ class TbTabs extends CWidget {
 
 		/** @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
-		Booster::getBooster()->registerPackage('booster');
-		$cs->registerScript(__CLASS__ . '#' . $id, "Booster.showTab('{$id}');");
+		// No script to start the tabs: the active pane is rendered active, and Bootstrap 5 switches
+		// through data-bs-toggle. A Tab on this container (which is no tab) threw in show().
 
 		foreach ($this->events as $name => $handler) {
 			$handler = CJavaScript::encode($handler);

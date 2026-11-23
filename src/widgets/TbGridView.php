@@ -195,7 +195,8 @@ class TbGridView extends CGridView
 			/** @var TbDataColumn $column */
 			ob_start();
 			$column->renderHeaderCell();
-			$name = addcslashes(trim(strip_tags(ob_get_clean())), "'\\");
+			// decoded: CSS content shows entities as typed (&amp;, and &nbsp; for an empty header)
+			$name = addcslashes(trim(html_entity_decode(strip_tags(ob_get_clean()), ENT_QUOTES, 'UTF-8')), "'\\");
 
 			$labels .= "#$this->id td:nth-of-type($cnt):before { content: '{$name}'; }\n";
 			$cnt++;

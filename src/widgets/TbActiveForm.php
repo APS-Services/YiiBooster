@@ -623,8 +623,9 @@ class TbActiveForm extends CActiveForm {
 		CHtml::resolveName($model, $realAttribute);
 
 		// in a form-check, as checkboxGroup: the radio's own wrapper that Bootstrap 5 positions it by
+		$inline = $this->type == self::TYPE_INLINE || !empty($options['inline']);
 		ob_start();
-		echo '<div class="form-check' . ($this->type == self::TYPE_INLINE ? ' form-check-inline' : '') . '">';
+		echo '<div class="form-check' . ($inline ? ' form-check-inline' : '') . '">';
 		if (isset($hiddenField)) echo $hiddenField;
 		echo CHtml::tag('label', $options['labelOptions'], false, false);
 		echo $field;

@@ -99,36 +99,10 @@ class TbHtml5Editor extends CInputWidget {
 			// setSelection(0), which focuses the editor, so every editor with content took the focus on page load
 			. " if (input.value) { editor.setContents(editor.clipboard.convert({html: input.value, text: ''}), 'silent'); }"
 			. " editor.on('text-change', function () {"
-			. " input.value = editor.root.innerHTML;"
+			// an emptied editor still holds <p><br></p>, which passed `required` and was saved
+			. " input.value = editor.getLength() > 1 ? editor.root.innerHTML : '';"
 			. " });"
 			. " })();"
 		);
-	}
-
-	private function insertDefaultStylesheetIfColorsEnabled()
-	{
-		if (empty($this->editorOptions['color'])) {
-			return;
-		}
-
-		$defaultStyleSheetUrl = Booster::getBooster()->getAssetsUrl() . '/css/wysiwyg-color.css';
-		array_unshift($this->editorOptions['stylesheets'], $defaultStyleSheetUrl); // we want default css to be first
-	}
-
-	private function normalizeStylesheetsProperty()
-	{
-		if (empty($this->editorOptions['stylesheets'])) {
-			$this->editorOptions['stylesheets'] = array();
-		} else if (is_array($this->editorOptions['stylesheets'])) {
-			$this->editorOptions['stylesheets'] = array_filter(
-				$this->editorOptions['stylesheets'],
-				'is_string'
-			);
-		} else if (is_string($this->editorOptions['stylesheets'])) {
-			$this->editorOptions['stylesheets'] = array($this->editorOptions['stylesheets']);
-		} else // presumably if this option is neither an array or string then it's some erroneous value; clean it
-		{
-			$this->editorOptions['stylesheets'] = array();
-		}
 	}
 }

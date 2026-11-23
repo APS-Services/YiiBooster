@@ -255,6 +255,49 @@ class PluginReplacementTest extends WidgetTestCase
 	}
 
 	/**
+	 * The widget's container is no tab: a bootstrap.Tab on it throws in show() (it has no parent
+	 * nav), and the ready scripts after it on the page never ran.
+	 *
+	 * @test
+	 */
+	public function tabsStartNoBootstrapTabOnTheirContainer()
+	{
+		$this->render('TbTabs', array(
+			'id' => 'my-tabs',
+			'tabs' => array(array('label' => 'One', 'content' => 'first', 'active' => true)),
+		));
+
+		$this->assertStringNotContainsString('my-tabs', $this->registeredScripts());
+	}
+
+	/**
+	 * An emptied Quill editor still holds <p><br></p>, which passed a `required` rule.
+	 *
+	 * @test
+	 */
+	public function html5EditorPostsNothingForAnEmptiedEditor()
+	{
+		$this->render('TbHtml5Editor', array('name' => 'Post[body]'));
+
+		$this->assertStringContainsString(
+			"input.value = editor.getLength() > 1 ? editor.root.innerHTML : '';",
+			$this->registeredScripts()
+		);
+	}
+
+	/**
+	 * @test
+	 */
+	public function radioButtonGroupHonoursTheInlineOption()
+	{
+		$form = new TbActiveForm(Yii::app()->getController());
+		$model = new PluginReplacementModel();
+
+		$this->assertStringContainsString('form-check-inline', $form->radioButtonGroup($model, 'choice', array('inline' => true)));
+		$this->assertStringNotContainsString('form-check-inline', $form->radioButtonGroup($model, 'choice'));
+	}
+
+	/**
 	 * `$widgetOptions` in the list groups IS the htmlOptions array; nesting another htmlOptions
 	 * key inside it made CHtml emit `htmlOptions="Array"` as an attribute.
 	 *

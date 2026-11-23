@@ -89,7 +89,8 @@ class TbTypeahead extends TbBaseInputWidget {
 
 		Yii::app()->clientScript->registerScript(
 			__CLASS__ . '#' . $id,
-			"new Awesomplete(document.getElementById('{$id}'), " . CJavaScript::encode($options) . ");"
+			// Awesomplete wraps the input in an inline-block div, which shrank the form-control
+			"new Awesomplete(document.getElementById('{$id}'), " . CJavaScript::encode($options) . ").container.style.display = 'block';"
 		);
 	}
 

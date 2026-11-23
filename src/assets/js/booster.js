@@ -358,22 +358,6 @@
 	};
 
 	/**
-	 * Bootstrap 3: `$el.tab('show')`.
-	 *
-	 * @param {string} id
-	 * @returns {Object|null}
-	 */
-	Booster.showTab = function (id) {
-		var instance = Booster.component('Tab', id);
-
-		if (instance) {
-			instance.show();
-		}
-
-		return instance;
-	};
-
-	/**
 	 * Bootstrap 3 picked scrollspy up from a data attribute through its data-api, so the widget
 	 * could simply set the attribute after load. Bootstrap 5 only reads it during its own
 	 * initialisation, so an attribute written afterwards is never noticed and the component has

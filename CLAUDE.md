@@ -19,10 +19,11 @@ YiiBooster 3.x, which was Bootstrap 2-based.
 **The dev toolchain runs on PHP 7.4, not the system PHP.** `src/` still targets PHP 5.3 syntax (that is the
 shipped artifact), but the test/build tooling is installed against 7.4 — the original PHPUnit 4.8 pin cannot
 install on a modern PHP, and every PHPUnit release up to 7.5.20 is blocked by a security advisory. Prefix
-Composer and PHPUnit invocations with `php7.4` (`composer` is a phar at `/usr/local/bin/composer`):
+PHPUnit invocations with `php7.4`. Composer itself runs on whatever PHP it was installed for (the system
+`composer` does not parse on 7.4); `config.platform.php` in `composer.json` keeps the resolution on 7.4:
 
 ```shell
-php7.4 /usr/local/bin/composer install
+composer install
 ```
 
 Tests — PHPUnit is run from inside `tests/` so `phpunit.xml`'s relative paths resolve:

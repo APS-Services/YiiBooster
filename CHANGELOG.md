@@ -340,7 +340,13 @@ Fixes from the review of the Bootstrap 5 pull request:
   `TbBaseMenu` (rather)
 - **(fix)** x-editable inputs focus with `preventScroll`: the page jumped to the top because the input
   got the focus before Popper had placed the popover (rather)
+- **(fix)** `TbTabs` no longer starts a `bootstrap.Tab` on its container: it threw in `show()` and
+  stopped every ready script after it on the page (`Booster.showTab` is gone with it) (rather)
+- **(fix)** an emptied `TbHtml5Editor` posts an empty value instead of `<p><br></p>`; `TbTypeahead`
+  keeps the full width of its form-control; `radioButtonGroup()` honours `'inline' => true` again;
+  the labels of a responsive `TbGridView` decode entities (`&amp;`, `&nbsp;`) (rather)
 - **(enh)** CI checks the syntax of `src/` on PHP 5.3 and 8.3 (rather)
+- **(enh)** CI runs once per push of a pull request (push builds on `master` only) (rather)
 
 ### Removed
 - **(enh)** removed `TbMarkdownEditorJs`. YiiBooster shipped two markdown editors on two dead
