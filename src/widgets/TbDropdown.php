@@ -9,6 +9,7 @@
  */
 
 Yii::import('booster.widgets.TbBaseMenu');
+Yii::import('booster.helpers.TbIcon');
 
 /**
  *## Bootstrap dropdown menu.
@@ -47,30 +48,21 @@ class TbDropdown extends TbBaseMenu {
 	protected function renderMenuItem($item) {
 		
 		if (isset($item['icon'])) {
-			if (strpos($item['icon'], 'icon') === false && strpos($item['icon'], 'fa') === false) {
-				$item['icon'] = 'icon-' . implode(' icon-', explode(' ', $item['icon']));
+			$icon = TbIcon::render($item['icon']);
+			if ($icon !== '') {
+				$item['label'] = $icon . ' ' . $item['label'];
 			}
-
-			$item['label'] = '<i class="' . $item['icon'] . '"></i> ' . $item['label'];
 		}
 
-		if (!isset($item['linkOptions'])) {
-			$item['linkOptions'] = array();
-		}
-
-		// TODO: Bootstrap 3 does not support submenu 
-		// http://stackoverflow.com/questions/18023493/bootstrap-3-dropdown-sub-menu-missing
-		// we may use this to support it 
-		/* if (isset($item['items']) && !empty($item['items']) && empty($item['url'])) {
-			$item['url'] = '#';
-		} */
-
-		$item['linkOptions']['tabindex'] = -1;
+		// Bootstrap 3's dropdown markup put tabindex="-1" on every item; Bootstrap 5 does not,
+		// and keeping it would take the whole menu out of the keyboard tab order - so it is now
+		// applied only to genuinely disabled items, by applyLinkOptions().
+		$this->applyLinkOptions($item);
 
 		if (isset($item['url'])) {
 			return CHtml::link($item['label'], $item['url'], $item['linkOptions']);
 		} else {
-			return CHtml::link($item['label'], '#', array());
+			return CHtml::link($item['label'], '#', $item['linkOptions']);
 		}
 	}
 
@@ -82,7 +74,16 @@ class TbDropdown extends TbBaseMenu {
 	 */
 	public function getDividerCssClass()
 	{
-		return 'divider';
+		return 'dropdown-divider';
+	}
+
+	/**
+	 * @return string
+	 * @since 5.0.0
+	 */
+	public function getLinkCssClass()
+	{
+		return 'dropdown-item';
 	}
 
 	/**

@@ -62,7 +62,7 @@ class TbJsonPickerColumn extends TbJsonDataColumn
 
 		$class = preg_replace('/\s+/', '.', $this->class);
 		$value = !isset($value) ? $this->grid->nullDisplay : $this->grid->getFormatter()->format($value, $this->type);
-		$value = CHtml::link($value, '#', array('class' => $class));
+		$value = CHtml::link($value, '#', array('class' => $class, 'data-booster-popover' => ''));
 
 		if ($this->grid->json) {
 			return $value;

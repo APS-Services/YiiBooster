@@ -404,7 +404,6 @@ class TbExtendedGridView extends TbGridView {
 		$buttons = Yii::createComponent(
 			array(
 				'class' => 'booster.widgets.TbButtonGroup',
-				'toggle' => 'radio',
 				'buttons' => array(
 					array(
 						'label' => Yii::t('zii', 'Grid'),
@@ -428,7 +427,8 @@ class TbExtendedGridView extends TbGridView {
 		$chartId = preg_replace('[-\\ ?]', '_', 'exgvwChart' . $this->getId()); // cleaning out most possible characters invalid as javascript variable identifiers.
 
 		$this->componentsReadyScripts[] = '$(document).on("click",".' . $this->getId() . '-grid-control", function() {
-			$(this).parent().find("input[type=\"radio\"]").parent().toggleClass("active");
+			// Bootstrap 5 has no radio toggle buttons: the clicked control is the active one
+			$(this).addClass("active").siblings(".' . $this->getId() . '-grid-control").removeClass("active");
 			if ($(this).hasClass("grid") && $("#' . $this->getId() . ' #' . $chartId . '").is(":visible"))
 			{
 				$("#' . $this->getId() . ' #' . $chartId . '").hide();
@@ -443,7 +443,7 @@ class TbExtendedGridView extends TbGridView {
 		});';
 		
 		$this->componentsAfterAjaxUpdate[] = '
-			if($("label.grid.'.$this->getId().'-grid-control").hasClass("active")) {
+			if($(".'.$this->getId().'-grid-control.grid").hasClass("active")) {
 				$("#' . $this->getId() . ' #' . $chartId . '").hide();
 				$("#' . $this->getId() . ' table.items").show();
 			} else {

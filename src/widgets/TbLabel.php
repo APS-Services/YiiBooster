@@ -38,10 +38,12 @@ class TbLabel extends TbWidget {
 	 */
 	public function init() {
 		
-		$classes = array('label');
+		// Bootstrap 4 removed the label component; its role is filled by the badge, and 5.3
+		// expresses the contextual colour with the combined text/background utility.
+		$classes = array('badge');
 
 		if($this->isValidContext())
-			$classes[] = 'label-' . $this->getContextClass();
+			$classes[] = 'text-bg-' . $this->getContextClass();
 
 		if (!empty($classes)) {
 			$classes = implode(' ', $classes);

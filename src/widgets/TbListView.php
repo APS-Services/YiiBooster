@@ -42,19 +42,16 @@ class TbListView extends CListView {
 		
 		parent::init();
 
-        $booster = Booster::getBooster();
-		$popover = $booster->popoverSelector;
-		$tooltip = $booster->tooltipSelector;
+		// Tooltip/popover lifecycle across AJAX updates. Both callbacks are built by Booster so
+		// this widget and TbListView cannot drift apart; see Booster::createAjaxUpdateCallbacks().
+		$callbacks = Booster::getBooster()->createAjaxUpdateCallbacks();
 
-		$afterAjaxUpdate = "js:function() {
-			jQuery('.popover').remove();
-			jQuery('{$popover}').popover();
-			jQuery('.tooltip').remove();
-			jQuery('{$tooltip}').tooltip();
-		}";
+		if (!isset($this->beforeAjaxUpdate)) {
+			$this->beforeAjaxUpdate = $callbacks['beforeAjaxUpdate'];
+		}
 
 		if (!isset($this->afterAjaxUpdate)) {
-			$this->afterAjaxUpdate = $afterAjaxUpdate;
+			$this->afterAjaxUpdate = $callbacks['afterAjaxUpdate'];
 		}
 	}
 }

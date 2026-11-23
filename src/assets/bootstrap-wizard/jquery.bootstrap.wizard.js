@@ -4,6 +4,7 @@
  * version 1.0
  * Requires jQuery v1.3.2 or later
  * Supports Bootstrap 2.2.x, 2.3.x, 3.0
+ * Patched in YiiBooster for Bootstrap 5: tabs are found by data-bs-toggle="tab" (only the unminified build ships)
  * Dual licensed under the MIT and GPL licenses:
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.gnu.org/licenses/gpl.html
@@ -15,7 +16,7 @@ var bootstrapWizardCreate = function(element, options) {
 	var obj = this;
 	
 	// selector skips any 'li' elements that do not contain a child with a tab data-toggle
-	var baseItemSelector = 'li:has([data-toggle="tab"])';
+	var baseItemSelector = 'li:has([data-bs-toggle="tab"])';
 
 	// Merge options with defaults
 	var $settings = $.extend({}, $.fn.bootstrapWizard.defaults, options);
@@ -201,16 +202,16 @@ var bootstrapWizardCreate = function(element, options) {
 	this.resetWizard = function() {
 		
 		// remove the existing handlers
-		$('a[data-toggle="tab"]', $navigation).off('click', innerTabClick);
-		$('a[data-toggle="tab"]', $navigation).off('shown shown.bs.tab', innerTabShown);
+		$('a[data-bs-toggle="tab"]', $navigation).off('click', innerTabClick);
+		$('a[data-bs-toggle="tab"]', $navigation).off('shown shown.bs.tab', innerTabShown);
 		
 		// reset elements based on current state of the DOM
 		$navigation = element.find('ul:first', element);
 		$activeTab = $navigation.find(baseItemSelector + '.active', element);
 		
 		// re-add handlers
-		$('a[data-toggle="tab"]', $navigation).on('click', innerTabClick);
-		$('a[data-toggle="tab"]', $navigation).on('shown shown.bs.tab', innerTabShown);
+		$('a[data-bs-toggle="tab"]', $navigation).on('click', innerTabClick);
+		$('a[data-bs-toggle="tab"]', $navigation).on('shown shown.bs.tab', innerTabShown);
 		
 		obj.fixNavigationButtons();
 	};
@@ -232,10 +233,10 @@ var bootstrapWizardCreate = function(element, options) {
 		$settings.onShow($activeTab, $navigation, obj.nextIndex());
 	}
 
-	$('a[data-toggle="tab"]', $navigation).on('click', innerTabClick);
+	$('a[data-bs-toggle="tab"]', $navigation).on('click', innerTabClick);
 
 	// attach to both shown and shown.bs.tab to support Bootstrap versions 2.3.2 and 3.0.0
-	$('a[data-toggle="tab"]', $navigation).on('shown shown.bs.tab', innerTabShown);
+	$('a[data-bs-toggle="tab"]', $navigation).on('shown shown.bs.tab', innerTabShown);
 
 	this.fixNavigationButtons();
 };

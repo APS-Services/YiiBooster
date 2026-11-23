@@ -198,7 +198,7 @@ class TbJsonGridView extends TbGridView
 
 		echo $this->renderTemplate(
 			$this->id . '-pager-template',
-			'<li class="<%=this.class%>"><a href="<%=this.url%>"><%=this.text%></a></li>'
+			'<li class="<%=this.class%>"><a class="page-link" href="<%=this.url%>"><%=this.text%></a></li>'
 		);
 
 		echo $this->renderTemplate(

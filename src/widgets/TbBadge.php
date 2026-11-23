@@ -38,10 +38,12 @@ class TbBadge extends TbWidget {
 	 */
 	public function init() {
 		
+		// Bootstrap 5 dropped the badge-* colour classes in favour of the combined
+		// text/background utility, which also gets the contrast right.
 		$classes = array('badge');
 
 		if ($this->isValidContext())
-			$classes[] = 'badge-' . $this->getContextClass();
+			$classes[] = 'text-bg-' . $this->getContextClass();
 
 		if (!empty($classes)) {
 			$classes = implode(' ', $classes);
